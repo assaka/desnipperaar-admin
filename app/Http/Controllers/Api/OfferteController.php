@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderCreated;
+use App\Models\Bon;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class OfferteController extends Controller
 {
@@ -70,7 +73,17 @@ class OfferteController extends Controller
             'pilot'              => $pilot,
         ]);
 
-        // TODO: dispatch SendOrderConfirmation job (Resend)
+        Bon::create([
+            'bon_number' => Bon::generateBonNumber(),
+            'order_id'   => $order->id,
+            'mode'       => $order->delivery_mode,
+        ]);
+
+        try {
+            Mail::to($order->customer_email)->send(new OrderCreated($order));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'ok' => true,

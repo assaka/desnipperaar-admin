@@ -2,7 +2,10 @@
 @section('title', 'Orders')
 
 @section('content')
-    <h1 class="text-2xl font-black mb-4">Orders</h1>
+    <div class="flex justify-between items-baseline mb-4">
+        <h1 class="text-2xl font-black">Orders</h1>
+        <a href="{{ route('orders.create') }}" class="bg-black text-yellow-400 px-3 py-2 text-sm uppercase font-bold">+ Nieuwe order</a>
+    </div>
 
     <table class="w-full text-left">
         <thead class="border-b">

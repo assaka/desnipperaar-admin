@@ -73,11 +73,28 @@
     <section>
         <h2 class="font-black mb-2">Certificaat</h2>
         @if ($order->certificate)
-            <a href="{{ route('certificates.show', $order->certificate) }}" class="underline font-mono">
-                {{ $order->certificate->certificate_number }}
-            </a>
+            <div class="flex gap-3 items-baseline">
+                <a href="{{ route('certificates.show', $order->certificate) }}" class="underline font-mono">
+                    {{ $order->certificate->certificate_number }}
+                </a>
+                @if ($order->certificate->emailed_at)
+                    <span class="text-xs text-green-700">verzonden {{ $order->certificate->emailed_at->format('Y-m-d H:i') }}</span>
+                @else
+                    <form method="POST" action="{{ route('certificates.mail', $order->certificate) }}" class="inline">
+                        @csrf
+                        <button class="bg-black text-yellow-400 px-3 py-1 text-xs uppercase font-bold">
+                            Mail certificaat naar klant
+                        </button>
+                    </form>
+                @endif
+            </div>
         @else
-            <div class="text-sm text-gray-500">Nog niet uitgegeven.</div>
+            <form method="POST" action="{{ route('certificates.generate', $order) }}">
+                @csrf
+                <button class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">
+                    Genereer certificaat
+                </button>
+            </form>
         @endif
     </section>
 @endsection
