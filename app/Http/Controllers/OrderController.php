@@ -104,7 +104,7 @@ class OrderController extends Controller
         ]);
 
         try {
-            Mail::to($order->customer_email)->send(new OrderCreated($order));
+            Mail::to($order->customer_email)->send(new OrderCreated($order, $request->user()));
         } catch (\Throwable $e) {
             report($e);
         }

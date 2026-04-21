@@ -43,12 +43,12 @@ class CertificateController extends Controller
         return redirect()->route('certificates.show', $certificate);
     }
 
-    public function mail(Certificate $certificate)
+    public function mail(Request $request, Certificate $certificate)
     {
         $certificate->load('order');
 
         Mail::to($certificate->order->customer_email)
-            ->send(new CertificateIssued($certificate));
+            ->send(new CertificateIssued($certificate, $request->user()));
 
         $certificate->update(['emailed_at' => now()]);
         $certificate->order->update(['state' => Order::STATE_AFGESLOTEN]);

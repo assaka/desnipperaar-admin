@@ -28,5 +28,5 @@ We nemen binnen één werkdag contact met u op om de ophaling in te plannen.</p>
 <p>Heeft u vragen? Bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> of mail op
 <a href="mailto:hamid@desnipperaar.nl" style="color:#0A0A0A;">hamid@desnipperaar.nl</a>.</p>
 
-<p>Met vriendelijke groet,<br>Hamid — DeSnipperaar</p>
+<p>Met vriendelijke groet,<br>{{ $sender?->name ?? 'Hamid' }} — DeSnipperaar</p>
 @endcomponent
