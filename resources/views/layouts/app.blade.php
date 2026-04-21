@@ -14,7 +14,15 @@
 </head>
 <body class="min-h-screen">
     <header class="brand-bar flex justify-between items-center">
-        <a href="{{ route('orders.index') }}">DESNIPPERAAR ADMIN</a>
+        <div class="flex gap-6 items-baseline">
+            <a href="{{ route('orders.index') }}">DESNIPPERAAR ADMIN</a>
+            @auth
+                <nav class="text-sm font-normal">
+                    <a href="{{ route('orders.index') }}" class="mr-4">Orders</a>
+                    <a href="{{ route('drivers.index') }}">Chauffeurs</a>
+                </nav>
+            @endauth
+        </div>
         @auth
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
