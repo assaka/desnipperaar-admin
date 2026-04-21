@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
 use App\Models\Bon;
+use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -12,47 +13,90 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::orderByDesc('id')->paginate(25);
+        $orders = Order::with('customer')->orderByDesc('id')->paginate(25);
         return view('orders.index', compact('orders'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('orders.create');
+        $preselected = null;
+        if ($request->filled('customer')) {
+            $c = Customer::find($request->integer('customer'));
+            if ($c) {
+                $preselected = [
+                    'id' => $c->id, 'name' => $c->name, 'company' => $c->company,
+                    'email' => $c->email, 'phone' => $c->phone,
+                    'address' => $c->address, 'postcode' => $c->postcode,
+                    'city' => $c->city, 'reference' => $c->reference,
+                ];
+            }
+        }
+        return view('orders.create', compact('preselected'));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'customer_name'      => 'required|string|max:255',
-            'customer_email'     => 'required|email',
-            'customer_phone'     => 'nullable|string|max:50',
-            'customer_address'   => 'nullable|string|max:255',
-            'customer_postcode'  => 'nullable|string|max:10',
-            'customer_city'      => 'nullable|string|max:100',
-            'customer_reference' => 'nullable|string|max:100',
-            'delivery_mode'      => 'required|in:ophaal,breng,mobiel',
-            'box_count'          => 'nullable|integer|min:0',
-            'container_count'    => 'nullable|integer|min:0',
-            'notes'              => 'nullable|string|max:5000',
+        $validated = $request->validate([
+            'customer_id'            => 'nullable|exists:customers,id',
+            'new_customer.name'      => 'required_without:customer_id|string|max:255',
+            'new_customer.email'     => 'required_without:customer_id|email',
+            'new_customer.company'   => 'nullable|string|max:255',
+            'new_customer.phone'     => 'nullable|string|max:50',
+            'new_customer.address'   => 'nullable|string|max:255',
+            'new_customer.postcode'  => ['nullable','string','max:10','regex:/^\d{4}\s?[A-Za-z]{2}$/'],
+            'new_customer.city'      => 'nullable|string|max:100',
+
+            'delivery_mode'          => 'required|in:ophaal,breng,mobiel',
+            'box_count'              => 'nullable|integer|min:0',
+            'container_count'        => 'nullable|integer|min:0',
+            'pickup_date'            => 'nullable|date|after_or_equal:today',
+            'pickup_window'          => 'nullable|in:ochtend,middag,avond,flexibel',
+            'first_box_free'         => 'nullable|boolean',
+            'notes'                  => 'nullable|string|max:5000',
+        ], [
+            'new_customer.postcode.regex' => 'Postcode moet NL-formaat zijn (bv. 1034 AB).',
         ]);
 
-        $postcode = preg_replace('/\s+/', '', strtoupper($data['customer_postcode'] ?? ''));
-        $numeric  = (int) substr($postcode, 0, 4);
+        $customer = $validated['customer_id'] ?? null
+            ? Customer::find($validated['customer_id'])
+            : Customer::firstOrCreate(
+                ['email' => $validated['new_customer']['email']],
+                [
+                    'name'     => $validated['new_customer']['name'],
+                    'company'  => $validated['new_customer']['company']  ?? null,
+                    'phone'    => $validated['new_customer']['phone']    ?? null,
+                    'address'  => $validated['new_customer']['address']  ?? null,
+                    'postcode' => strtoupper(preg_replace('/\s+/', '', $validated['new_customer']['postcode'] ?? '')) ?: null,
+                    'city'     => $validated['new_customer']['city']     ?? null,
+                ]
+            );
+
+        $postcode = $customer->postcode;
+        $numeric  = (int) substr($postcode ?? '', 0, 4);
         $pilot    = $numeric >= config('desnipperaar.pilot.postcode_start')
                  && $numeric <= config('desnipperaar.pilot.postcode_end');
 
         $order = Order::create([
-            ...$data,
-            'customer_postcode' => $postcode ?: null,
-            'box_count'         => $data['box_count']       ?? 0,
-            'container_count'   => $data['container_count'] ?? 0,
-            'order_number'      => Order::generateOrderNumber(),
-            'state'             => Order::STATE_NIEUW,
-            'pilot'             => $pilot,
+            'order_number'       => Order::generateOrderNumber(),
+            'customer_id'        => $customer->id,
+            'customer_name'      => $customer->name,
+            'customer_email'     => $customer->email,
+            'customer_phone'     => $customer->phone,
+            'customer_address'   => $customer->address,
+            'customer_postcode'  => $postcode,
+            'customer_city'      => $customer->city,
+            'customer_reference' => $customer->reference,
+            'delivery_mode'      => $validated['delivery_mode'],
+            'box_count'          => $validated['box_count']       ?? 0,
+            'container_count'    => $validated['container_count'] ?? 0,
+            'pickup_date'        => $validated['pickup_date']     ?? null,
+            'pickup_window'      => $validated['pickup_window']   ?? null,
+            'notes'              => $validated['notes']           ?? null,
+            'state'              => Order::STATE_NIEUW,
+            'pilot'              => $pilot,
+            'first_box_free'     => (bool) ($validated['first_box_free'] ?? false),
         ]);
 
-        // Auto-create a placeholder bon — driver fills in details at pickup.
         Bon::create([
             'bon_number' => Bon::generateBonNumber(),
             'order_id'   => $order->id,
@@ -70,7 +114,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['bons.driver', 'certificate']);
+        $order->load(['customer', 'bons.driver', 'certificate']);
         $availableTransitions = $this->nextStates($order->state);
         return view('orders.show', compact('order', 'availableTransitions'));
     }
@@ -79,15 +123,7 @@ class OrderController extends Controller
     {
         $to = $request->string('to');
         abort_unless(in_array($to, $this->nextStates($order->state)), 422, 'Invalid transition');
-
         $order->update(['state' => $to]);
-
-        activity()
-            ->performedOn($order)
-            ->causedBy($request->user())
-            ->withProperties(['from' => $order->getOriginal('state'), 'to' => $to])
-            ->log('state_changed');
-
         return back();
     }
 

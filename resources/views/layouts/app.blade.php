@@ -6,6 +6,7 @@
     <title>@yield('title', 'DeSnipperaar Admin')</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2/dist/tailwind.min.css">
     <script defer src="https://unpkg.com/alpinejs@3/dist/cdn.min.js"></script>
+    <style>[x-cloak]{display:none!important}</style>
     <style>
         :root { --ink:#0A0A0A; --geel:#F5C518; }
         body { font-family: Arial, Helvetica, sans-serif; background: #EEECE4; color: var(--ink); }
@@ -19,6 +20,7 @@
             @auth
                 <nav class="text-sm font-normal">
                     <a href="{{ route('orders.index') }}" class="mr-4">Orders</a>
+                    <a href="{{ route('customers.index') }}" class="mr-4">Klanten</a>
                     <a href="{{ route('drivers.index') }}">Chauffeurs</a>
                 </nav>
             @endauth

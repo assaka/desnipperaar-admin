@@ -17,6 +17,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'customer_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -31,14 +32,24 @@ class Order extends Model
         'notes',
         'state',
         'pilot',
+        'pickup_date',
+        'pickup_window',
+        'first_box_free',
     ];
 
     protected $casts = [
         'media_items' => 'array',
         'pilot' => 'boolean',
+        'first_box_free' => 'boolean',
+        'pickup_date' => 'date',
         'box_count' => 'integer',
         'container_count' => 'integer',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function bons()
     {

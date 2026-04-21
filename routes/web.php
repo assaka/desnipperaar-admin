@@ -7,6 +7,16 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/customers',          [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/create',   [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/customers',         [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/customers/search',   [\App\Http\Controllers\CustomerController::class, 'search'])->name('customers.search');
+    Route::get('/customers/{customer}',         [\App\Http\Controllers\CustomerController::class, 'show'])->name('customers.show');
+    Route::get('/customers/{customer}/edit',    [\App\Http\Controllers\CustomerController::class, 'edit'])->name('customers.edit');
+    Route::patch('/customers/{customer}',       [\App\Http\Controllers\CustomerController::class, 'update'])->name('customers.update');
+
+    Route::get('/pricing/quote', [\App\Http\Controllers\PricingController::class, 'quote'])->name('pricing.quote');
+
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [\App\Http\Controllers\OrderController::class, 'store'])->name('orders.store');
