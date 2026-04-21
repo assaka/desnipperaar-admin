@@ -44,12 +44,12 @@ class OfferteController extends Controller
               : (str_contains($loc, 'mobiel')  ? 'mobiel' : 'ophaal');
 
         $notes = collect([
-            $data['bedrijf']  ? 'Bedrijf: '  . $data['bedrijf']  : null,
-            $data['branche']  ? 'Branche: '  . $data['branche']  : null,
-            $data['type']     ? 'Type: '     . $data['type']     : null,
-            $data['volume']   ? 'Volume: '   . $data['volume']   : null,
-            $data['termijn']  ? 'Termijn: '  . $data['termijn']  : null,
-            $data['bericht']  ? "\n" . $data['bericht']          : null,
+            !empty($data['bedrijf']) ? 'Bedrijf: '  . $data['bedrijf']  : null,
+            !empty($data['branche']) ? 'Branche: '  . $data['branche']  : null,
+            !empty($data['type'])    ? 'Type: '     . $data['type']     : null,
+            !empty($data['volume'])  ? 'Volume: '   . $data['volume']   : null,
+            !empty($data['termijn']) ? 'Termijn: '  . $data['termijn']  : null,
+            !empty($data['bericht']) ? "\n"         . $data['bericht']  : null,
         ])->filter()->implode("\n");
 
         $order = Order::create([
