@@ -85,7 +85,7 @@ class OrderController extends Controller
             'notes'              => $notes ?: null,
             'state'              => Order::STATE_NIEUW,
             'pilot'              => $pilot,
-            'first_box_free'     => $this->isKennismakingEligible($data, $pilot),
+            'first_box_free'     => $this->isKennismakingEligible($data),
         ]);
 
         Bon::create([
@@ -110,13 +110,12 @@ class OrderController extends Controller
     /**
      * Kennismaking is granted only when:
      *  - customer requested it (first_box_free flag)
-     *  - postcode is in the Noord pilot
      *  - the email has not been seen before in any previous Order
+     * Independent of pilot-korting.
      */
-    private function isKennismakingEligible(array $data, bool $pilot): bool
+    private function isKennismakingEligible(array $data): bool
     {
         if (!($data['first_box_free'] ?? false)) return false;
-        if (!$pilot) return false;
 
         $email = strtolower(trim($data['email']));
         $customer = Customer::whereRaw('LOWER(email) = ?', [$email])->first();
