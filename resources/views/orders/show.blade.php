@@ -130,6 +130,7 @@
         </section>
     @endif
 
+    @php $firstBon = $order->bons->first(); @endphp
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
@@ -139,9 +140,8 @@
             @endif
         </div>
 
-        @if ($order->pickup_date && !$order->bons->whereNull('picked_up_at')->isEmpty() || $order->state !== 'nieuw')
+        @if ($order->state !== 'nieuw')
             <div x-show="!editing" x-cloak class="text-sm">
-                @php $firstBon = $order->bons->first(); @endphp
                 <div><strong>Datum:</strong> {{ $order->pickup_date?->format('l d F Y') ?? '—' }}
                     @if ($order->pickup_window) ({{ $order->pickup_window }}@switch($order->pickup_window)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch)@endif
                 </div>
