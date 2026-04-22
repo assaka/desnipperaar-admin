@@ -22,31 +22,18 @@
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-3 py-2 mb-4 text-sm">{{ session('warning') }}</div>
     @endif
 
-    <section class="grid grid-cols-3 gap-6 mb-6">
+    <section class="grid grid-cols-2 gap-6 mb-6">
         <div>
             <h2 class="font-black mb-2">Klant</h2>
             <div>{{ $bon->order->customer_name }}</div>
             <div class="text-sm">{{ $bon->order->customer_address }}<br>{{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
-        </div>
-        <div>
-            <h2 class="font-black mb-2">Inhoud (verwacht)</h2>
-            <div>Dozen: <strong>{{ $bon->order->box_count }}</strong></div>
-            <div>Rolcontainers: <strong>{{ $bon->order->container_count }}</strong></div>
-            @php
-                $mediaLabelsInhoud = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
-            @endphp
-            @foreach ($mediaLabelsInhoud as $k => $label)
-                @if (!empty($bon->order->media_items[$k]))
-                    <div>{{ $label }}: <strong>{{ (int) $bon->order->media_items[$k] }}</strong></div>
-                @endif
-            @endforeach
             @if ($bon->order->pickup_date)
-                <div class="mt-1 text-sm">Gewenst: {{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
+                <div class="mt-2 text-sm">Gewenst: {{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
             @endif
         </div>
-        <div>
+        <div class="text-right">
             <a href="{{ $publicPdfUrl }}" target="_blank" title="Publieke PDF-download">
-                <img src="{{ $qrDataUri }}" alt="QR — publieke PDF-download" style="width:120px;height:120px;">
+                <img src="{{ $qrDataUri }}" alt="QR — publieke PDF-download" style="width:120px;height:120px;display:inline-block;">
             </a>
         </div>
     </section>
@@ -72,10 +59,10 @@
     <div x-data="{
         expBoxes: {{ $bon->order->box_count }},
         expCont:  {{ $bon->order->container_count }},
-        expMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + ($expMedia ?: [])) }},
+        expMedia: {{ \Illuminate\Support\Js::from(array_map('intval', $expMedia ?: []) + array_fill_keys($mediaKeys, 0)) }},
         actBoxes: {{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) ?: 0 }},
         actCont:  {{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) ?: 0 }},
-        actMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + array_map('intval', $actMedia ?: [])) }},
+        actMedia: {{ \Illuminate\Support\Js::from(array_map('intval', $actMedia ?: []) + array_fill_keys($mediaKeys, 0)) }},
         pilot: {{ $bon->order->pilot ? 'true' : 'false' }},
         firstBoxFree: {{ $bon->order->first_box_free ? 'true' : 'false' }},
         orderedTotal: {{ $orderedQuote['total'] }},
@@ -119,9 +106,32 @@
         },
         fmt(n) { return '€ ' + Number(n).toFixed(2).replace('.', ','); },
     }">
+    <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4"
+          {{ $locked ? 'onsubmit=return false' : '' }}>
+        @csrf @method('PATCH')
+        <fieldset {{ $locked ? 'disabled' : '' }} class="space-y-4 {{ $locked ? 'opacity-60 pointer-events-none' : '' }}">
+
+        @if ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 text-sm">
+                @foreach ($errors->all() as $err) <div>{{ $err }}</div> @endforeach
+            </div>
+        @endif
+
+        <section>
+            <h2 class="font-black mb-3">Chauffeur</h2>
+            <select name="driver_id" class="w-full border p-2">
+                <option value="">— nog geen chauffeur —</option>
+                @foreach ($drivers as $driver)
+                    <option value="{{ $driver->id }}" {{ $bon->driver_id == $driver->id ? 'selected' : '' }}>
+                        {{ $driver->name }} (****{{ $driver->license_last4 }})
+                    </option>
+                @endforeach
+            </select>
+        </section>
+
         @if (count($orderedQuote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
-            <h2 class="font-black mb-2">Origineel prijsoverzicht
+            <h2 class="font-black mb-2">Origineel overzicht
                 <span x-show="diff" x-cloak class="text-xs font-normal text-gray-500">— op basis van bestelling</span>
             </h2>
             <table class="w-full text-sm">
@@ -146,7 +156,7 @@
         <section x-show="diff" x-cloak class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
             <h2 class="font-black mb-2 flex items-center gap-2">
                 <span style="color:#E67E22;">⚠</span>
-                Gecorrigeerd prijsoverzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
+                Gecorrigeerd overzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
             </h2>
             <table class="w-full text-sm">
                 <template x-for="(line, i) in liveQuote.lines" :key="i + ':' + line.label">
@@ -174,29 +184,6 @@
             </p>
         </section>
         @endif
-
-    <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4"
-          {{ $locked ? 'onsubmit=return false' : '' }}>
-        @csrf @method('PATCH')
-        <fieldset {{ $locked ? 'disabled' : '' }} class="space-y-4 {{ $locked ? 'opacity-60 pointer-events-none' : '' }}">
-
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 text-sm">
-                @foreach ($errors->all() as $err) <div>{{ $err }}</div> @endforeach
-            </div>
-        @endif
-
-        <section>
-            <h2 class="font-black mb-3">Chauffeur</h2>
-            <select name="driver_id" class="w-full border p-2">
-                <option value="">— nog geen chauffeur —</option>
-                @foreach ($drivers as $driver)
-                    <option value="{{ $driver->id }}" {{ $bon->driver_id == $driver->id ? 'selected' : '' }}>
-                        {{ $driver->name }} (****{{ $driver->license_last4 }})
-                    </option>
-                @endforeach
-            </select>
-        </section>
 
         <section>
             <h2 class="font-black mb-3">Werkelijk opgehaald</h2>
