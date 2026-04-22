@@ -21,9 +21,9 @@
     .signoff { padding:8mm 14mm; display:grid; grid-template-columns:1fr 1fr; gap:10mm; border-top:1px solid #E5E5E5; }
     .signoff .box { border-bottom:1px solid #000; padding:12mm 0 2mm; }
     .signoff .lbl { font-size:8pt; color:#555; text-transform:uppercase; }
-    .toolbar { padding:6mm 14mm; text-align:right; }
+    .toolbar { position:fixed; top:8px; right:8px; z-index:100; }
     .toolbar button { background:#0A0A0A; color:#F5C518; font-weight:700; border:0; padding:8px 16px; cursor:pointer; }
-    @media print { .toolbar { display:none; } }
+    @media print { .toolbar { display:none !important; } }
 </style>
 </head>
 <body>
