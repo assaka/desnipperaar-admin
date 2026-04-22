@@ -35,5 +35,5 @@
 en op de vervolgpagina <strong>Akkoord</strong> te kiezen, komt een overeenkomst tot stand voor het hierboven genoemde bedrag.
 Klikt u niet, dan bent u nergens aan gebonden.</p>
 
-<p>Met vriendelijke groet,<br>{{ $sender?->name ?? 'DeSnipperaar' }}</p>
+<p>Met vriendelijke groet,<br>Team DeSnipperaar</p>
 @endcomponent

@@ -35,9 +35,43 @@ class OrderCreated extends Mailable
 
     public function content(): Content
     {
+        $quote = \App\Support\Pricing::quote(
+            (int) $this->order->box_count,
+            (int) $this->order->container_count,
+            (bool) $this->order->pilot,
+            (bool) $this->order->first_box_free,
+        );
+
+        $mediaLines = [];
+        $mediaPrices = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
+        $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+        foreach (($this->order->media_items ?? []) as $key => $qty) {
+            $qty = (int) $qty;
+            if ($qty <= 0 || !isset($mediaPrices[$key])) continue;
+            $mediaLines[] = [
+                'label'    => $mediaLabels[$key] ?? ucfirst($key),
+                'qty'      => $qty,
+                'unit'     => $mediaPrices[$key],
+                'subtotal' => $mediaPrices[$key] * $qty,
+            ];
+        }
+
+        $mediaSubtotal = array_sum(array_column($mediaLines, 'subtotal'));
+        $subtotal      = $quote['subtotal'] + $mediaSubtotal;
+        $vat           = round($subtotal * 0.21, 2);
+        $total         = round($subtotal + $vat, 2);
+
         return new Content(
             view: 'emails.order-created',
-            with: ['order' => $this->order, 'sender' => $this->sender],
+            with: [
+                'order'       => $this->order,
+                'sender'      => $this->sender,
+                'quote'       => $quote,
+                'mediaLines'  => $mediaLines,
+                'subtotal'    => $subtotal,
+                'vat'         => $vat,
+                'total'       => $total,
+            ],
         );
     }
 }
