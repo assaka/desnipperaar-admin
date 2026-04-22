@@ -40,7 +40,19 @@
         </div>
         <h1 style="font-weight:900;font-size:22pt;margin-bottom:6px;">Afhaalbewijs</h1>
         <div class="num">{{ $bon->bon_number }}</div>
+        @if ($bon->picked_up_at)
+            <div style="margin-top:4mm;font-size:10.5pt;color:#555;">
+                Opgehaald op <strong style="color:#0A0A0A;">{{ $bon->picked_up_at->format('d-m-Y H:i') }}</strong>
+            </div>
+        @endif
     </section>
+
+    @php
+        $actBoxes    = $bon->actual_boxes      ?? $bon->order->box_count;
+        $actCont     = $bon->actual_containers ?? $bon->order->container_count;
+        $actMedia    = !empty($bon->actual_media) ? $bon->actual_media : ($bon->order->media_items ?? []);
+        $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+    @endphp
 
     <section class="meta">
         <div>
@@ -50,11 +62,14 @@
             <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
         </div>
         <div>
-            <h3>Aanlevering</h3>
-            <div class="row"><span class="k">Datum</span><span class="v">{{ $bon->picked_up_at?->format('d-m-Y H:i') ?? '—' }}</span></div>
-            <div class="row"><span class="k">Gewicht</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
-            <div class="row"><span class="k">Dozen</span><span class="v">{{ $bon->order->box_count }}</span></div>
-            <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $bon->order->container_count }}</span></div>
+            <h3>Inhoud</h3>
+            <div class="row"><span class="k">Dozen</span><span class="v">{{ $actBoxes }}</span></div>
+            <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $actCont }}</span></div>
+            @foreach ($mediaLabels as $k => $label)
+                @if (!empty($actMedia[$k]))
+                    <div class="row"><span class="k">{{ $label }}</span><span class="v">{{ (int) $actMedia[$k] }}</span></div>
+                @endif
+            @endforeach
         </div>
     </section>
 
