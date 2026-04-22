@@ -98,29 +98,33 @@
                 @php
                     $hasPaperMethod = str_contains($method, 'P-4') || str_contains($method, 'P-5') || str_contains($method, 'P-6');
                 @endphp
-                <tr class="border-b">
-                    <td class="py-2 px-3 {{ $order->box_count > 0 ? '' : 'text-gray-400' }}">Papier / dossiers (dozen)</td>
-                    <td class="text-right py-2 px-3 font-mono {{ $order->box_count > 0 ? '' : 'text-gray-400' }}">{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
-                    <td class="py-2 px-3 font-mono">
-                        @foreach (['P-4', 'P-5', 'P-6'] as $m)
-                            @php $on = ($order->box_count > 0) && (str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod)); @endphp
-                            <span class="{{ $on ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
-                        @endforeach
-                    </td>
-                </tr>
-                <tr class="border-b">
-                    <td class="py-2 px-3 {{ $order->container_count > 0 ? '' : 'text-gray-400' }}">Papier / dossiers (rolcontainers 240 L)</td>
-                    <td class="text-right py-2 px-3 font-mono {{ $order->container_count > 0 ? '' : 'text-gray-400' }}">
-                        {{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}
-                        @if ($certificate->weight_kg_final)<br>{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif
-                    </td>
-                    <td class="py-2 px-3 font-mono">
-                        @foreach (['P-4', 'P-5', 'P-6'] as $m)
-                            @php $on = ($order->container_count > 0) && (str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod)); @endphp
-                            <span class="{{ $on ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
-                        @endforeach
-                    </td>
-                </tr>
+                @if ($order->box_count > 0)
+                    <tr class="border-b">
+                        <td class="py-2 px-3">Papier / dossiers (dozen)</td>
+                        <td class="text-right py-2 px-3 font-mono">{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
+                        <td class="py-2 px-3 font-mono">
+                            @foreach (['P-4', 'P-5', 'P-6'] as $m)
+                                @php $on = str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod); @endphp
+                                <span class="{{ $on ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
+                @if ($order->container_count > 0)
+                    <tr class="border-b">
+                        <td class="py-2 px-3">Papier / dossiers (rolcontainers 240 L)</td>
+                        <td class="text-right py-2 px-3 font-mono">
+                            {{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}
+                            @if ($certificate->weight_kg_final)<br>{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif
+                        </td>
+                        <td class="py-2 px-3 font-mono">
+                            @foreach (['P-4', 'P-5', 'P-6'] as $m)
+                                @php $on = str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod); @endphp
+                                <span class="{{ $on ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
                 @php
                     $mediaRows = [
                         'hdd'    => ['Harde schijven (HDD)', ['H-3', 'H-4', 'H-5']],

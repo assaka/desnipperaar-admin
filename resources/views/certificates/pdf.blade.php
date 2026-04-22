@@ -160,78 +160,83 @@
         <table class="mat">
             <thead><tr><th></th><th>Materiaal</th><th>Aantal / gewicht</th><th>Methode (DIN 66399 / ISO 21964)</th></tr></thead>
             <tbody>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $order->box_count > 0 ? 'on' : '' }}"></span></td>
-                    <td>Papier / dossiers (dozen)</td>
-                    <td class="val">{{ $order->box_count ?: '___' }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
-                    <td>
-                        @foreach ($paperMethods as $m => $on)
-                            <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
-                        @endforeach
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $order->container_count > 0 ? 'on' : '' }}"></span></td>
-                    <td>Papier / dossiers (rolcontainers 240 L)</td>
-                    <td class="val">{{ $order->container_count ?: '___' }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}@if ($certificate->weight_kg_final) &middot; {{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif</td>
-                    <td>
-                        @foreach ($paperMethods as $m => $on)
-                            <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
-                        @endforeach
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $mediaInt('hdd') > 0 ? 'on' : '' }}"></span></td>
-                    <td>Harde schijven (HDD)</td>
-                    <td class="val">{{ $mediaInt('hdd') ?: '___' }} stuks</td>
-                    <td>
-                        @foreach ($hddMethods as $m => $on)
-                            <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
-                        @endforeach
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $mediaInt('ssd') > 0 ? 'on' : '' }}"></span></td>
-                    <td>SSDs</td>
-                    <td class="val">{{ $mediaInt('ssd') ?: '___' }} stuks</td>
-                    <td>
-                        <span class="meth"><span class="cbox {{ $eMethods3 && $mediaInt('ssd') > 0 ? 'on' : '' }}"></span>E-3</span>
-                        <span class="meth"><span class="cbox {{ $eMethods4 && $mediaInt('ssd') > 0 ? 'on' : '' }}"></span>E-4</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $mediaInt('phone') > 0 ? 'on' : '' }}"></span></td>
-                    <td>Mobiele telefoons</td>
-                    <td class="val">{{ $mediaInt('phone') ?: '___' }} stuks</td>
-                    <td>
-                        <span class="meth"><span class="cbox {{ $eMethods3 && $mediaInt('phone') > 0 ? 'on' : '' }}"></span>E-3</span>
-                        <span class="meth"><span class="cbox {{ $eMethods4 && $mediaInt('phone') > 0 ? 'on' : '' }}"></span>E-4</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox"></span></td>
-                    <td>Backup tapes (LTO)</td>
-                    <td class="val">___ stuks</td>
-                    <td>
-                        <span class="meth"><span class="cbox {{ $tMethods2 ? 'on' : '' }}"></span>T-2</span>
-                        <span class="meth"><span class="cbox {{ $tMethods3 ? 'on' : '' }}"></span>T-3</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $mediaInt('usb') > 0 ? 'on' : '' }}"></span></td>
-                    <td>USB / geheugenkaarten</td>
-                    <td class="val">{{ $mediaInt('usb') ?: '___' }} stuks</td>
-                    <td>
-                        <span class="meth"><span class="cbox {{ $eMethods3 && $mediaInt('usb') > 0 ? 'on' : '' }}"></span>E-3</span>
-                        <span class="meth"><span class="cbox {{ $eMethods4 && $mediaInt('usb') > 0 ? 'on' : '' }}"></span>E-4</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="chk"><span class="cbox {{ $mediaInt('laptop') > 0 ? 'on' : '' }}"></span></td>
-                    <td>Anders (laptop / overig)</td>
-                    <td class="val">{{ $mediaInt('laptop') ?: '___' }} stuks/kg</td>
-                    <td>Klasse: ___</td>
-                </tr>
+                @if ($order->box_count > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Papier / dossiers (dozen)</td>
+                        <td class="val">{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
+                        <td>
+                            @foreach ($paperMethods as $m => $on)
+                                <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
+                @if ($order->container_count > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Papier / dossiers (rolcontainers 240 L)</td>
+                        <td class="val">{{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}@if ($certificate->weight_kg_final) &middot; {{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif</td>
+                        <td>
+                            @foreach ($paperMethods as $m => $on)
+                                <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
+                @if ($mediaInt('hdd') > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Harde schijven (HDD)</td>
+                        <td class="val">{{ $mediaInt('hdd') }} stuks</td>
+                        <td>
+                            @foreach ($hddMethods as $m => $on)
+                                <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
+                @if ($mediaInt('ssd') > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>SSDs</td>
+                        <td class="val">{{ $mediaInt('ssd') }} stuks</td>
+                        <td>
+                            <span class="meth"><span class="cbox {{ $eMethods3 ? 'on' : '' }}"></span>E-3</span>
+                            <span class="meth"><span class="cbox {{ $eMethods4 ? 'on' : '' }}"></span>E-4</span>
+                        </td>
+                    </tr>
+                @endif
+                @if ($mediaInt('phone') > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Mobiele telefoons</td>
+                        <td class="val">{{ $mediaInt('phone') }} stuks</td>
+                        <td>
+                            <span class="meth"><span class="cbox {{ $eMethods3 ? 'on' : '' }}"></span>E-3</span>
+                            <span class="meth"><span class="cbox {{ $eMethods4 ? 'on' : '' }}"></span>E-4</span>
+                        </td>
+                    </tr>
+                @endif
+                @if ($mediaInt('usb') > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>USB / geheugenkaarten</td>
+                        <td class="val">{{ $mediaInt('usb') }} stuks</td>
+                        <td>
+                            <span class="meth"><span class="cbox {{ $eMethods3 ? 'on' : '' }}"></span>E-3</span>
+                            <span class="meth"><span class="cbox {{ $eMethods4 ? 'on' : '' }}"></span>E-4</span>
+                        </td>
+                    </tr>
+                @endif
+                @if ($mediaInt('laptop') > 0)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Anders (laptop / overig)</td>
+                        <td class="val">{{ $mediaInt('laptop') }} stuks/kg</td>
+                        <td>Klasse: ___</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
         <p style="font-size:8pt; color:#555; margin-top:2mm;">Voor serienummers, IMEIs en asset-tags per stuk: zie Bijlage A op de volgende pagina.</p>
