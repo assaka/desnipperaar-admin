@@ -45,10 +45,23 @@ class BonController extends Controller
             $patch['driver_id']            = $driver->id;
             $patch['driver_name_snapshot'] = $driver->name;
             $patch['driver_license_last4'] = $driver->license_last4;
+            // Pre-fill driver signature from his profile if he already has one and bon has none.
+            if ($driver->signature_path && empty($bon->driver_signature_path)) {
+                $copy = "signatures/bon-{$bon->id}-driver.png";
+                \Illuminate\Support\Facades\Storage::disk('local')->put(
+                    $copy,
+                    \Illuminate\Support\Facades\Storage::disk('local')->get($driver->signature_path)
+                );
+                $patch['driver_signature_path'] = $copy;
+            }
         }
 
         if (!empty($data['customer_signature']) && str_starts_with($data['customer_signature'], 'data:image/')) {
             $patch['customer_signature_path'] = $this->storeSignature($bon, 'customer', $data['customer_signature']);
+            // Customer just signed — auto-fill picked_up_at if not already set.
+            if (empty($bon->picked_up_at) && empty($patch['picked_up_at'])) {
+                $patch['picked_up_at'] = now();
+            }
         }
         if (!empty($data['driver_signature']) && str_starts_with($data['driver_signature'], 'data:image/')) {
             $patch['driver_signature_path'] = $this->storeSignature($bon, 'driver', $data['driver_signature']);

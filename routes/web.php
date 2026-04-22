@@ -44,6 +44,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/drivers', [\App\Http\Controllers\DriverController::class, 'index'])->name('drivers.index');
     Route::post('/drivers', [\App\Http\Controllers\DriverController::class, 'store'])->name('drivers.store');
+    Route::get('/drivers/{driver}/edit', [\App\Http\Controllers\DriverController::class, 'edit'])->name('drivers.edit');
+    Route::patch('/drivers/{driver}', [\App\Http\Controllers\DriverController::class, 'update'])->name('drivers.update');
+    Route::get('/drivers/{driver}/signature', [\App\Http\Controllers\DriverController::class, 'signature'])->name('drivers.signature');
 });
 
 require __DIR__.'/auth.php';

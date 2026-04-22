@@ -13,6 +13,7 @@ class Driver extends Model
         'name',
         'license_last4',
         'vog_valid_until',
+        'signature_path',
         'active',
     ];
 

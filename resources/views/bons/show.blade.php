@@ -125,11 +125,11 @@
                     <input type="hidden" name="driver_signature" id="sig-driver-data">
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Zodra de klant-handtekening en ophaaltijd zijn ingevuld, gaat automatisch de getekende bon als PDF per e-mail naar de klant.</p>
+            <p class="text-xs text-gray-500 mt-2">Zodra de klant tekent wordt de ophaaldatum automatisch vastgelegd en gaat de getekende bon als PDF naar de klant. De chauffeur-handtekening wordt automatisch ingevuld vanuit het chauffeur-profiel.</p>
         </section>
 
         <div class="border-t pt-4 flex gap-3">
-            <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bon bijwerken &amp; mailen</button>
+            <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bevestig &amp; mailen</button>
             @if ($bon->picked_up_at)
                 <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="px-4 py-2 border font-bold uppercase underline">Print PDF</a>
             @endif

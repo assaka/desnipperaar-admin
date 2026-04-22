@@ -19,7 +19,7 @@
         <tbody>
             @forelse ($drivers as $driver)
                 <tr class="border-b">
-                    <td class="py-2">{{ $driver->name }}</td>
+                    <td class="py-2"><a href="{{ route('drivers.edit', $driver) }}" class="underline">{{ $driver->name }}</a></td>
                     <td class="font-mono">****{{ $driver->license_last4 }}</td>
                     <td class="{{ $driver->isVogExpiringSoon() ? 'text-red-600 font-bold' : '' }}">
                         {{ $driver->vog_valid_until?->format('Y-m-d') ?? '—' }}
