@@ -15,6 +15,25 @@ class Customer extends Model
         'reference', 'branche', 'notes',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Customer $customer) {
+            if (blank($customer->reference)) {
+                $customer->reference = self::generateReference();
+            }
+        });
+    }
+
+    public static function generateReference(): string
+    {
+        $year = now()->year;
+        $last = self::where('reference', 'like', "KL-{$year}-%")
+            ->orderByDesc('id')
+            ->first();
+        $seq = $last ? ((int) substr($last->reference, -4)) + 1 : 1;
+        return sprintf('KL-%d-%04d', $year, $seq);
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);

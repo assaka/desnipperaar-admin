@@ -36,24 +36,29 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'customer_id'            => 'nullable|exists:customers,id',
-            'new_customer.name'      => 'required_without:customer_id|string|max:255',
-            'new_customer.email'     => 'required_without:customer_id|email',
-            'new_customer.company'   => 'nullable|string|max:255',
-            'new_customer.phone'     => 'nullable|string|max:50',
-            'new_customer.address'   => 'nullable|string|max:255',
-            'new_customer.postcode'  => ['nullable','string','max:10','regex:/^\d{4}\s?[A-Za-z]{2}$/'],
-            'new_customer.city'      => 'nullable|string|max:100',
+        $rules = [
+            'customer_id'    => 'nullable|exists:customers,id',
+            'delivery_mode'  => 'required|in:ophaal,breng,mobiel',
+            'box_count'      => 'nullable|integer|min:0',
+            'container_count'=> 'nullable|integer|min:0',
+            'pickup_date'    => 'nullable|date|after_or_equal:today',
+            'pickup_window'  => 'nullable|in:ochtend,middag,avond,flexibel',
+            'first_box_free' => 'nullable|boolean',
+            'notes'          => 'nullable|string|max:5000',
+        ];
 
-            'delivery_mode'          => 'required|in:ophaal,breng,mobiel',
-            'box_count'              => 'nullable|integer|min:0',
-            'container_count'        => 'nullable|integer|min:0',
-            'pickup_date'            => 'nullable|date|after_or_equal:today',
-            'pickup_window'          => 'nullable|in:ochtend,middag,avond,flexibel',
-            'first_box_free'         => 'nullable|boolean',
-            'notes'                  => 'nullable|string|max:5000',
-        ], [
+        // Only validate inline-new-customer fields when no existing customer selected.
+        if (blank($request->input('customer_id'))) {
+            $rules['new_customer.name']     = 'required|string|max:255';
+            $rules['new_customer.email']    = 'required|email';
+            $rules['new_customer.company']  = 'nullable|string|max:255';
+            $rules['new_customer.phone']    = 'nullable|string|max:50';
+            $rules['new_customer.address']  = 'nullable|string|max:255';
+            $rules['new_customer.postcode'] = ['nullable','string','max:10','regex:/^\d{4}\s?[A-Za-z]{2}$/'];
+            $rules['new_customer.city']     = 'nullable|string|max:100';
+        }
+
+        $validated = $request->validate($rules, [
             'new_customer.postcode.regex' => 'Postcode moet NL-formaat zijn (bv. 1034 AB).',
         ]);
 
