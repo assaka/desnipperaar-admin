@@ -28,7 +28,9 @@ class QuoteAcceptController extends Controller
             return view('public.quote-expired', compact('order'));
         }
 
+        // On acceptance: mint a new B- order number, keep the O- reference as audit trail.
         $order->update([
+            'order_number'         => Order::generateOrderNumber(),
             'quote_accepted_at'    => now(),
             'quote_acceptance_ip'  => $request->ip(),
             'type'                 => Order::TYPE_DIRECT,

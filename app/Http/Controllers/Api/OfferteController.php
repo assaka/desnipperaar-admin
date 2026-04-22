@@ -47,8 +47,10 @@ class OfferteController extends Controller
             !empty($data['bericht']) ? "\n" . $data['bericht'] : null,
         ])->filter()->implode("\n");
 
+        $quoteRef = Order::generateQuoteReference();
         $order = Order::create([
-            'order_number'   => Order::generateOrderNumber(),
+            'order_number'   => $quoteRef,  // displayed while type=quote
+            'quote_reference' => $quoteRef,
             'type'           => Order::TYPE_QUOTE,
             'customer_id'    => $customer->id,
             'customer_name'  => $customer->name,

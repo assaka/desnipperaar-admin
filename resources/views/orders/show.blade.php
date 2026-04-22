@@ -5,6 +5,9 @@
     <div class="flex justify-between items-start mb-4">
         <div>
             <h1 class="text-2xl font-black font-mono">{{ $order->order_number }}</h1>
+            @if ($order->quote_reference && $order->quote_reference !== $order->order_number)
+                <div class="text-xs text-gray-500 font-mono">voortkomend uit offerte {{ $order->quote_reference }}</div>
+            @endif
             <div class="text-sm text-gray-600">
                 Status: <span class="font-bold uppercase">{{ $order->state }}</span>
                 @if ($order->pilot) · <span class="bg-yellow-400 text-black px-1">Noord-pilot</span> @endif

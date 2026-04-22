@@ -21,6 +21,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'quote_reference',
         'type',
         'customer_id',
         'created_by_user_id',
@@ -106,6 +107,23 @@ class Order extends Model
 
         $seq = $last
             ? ((int) substr($last->order_number, -4)) + 1
+            : $start;
+
+        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+    }
+
+    public static function generateQuoteReference(): string
+    {
+        $prefix = config('desnipperaar.order.quote_prefix');
+        $year   = now()->year;
+        $start  = config('desnipperaar.order.start');
+
+        $last = self::where('quote_reference', 'like', "{$prefix}-{$year}-%")
+            ->orderByDesc('id')
+            ->first();
+
+        $seq = $last
+            ? ((int) substr($last->quote_reference, -4)) + 1
             : $start;
 
         return sprintf('%s-%d-%04d', $prefix, $year, $seq);

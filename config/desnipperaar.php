@@ -3,8 +3,9 @@
 return [
 
     'order' => [
-        'prefix' => env('DESNIPPERAAR_ORDER_PREFIX', 'DS'),
-        'start'  => (int) env('DESNIPPERAAR_ORDER_START', 142),
+        'prefix'        => env('DESNIPPERAAR_ORDER_PREFIX', 'B'),  // bestelling
+        'quote_prefix'  => env('DESNIPPERAAR_QUOTE_PREFIX', 'O'),  // offerte
+        'start'         => (int) env('DESNIPPERAAR_ORDER_START', 142),
     ],
 
     'bon' => [
