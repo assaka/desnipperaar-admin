@@ -25,6 +25,8 @@ class OrderController extends Controller
             'email'      => 'required|email',
             'telefoon'   => 'required|string|max:50',
             'adres'      => 'nullable|string|max:255',
+            'straat'     => 'nullable|string|max:255',
+            'huisnummer' => 'nullable|string|max:20',
             'stad'       => 'nullable|string|max:100',
             'plaats'     => 'nullable|string|max:100',
             'branche'    => 'nullable|string|max:100',
