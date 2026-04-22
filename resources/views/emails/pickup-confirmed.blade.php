@@ -32,12 +32,17 @@
 </div>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Wat u voor ons klaarzet</h2>
+@php
+    $mediaLabels = ['hdd' => 'HDD / harde schijf', 'ssd' => 'SSD / NVMe', 'usb' => 'USB-stick / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+@endphp
 <ul style="font-size:14px;padding-left:20px;">
     @if ($order->box_count) <li>{{ $order->box_count }} doos/dozen met papier of dossiers</li> @endif
     @if ($order->container_count) <li>{{ $order->container_count }} rolcontainer(s) 240 L</li> @endif
-    @if (!empty($order->media_items))
-        <li>Gegevensdragers volgens overzicht in orderbevestiging</li>
-    @endif
+    @foreach ($mediaLabels as $key => $label)
+        @if (!empty($order->media_items[$key]))
+            <li>{{ (int) $order->media_items[$key] }}× {{ $label }}</li>
+        @endif
+    @endforeach
 </ul>
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
