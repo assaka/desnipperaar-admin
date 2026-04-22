@@ -20,6 +20,7 @@
             @auth
                 <nav class="text-sm font-normal">
                     <a href="{{ route('orders.index') }}" class="mr-4">Orders</a>
+                    <a href="{{ route('planning.index') }}" class="mr-4">Planning</a>
                     <a href="{{ route('offertes.index') }}" class="mr-4">Offertes</a>
                     <a href="{{ route('invoices.index') }}" class="mr-4">Facturen</a>
                     <a href="{{ route('customers.index') }}" class="mr-4">Klanten</a>
