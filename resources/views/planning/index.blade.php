@@ -2,7 +2,7 @@
 @section('title', 'Planning')
 
 @section('content')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@schedule-x/theme-default@2/dist/calendar.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@schedule-x/theme-default@2.15.0/dist/calendar.css">
 
 <div class="flex justify-between items-baseline mb-3">
     <h1 class="text-2xl font-black">Planning</h1>
@@ -25,6 +25,18 @@
 <div id="sx-error" style="display:none;padding:12px;background:#FDECEC;border-left:4px solid #D32F2F;color:#8B1A1A;margin-bottom:12px;font-family:monospace;font-size:12px;white-space:pre-wrap;"></div>
 <div id="sx-calendar" style="height:78vh;min-height:640px;background:#fff;border:1px solid #DDD;"></div>
 
+{{-- Import map pins one preact + signals@1 across all Schedule-X imports. Prevents esm.sh from pulling @preact/signals@2.x which transitively drags in experimental preact@11 and breaks hooks. --}}
+<script type="importmap">
+{
+    "imports": {
+        "preact":               "https://esm.sh/preact@10.19.3",
+        "preact/":              "https://esm.sh/preact@10.19.3/",
+        "@preact/signals":      "https://esm.sh/@preact/signals@1.3.0?deps=preact@10.19.3",
+        "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.6.0"
+    }
+}
+</script>
+
 <script type="module">
 const showError = (msg) => {
     const el = document.getElementById('sx-error');
@@ -36,16 +48,19 @@ window.addEventListener('error',           e => showError('JS error: ' + e.messa
 window.addEventListener('unhandledrejection', e => showError('Promise reject: ' + (e.reason?.message || e.reason)));
 
 try {
+    // Schedule-X 2.15 is the last release before @preact/signals@2 bump — compatible with preact@10 pinned above.
+    // ?external=... tells esm.sh to NOT bundle its own preact/signals — uses the importmap versions instead.
+    const ext = '?external=preact,@preact/signals,@preact/signals-core';
     const [
         { createCalendar, viewDay, viewWeek, viewMonthGrid, viewMonthAgenda },
         { createDragAndDropPlugin },
         { createEventsServicePlugin },
         { createCurrentTimePlugin },
     ] = await Promise.all([
-        import('https://esm.sh/@schedule-x/calendar@2.36'),
-        import('https://esm.sh/@schedule-x/drag-and-drop@2.36'),
-        import('https://esm.sh/@schedule-x/events-service@2.36'),
-        import('https://esm.sh/@schedule-x/current-time@2.36'),
+        import('https://esm.sh/@schedule-x/calendar@2.15.0'       + ext),
+        import('https://esm.sh/@schedule-x/drag-and-drop@2.15.0'  + ext),
+        import('https://esm.sh/@schedule-x/events-service@2.15.0' + ext),
+        import('https://esm.sh/@schedule-x/current-time@2.15.0'   + ext),
     ]);
 
     const csrf = '{{ csrf_token() }}';
