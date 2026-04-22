@@ -32,12 +32,18 @@
 <div class="sheet">
     <header class="brand">DESNIPPERAAR</header>
 
-    <section class="hero">
+    <section class="hero" style="position:relative;">
         <div style="font-family:'Courier New',monospace;font-size:9pt;letter-spacing:0.14em;text-transform:uppercase;color:#555;margin-bottom:4px;">
             {{ ucfirst($bon->mode) }}bon
         </div>
         <h1 style="font-weight:900;font-size:22pt;margin-bottom:6px;">Afhaalbewijs</h1>
         <div class="num">{{ $bon->bon_number }}</div>
+        @isset($qrDataUri)
+            <div style="position:absolute;top:8mm;right:14mm;text-align:center;">
+                <img src="{{ $qrDataUri }}" alt="QR — download bon" style="width:25mm;height:25mm;display:block;">
+                <div style="font-size:7pt;color:#555;margin-top:2px;letter-spacing:0.05em;">Scan voor PDF</div>
+            </div>
+        @endisset
     </section>
 
     <section class="meta">

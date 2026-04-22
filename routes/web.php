@@ -10,6 +10,11 @@ Route::get('/', function () {
 Route::get('/offerte/{token}',         [\App\Http\Controllers\QuoteAcceptController::class, 'show'])->name('quote.show');
 Route::post('/offerte/{token}/accept', [\App\Http\Controllers\QuoteAcceptController::class, 'accept'])->name('quote.accept');
 
+// Public bon PDF download via signed URL — QR code on the printed bon points here.
+Route::get('/b/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'publicPdf'])
+    ->middleware('signed')
+    ->name('bons.public-pdf');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/customers',          [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create',   [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');

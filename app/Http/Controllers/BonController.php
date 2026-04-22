@@ -7,9 +7,15 @@ use App\Models\Invoice;
 use App\Models\Bon;
 use App\Models\Driver;
 use App\Models\Seal;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class BonController extends Controller
 {
@@ -177,7 +183,31 @@ class BonController extends Controller
     public function pdf(Bon $bon)
     {
         $bon->load(['order.customer', 'driver', 'seals']);
-        return view('bons.pdf', compact('bon'));
+        $qrDataUri = $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]));
+        return view('bons.pdf', compact('bon', 'qrDataUri'));
+    }
+
+    public function publicPdf(Bon $bon)
+    {
+        $bon->load(['order.customer', 'driver', 'seals']);
+        $qrDataUri = $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]));
+        $pdf = Pdf::loadView('bons.pdf', compact('bon', 'qrDataUri'))->setPaper('a4');
+        return $pdf->download("bon-{$bon->bon_number}.pdf");
+    }
+
+    private function qrDataUri(string $payload): string
+    {
+        $result = (new Builder(
+            writer: new SvgWriter(),
+            writerOptions: [],
+            validateResult: false,
+            data: $payload,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            size: 200,
+            margin: 4,
+        ))->build();
+        return 'data:' . $result->getMimeType() . ';base64,' . base64_encode($result->getString());
     }
 
     public function signature(Bon $bon, string $role)
