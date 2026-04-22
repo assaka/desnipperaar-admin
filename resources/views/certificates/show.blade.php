@@ -95,6 +95,9 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $hasPaperMethod = str_contains($method, 'P-4') || str_contains($method, 'P-5') || str_contains($method, 'P-6');
+                @endphp
                 <tr class="border-b">
                     <td class="py-2 px-3">Papier / dossiers</td>
                     <td class="text-right py-2 px-3 font-mono">
@@ -103,7 +106,8 @@
                     </td>
                     <td class="py-2 px-3 font-mono">
                         @foreach (['P-4', 'P-5', 'P-6'] as $m)
-                            <span class="{{ str_contains($method, $m) ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
+                            @php $on = str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod); @endphp
+                            <span class="{{ $on ? 'bg-yellow-400 text-black font-bold px-1' : 'text-gray-400' }}">{{ $m }}</span>
                         @endforeach
                     </td>
                 </tr>

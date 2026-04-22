@@ -80,8 +80,9 @@
     $mediaInt    = fn($k) => (int) ($mediaSource[$k] ?? 0);
     $method      = strtoupper((string) $certificate->destruction_method);
 
+    $hasPaperMethod = str_contains($method, 'P-4') || str_contains($method, 'P-5') || str_contains($method, 'P-6');
     $paperMethods = ['P-4' => str_contains($method, 'P-4'),
-                     'P-5' => str_contains($method, 'P-5'),
+                     'P-5' => str_contains($method, 'P-5') || !$hasPaperMethod,   // P-5 is the standard default
                      'P-6' => str_contains($method, 'P-6')];
     $hddMethods   = ['H-3' => str_contains($method, 'H-3'),
                      'H-4' => str_contains($method, 'H-4'),
