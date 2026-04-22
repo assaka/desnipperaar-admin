@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OrderCreated extends Mailable
+class QuoteRequested extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -23,7 +23,7 @@ class OrderCreated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
+            subject: "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -36,7 +36,7 @@ class OrderCreated extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.order-created',
+            view: 'emails.quote-requested',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

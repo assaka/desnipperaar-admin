@@ -10,6 +10,9 @@ class Order extends Model
 {
     use HasFactory;
 
+    const TYPE_DIRECT        = 'direct';
+    const TYPE_QUOTE         = 'quote';
+
     const STATE_NIEUW        = 'nieuw';
     const STATE_BEVESTIGD    = 'bevestigd';
     const STATE_OPGEHAALD    = 'opgehaald';
@@ -18,6 +21,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
+        'type',
         'customer_id',
         'created_by_user_id',
         'customer_name',

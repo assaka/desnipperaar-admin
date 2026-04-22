@@ -21,7 +21,12 @@
         <tbody>
             @forelse ($orders as $order)
                 <tr class="border-b hover:bg-yellow-50">
-                    <td class="py-2 font-mono"><a href="{{ route('orders.show', $order) }}">{{ $order->order_number }}</a></td>
+                    <td class="py-2 font-mono">
+                        <a href="{{ route('orders.show', $order) }}">{{ $order->order_number }}</a>
+                        @if ($order->type === 'quote')
+                            <span class="ml-1 bg-orange-200 text-orange-900 px-1 text-xs font-bold uppercase">offerte</span>
+                        @endif
+                    </td>
                     <td>{{ $order->customer_name }}</td>
                     <td>{{ $order->customer_postcode }}</td>
                     <td>{{ $order->delivery_mode }}</td>

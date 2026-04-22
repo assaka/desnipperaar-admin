@@ -1,10 +1,11 @@
 @component('emails._layout', ['title' => 'Bevestiging '.$order->order_number])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Bedankt — wij hebben uw aanvraag ontvangen.</h1>
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Bedankt voor uw opdracht.</h1>
 
 <p>Beste {{ explode(' ', $order->customer_name)[0] }},</p>
 
-<p>Uw ordernummer is <strong style="font-family:monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.
-We nemen binnen één werkdag contact met u op om de ophaling in te plannen.</p>
+<p>Hierbij de bevestiging van uw opdracht. Uw ordernummer is
+<strong style="font-family:monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.
+We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Leveringsmethode</td>
