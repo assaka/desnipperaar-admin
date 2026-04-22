@@ -22,104 +22,113 @@
     @endif
 </div>
 
+<div id="sx-error" style="display:none;padding:12px;background:#FDECEC;border-left:4px solid #D32F2F;color:#8B1A1A;margin-bottom:12px;font-family:monospace;font-size:12px;white-space:pre-wrap;"></div>
 <div id="sx-calendar" style="height:78vh;min-height:640px;background:#fff;border:1px solid #DDD;"></div>
 
 <script type="module">
-import { createCalendar, viewDay, viewWeek, viewMonthGrid, viewMonthAgenda } from 'https://esm.sh/@schedule-x/calendar@2';
-import { createDragAndDropPlugin } from 'https://esm.sh/@schedule-x/drag-and-drop@2';
-import { createEventsServicePlugin } from 'https://esm.sh/@schedule-x/events-service@2';
-import { createCurrentTimePlugin } from 'https://esm.sh/@schedule-x/current-time@2';
-
-const csrf = '{{ csrf_token() }}';
-const calendars = @json($calendars, JSON_UNESCAPED_UNICODE);
-
-// Fetch a ~1-year window around today for initial events.
-const today = new Date();
-const start = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-const end   = new Date(today.getFullYear(), today.getMonth() + 6, 0);
-const fmt = d => d.toISOString().slice(0, 10);
-
-const res = await fetch(`{{ route('planning.events') }}?start=${fmt(start)}&end=${fmt(end)}`);
-const events = await res.json();
-
-const eventsService = createEventsServicePlugin();
-
-const windowFromIso = (isoStart) => {
-    // 'YYYY-MM-DD HH:mm' or 'YYYY-MM-DD'
-    if (!isoStart.includes(' ')) return 'flexibel';
-    const h = parseInt(isoStart.slice(11, 13), 10);
-    if (h < 12) return 'ochtend';
-    if (h < 17) return 'middag';
-    return 'avond';
+const showError = (msg) => {
+    const el = document.getElementById('sx-error');
+    el.textContent = String(msg);
+    el.style.display = 'block';
+    console.error('[planning]', msg);
 };
+window.addEventListener('error',           e => showError('JS error: ' + e.message));
+window.addEventListener('unhandledrejection', e => showError('Promise reject: ' + (e.reason?.message || e.reason)));
 
-const calendar = createCalendar({
-    locale: 'nl-NL',
-    firstDayOfWeek: 1,
-    views: [viewDay, viewWeek, viewMonthGrid, viewMonthAgenda],
-    defaultView: viewWeek.name,
-    dayBoundaries: { start: '07:00', end: '21:00' },
-    events,
-    calendars,
-    plugins: [
-        eventsService,
-        createDragAndDropPlugin(15),
-        createCurrentTimePlugin(),
-    ],
-    callbacks: {
-        onEventClick(ev) {
-            if (ev._orderUrl) window.location.href = ev._orderUrl;
+try {
+    const [
+        { createCalendar, viewDay, viewWeek, viewMonthGrid, viewMonthAgenda },
+        { createDragAndDropPlugin },
+        { createEventsServicePlugin },
+        { createCurrentTimePlugin },
+    ] = await Promise.all([
+        import('https://esm.sh/@schedule-x/calendar@2.36'),
+        import('https://esm.sh/@schedule-x/drag-and-drop@2.36'),
+        import('https://esm.sh/@schedule-x/events-service@2.36'),
+        import('https://esm.sh/@schedule-x/current-time@2.36'),
+    ]);
+
+    const csrf = '{{ csrf_token() }}';
+    const calendars = @json($calendars);
+
+    const today = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    const start = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    const end   = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+
+    const res = await fetch(`{{ route('planning.events') }}?start=${fmt(start)}&end=${fmt(end)}`, {
+        headers: { 'Accept': 'application/json' },
+    });
+    if (!res.ok) throw new Error('Events feed: HTTP ' + res.status);
+    const events = await res.json();
+
+    const windowFromIso = (isoStart) => {
+        if (!isoStart || !isoStart.includes(' ')) return 'flexibel';
+        const h = parseInt(isoStart.slice(11, 13), 10);
+        if (h < 12) return 'ochtend';
+        if (h < 17) return 'middag';
+        return 'avond';
+    };
+
+    const eventsService = createEventsServicePlugin();
+
+    const calendar = createCalendar({
+        locale: 'nl-NL',
+        firstDayOfWeek: 1,
+        views: [viewDay, viewWeek, viewMonthGrid, viewMonthAgenda],
+        defaultView: viewWeek.name,
+        dayBoundaries: { start: '07:00', end: '21:00' },
+        events,
+        calendars,
+        plugins: [eventsService, createDragAndDropPlugin(15), createCurrentTimePlugin()],
+        callbacks: {
+            onEventClick(ev) {
+                if (ev._orderUrl) window.location.href = ev._orderUrl;
+            },
+            async onEventUpdate(ev) {
+                if (ev._type !== 'confirmed') return;
+
+                const newDate   = (ev.start || '').slice(0, 10);
+                const newWindow = windowFromIso(ev.start);
+                const original  = events.find(e => e.id === ev.id);
+                if (!original) return;
+                const oldDate   = original.start.slice(0, 10);
+                const oldWindow = original._window;
+
+                if (newDate === oldDate && newWindow === oldWindow) return;
+
+                if (!confirm(`Verplaatsen naar ${newDate} (${newWindow})?\nKlant krijgt een nieuwe bevestigingsmail.`)) {
+                    eventsService.update(original);
+                    return;
+                }
+
+                try {
+                    const r = await fetch(`{{ route('planning.move') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ order_id: ev._orderId, pickup_date: newDate, window: newWindow }),
+                    });
+                    if (!r.ok) throw new Error(await r.text());
+                    const data = await r.json();
+                    if (data.error) alert(data.error);
+                    const idx = events.findIndex(e => e.id === ev.id);
+                    if (idx >= 0) events[idx] = { ...events[idx], start: ev.start, end: ev.end, _window: newWindow };
+                } catch (err) {
+                    alert('Fout bij verplaatsen: ' + err.message);
+                    eventsService.update(original);
+                }
+            },
         },
-        async onEventUpdate(ev) {
-            // ev has new start/end after drag-drop
-            if (ev._type !== 'confirmed') {
-                // Schedule-X should prevent this via editable:false, but be defensive
-                eventsService.update(events.find(e => e.id === ev.id));
-                return;
-            }
+    });
 
-            const newDate   = ev.start.slice(0, 10);
-            const newWindow = windowFromIso(ev.start);
-            const original  = events.find(e => e.id === ev.id);
-            const oldDate   = original.start.slice(0, 10);
-            const oldWindow = original._window;
-
-            if (newDate === oldDate && newWindow === oldWindow) {
-                return; // nothing effective changed
-            }
-
-            if (!confirm(`Verplaatsen naar ${newDate} (${newWindow})?\nKlant krijgt een nieuwe bevestigingsmail.`)) {
-                eventsService.update(original);
-                return;
-            }
-
-            try {
-                const r = await fetch(`{{ route('planning.move') }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ order_id: ev._orderId, pickup_date: newDate, window: newWindow }),
-                });
-                if (!r.ok) throw new Error(await r.text());
-                const data = await r.json();
-                if (data.error) alert(data.error);
-                // Update local event record so next drag has the latest "old" values
-                const idx = events.findIndex(e => e.id === ev.id);
-                if (idx >= 0) { events[idx] = { ...events[idx], start: ev.start, end: ev.end, _window: newWindow }; }
-            } catch (err) {
-                alert('Fout bij verplaatsen: ' + err.message);
-                eventsService.update(original);
-            }
-        },
-    },
-});
-
-// Schedule-X v2: lock proposal events as read-only via pre-render hook.
-// (The drag handler also bails on _type !== 'confirmed' as a belt + suspenders.)
-calendar.render(document.getElementById('sx-calendar'));
+    calendar.render(document.getElementById('sx-calendar'));
+} catch (err) {
+    showError('Init: ' + (err?.stack || err?.message || err));
+}
 </script>
 
 <style>
