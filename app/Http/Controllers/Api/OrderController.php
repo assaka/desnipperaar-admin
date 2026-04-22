@@ -43,9 +43,10 @@ class OrderController extends Controller
         ]);
 
         // Postcode extraction — from "plaats" field which may contain city+postcode.
+        // Capture digits + letters separately so we keep the full NL format (e.g. 1034AB).
         $postcode = null;
-        if (preg_match('/\b(\d{4})\s?[A-Za-z]{0,2}\b/', $data['plaats'] ?? '', $m)) {
-            $postcode = $m[1] . (isset($m[2]) ? $m[2] : '');
+        if (preg_match('/\b(\d{4})\s?([A-Za-z]{0,2})\b/', $data['plaats'] ?? '', $m)) {
+            $postcode = $m[1] . strtoupper($m[2] ?? '');
         }
         $numeric = (int) substr($postcode ?? '', 0, 4);
         $pilot   = $numeric >= config('desnipperaar.pilot.postcode_start')
