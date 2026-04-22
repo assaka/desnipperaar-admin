@@ -39,7 +39,7 @@ class CertificateController extends Controller
             'certificate_number' => Certificate::generateCertificateNumber(),
             'order_id'           => $order->id,
             'destroyed_at'       => now(),
-            'destruction_method' => 'DIN 66399 H-4',
+            'destruction_method' => 'DIN 66399 P-5 / H-4',
             'operator_name'      => $request->user()->name,
         ]);
 
