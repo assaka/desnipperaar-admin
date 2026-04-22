@@ -139,12 +139,25 @@ class OrderController extends Controller
         $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate', 'invoices']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
         $availableTransitions = $this->nextStates($order->state);
-        $quote = \App\Support\Pricing::quote(
-            $order->box_count,
-            $order->container_count,
-            (bool) $order->pilot,
-            (bool) $order->first_box_free,
-        );
+
+        $mediaPrices = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
+        $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+
+        $buildQuote = function ($boxes, $containers, $media) use ($order, $mediaPrices, $mediaLabels) {
+            $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
+            foreach ((array) $media as $k => $qty) {
+                $qty = (int) $qty;
+                if ($qty > 0 && isset($mediaPrices[$k])) {
+                    $q['lines'][] = ['label' => $mediaLabels[$k], 'qty' => $qty, 'unit' => $mediaPrices[$k], 'subtotal' => $mediaPrices[$k] * $qty];
+                }
+            }
+            $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
+            $q['vat']      = round($q['subtotal'] * 0.21, 2);
+            $q['total']    = round($q['subtotal'] + $q['vat'], 2);
+            return $q;
+        };
+
+        $quote = $buildQuote($order->box_count, $order->container_count, $order->media_items ?? []);
         $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
 
         // If a bon exists with actuals that differ from the order, also compute the actual quote.
@@ -155,11 +168,16 @@ class OrderController extends Controller
         if ($bonWithActuals) {
             $boxes = $bonWithActuals->actual_boxes ?? $order->box_count;
             $cntrs = $bonWithActuals->actual_containers ?? $order->container_count;
-            if ($boxes !== $order->box_count || $cntrs !== $order->container_count) {
-                $actualQuote = \App\Support\Pricing::quote(
-                    (int) $boxes, (int) $cntrs,
-                    (bool) $order->pilot, (bool) $order->first_box_free,
-                );
+            $media = !empty($bonWithActuals->actual_media) ? $bonWithActuals->actual_media : ($order->media_items ?? []);
+
+            $orderedMediaInt = array_map('intval', (array) ($order->media_items ?? []));
+            $actualMediaInt  = array_map('intval', (array) $media);
+            ksort($orderedMediaInt); ksort($actualMediaInt);
+
+            if ((int) $boxes !== (int) $order->box_count
+                || (int) $cntrs !== (int) $order->container_count
+                || $orderedMediaInt !== $actualMediaInt) {
+                $actualQuote = $buildQuote($boxes, $cntrs, $media);
             }
         }
 

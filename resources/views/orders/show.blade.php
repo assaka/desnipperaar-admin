@@ -29,7 +29,7 @@
         <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
     @endif
 
-    <section class="grid grid-cols-2 gap-6 mb-6">
+    <section class="mb-6">
         <div>
             <h2 class="font-black mb-2">Klant</h2>
             @if ($order->customer?->company)
@@ -61,17 +61,9 @@
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
             @endif
         </div>
-        <div>
-            <h2 class="font-black mb-2">Order</h2>
-            <div class="text-sm">
-                <div><strong>Leveringsmethode:</strong> {{ ucfirst($order->delivery_mode) }}service</div>
-                <div><strong>Dozen:</strong> {{ $order->box_count }}</div>
-                <div><strong>Rolcontainers:</strong> {{ $order->container_count }}</div>
-                @if ($order->notes)
-                    <div class="mt-2 italic">{{ $order->notes }}</div>
-                @endif
-            </div>
-        </div>
+        @if ($order->notes)
+            <div class="mt-3 text-sm italic text-gray-700">{{ $order->notes }}</div>
+        @endif
     </section>
 
     @if ($order->type === 'quote')
