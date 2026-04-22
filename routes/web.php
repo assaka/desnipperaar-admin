@@ -22,6 +22,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pricing/quote', [\App\Http\Controllers\PricingController::class, 'quote'])->name('pricing.quote');
 
     Route::get('/offertes', [\App\Http\Controllers\OrderController::class, 'offertes'])->name('offertes.index');
+
+    Route::get('/invoices',                          [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/{invoice}',                [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{invoice}/pdf',            [\App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
+    Route::post('/invoices/{invoice}/mail',          [\App\Http\Controllers\InvoiceController::class, 'mail'])->name('invoices.mail');
+    Route::post('/invoices/{invoice}/mark-paid',     [\App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [\App\Http\Controllers\OrderController::class, 'store'])->name('orders.store');

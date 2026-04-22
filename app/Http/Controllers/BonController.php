@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\BonSigned;
+use App\Models\Invoice;
 use App\Models\Bon;
 use App\Models\Driver;
 use App\Models\Seal;
@@ -83,6 +84,8 @@ class BonController extends Controller
         }
 
         $bon->update($patch);
+        // Order quantities are intentionally NOT synced — Order = frozen bestelling,
+        // Bon.actual_* = frozen werkelijkheid. Invoice reads from bon.
 
         if (array_key_exists('seals', $data)) {
             $bon->seals()->delete();
@@ -118,6 +121,15 @@ class BonController extends Controller
             } catch (\Throwable $e) {
                 report($e);
                 session()->flash('warning', 'Bon opgeslagen maar mail kon niet worden verstuurd: ' . $e->getMessage());
+            }
+
+            // Auto-generate a draft invoice based on the signed bon's actuals.
+            if (!Invoice::where('bon_id', $bon->id)->exists()) {
+                try {
+                    Invoice::fromBon($bon->fresh());
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
 

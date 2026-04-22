@@ -184,6 +184,12 @@ class OrderController extends Controller
             'pickup_date'   => $data['pickup_date'],
             'pickup_window' => $data['pickup_window'],
             'state'         => Order::STATE_BEVESTIGD,
+            'public_token'  => $order->public_token ?: Str::random(40),
+            // Any pending reschedule request is resolved by a new confirmation.
+            'reschedule_requested_at'     => null,
+            'reschedule_requested_date'   => null,
+            'reschedule_requested_window' => null,
+            'reschedule_notes'            => null,
         ]);
 
         try {

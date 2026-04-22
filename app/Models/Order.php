@@ -49,6 +49,11 @@ class Order extends Model
         'quote_accepted_at',
         'quote_acceptance_ip',
         'quote_token',
+        'public_token',
+        'reschedule_requested_at',
+        'reschedule_requested_date',
+        'reschedule_requested_window',
+        'reschedule_notes',
     ];
 
     protected $casts = [
@@ -62,6 +67,8 @@ class Order extends Model
         'quoted_amount_excl_btw' => 'decimal:2',
         'box_count' => 'integer',
         'container_count' => 'integer',
+        'reschedule_requested_at'   => 'datetime',
+        'reschedule_requested_date' => 'date',
     ];
 
     public function customer()

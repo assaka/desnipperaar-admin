@@ -73,8 +73,18 @@
             </select>
         </section>
 
-        <section>
+        <section x-data="{
+            expBoxes: {{ $bon->order->box_count }},
+            expCont:  {{ $bon->order->container_count }},
+            actBoxes: {{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) ?: 0 }},
+            actCont:  {{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) ?: 0 }},
+            get diff() { return this.actBoxes !== this.expBoxes || this.actCont !== this.expCont; }
+        }">
             <h2 class="font-black mb-3">Werkelijk opgehaald</h2>
+            <div x-show="diff" x-cloak class="bg-orange-100 border-l-4 border-orange-500 text-orange-900 px-3 py-2 mb-3 font-bold text-sm flex items-center gap-2">
+                <span style="font-size:18px;">⚠</span>
+                <span>Werkelijk opgehaald wijkt af van bestelling — deze aantallen staan op de factuur.</span>
+            </div>
             <p class="text-xs text-gray-500 mb-2">Pas aan als de klant meer of minder aanbood dan besteld. Besteld is voorgevuld.</p>
             @php
                 $mediaCatalog = ['hdd'=>['label'=>'HDD','price'=>9], 'ssd'=>['label'=>'SSD / NVMe','price'=>15], 'usb'=>['label'=>'USB / SD','price'=>6], 'phone'=>['label'=>'Telefoon / tablet','price'=>12], 'laptop'=>['label'=>'Laptop','price'=>19]];
@@ -83,13 +93,15 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-bold">Dozen <span class="text-xs font-normal text-gray-500">(besteld: {{ $bon->order->box_count }})</span></label>
-                    <input type="number" min="0" name="actual_boxes"
-                           value="{{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) }}" class="w-full border p-2">
+                    <input type="number" min="0" name="actual_boxes" x-model.number="actBoxes"
+                           :class="actBoxes !== expBoxes ? 'border-orange-500 border-2 bg-orange-50' : ''"
+                           class="w-full border p-2">
                 </div>
                 <div>
                     <label class="block text-sm font-bold">Rolcontainers <span class="text-xs font-normal text-gray-500">(besteld: {{ $bon->order->container_count }})</span></label>
-                    <input type="number" min="0" name="actual_containers"
-                           value="{{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) }}" class="w-full border p-2">
+                    <input type="number" min="0" name="actual_containers" x-model.number="actCont"
+                           :class="actCont !== expCont ? 'border-orange-500 border-2 bg-orange-50' : ''"
+                           class="w-full border p-2">
                 </div>
             </div>
             <div class="grid grid-cols-5 gap-2 mt-3">
