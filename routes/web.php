@@ -6,6 +6,10 @@ Route::get('/', function () {
     return redirect('/orders');
 });
 
+// Public offerte-accept (no auth) — token-gated.
+Route::get('/offerte/{token}',         [\App\Http\Controllers\QuoteAcceptController::class, 'show'])->name('quote.show');
+Route::post('/offerte/{token}/accept', [\App\Http\Controllers\QuoteAcceptController::class, 'accept'])->name('quote.accept');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/customers',          [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create',   [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');
@@ -23,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}', [\App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/transition', [\App\Http\Controllers\OrderController::class, 'transition'])->name('orders.transition');
     Route::post('/orders/{order}/mail', [\App\Http\Controllers\OrderController::class, 'mail'])->name('orders.mail');
+    Route::post('/orders/{order}/send-quote', [\App\Http\Controllers\OrderController::class, 'sendQuote'])->name('orders.send-quote');
 
     Route::get('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'show'])->name('bons.show');
     Route::patch('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'update'])->name('bons.update');

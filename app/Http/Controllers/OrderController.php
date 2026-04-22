@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
+use App\Mail\QuoteSent;
 use App\Models\Bon;
 use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -147,6 +149,33 @@ class OrderController extends Controller
         abort_unless(in_array($to, $this->nextStates($order->state)), 422, 'Invalid transition');
         $order->update(['state' => $to]);
         return back();
+    }
+
+    public function sendQuote(Request $request, Order $order)
+    {
+        abort_unless($order->type === Order::TYPE_QUOTE, 422, 'Only quote-type orders can have a quote sent.');
+
+        $data = $request->validate([
+            'quoted_amount_excl_btw' => 'required|numeric|min:0|max:999999.99',
+            'quote_body'             => 'required|string|max:10000',
+            'quote_valid_until'      => 'nullable|date|after:today',
+        ]);
+
+        $order->update([
+            'quoted_amount_excl_btw' => $data['quoted_amount_excl_btw'],
+            'quote_body'             => $data['quote_body'],
+            'quote_valid_until'      => $data['quote_valid_until'] ?? now()->addDays(30)->toDateString(),
+            'quote_token'            => $order->quote_token ?? Str::random(64),
+            'quote_sent_at'          => now(),
+        ]);
+
+        try {
+            Mail::to($order->customer_email)->send(new QuoteSent($order));
+            return back()->with('status', "Offerte verzonden naar {$order->customer_email}.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['mail' => 'Kon offerte niet versturen: ' . $e->getMessage()]);
+        }
     }
 
     public function mail(Request $request, Order $order)

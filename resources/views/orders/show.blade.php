@@ -63,6 +63,39 @@
         </div>
     </section>
 
+    @if ($order->type === 'quote')
+        <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
+            <h2 class="font-black mb-3">Offerte op maat</h2>
+            @if ($order->quote_accepted_at)
+                <div class="bg-green-100 border border-green-400 px-3 py-2 mb-3 text-sm">
+                    ✓ Geaccepteerd op {{ $order->quote_accepted_at->format('d-m-Y H:i') }} vanaf IP {{ $order->quote_acceptance_ip }}.
+                </div>
+                <div class="text-sm">
+                    Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw
+                    (€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }} incl.)
+                </div>
+            @elseif ($order->quote_sent_at)
+                <div class="text-sm mb-3">
+                    Offerte verzonden op {{ $order->quote_sent_at->format('d-m-Y H:i') }}.
+                    @if ($order->quote_valid_until)
+                        Geldig tot {{ $order->quote_valid_until->format('d-m-Y') }}
+                        @if ($order->isQuoteExpired()) <span class="text-red-700 font-bold">(VERLOPEN)</span> @endif.
+                    @endif
+                </div>
+                <div class="text-sm">
+                    Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw.
+                    <br>Publieke link: <a href="{{ route('quote.show', $order->quote_token) }}" target="_blank" class="underline font-mono text-xs">{{ route('quote.show', $order->quote_token) }}</a>
+                </div>
+                <details class="mt-3">
+                    <summary class="text-xs underline cursor-pointer">Offerte bijwerken en opnieuw versturen</summary>
+                    @include('orders._quote_form')
+                </details>
+            @else
+                @include('orders._quote_form')
+            @endif
+        </section>
+    @endif
+
     @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht</h2>
