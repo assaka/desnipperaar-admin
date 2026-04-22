@@ -27,7 +27,9 @@
 </style>
 </head>
 <body>
-<div class="toolbar"><button onclick="window.print()">Printen / opslaan als PDF</button></div>
+@unless ($renderingForPdf ?? false)
+    <div class="toolbar"><button onclick="window.print()">Printen / opslaan als PDF</button></div>
+@endunless
 
 <div class="sheet">
     <header class="brand">DESNIPPERAAR</header>

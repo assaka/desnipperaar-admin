@@ -187,14 +187,16 @@ class BonController extends Controller
     {
         $bon->load(['order.customer', 'driver', 'seals']);
         [$customerSigDataUri, $driverSigDataUri] = $this->signatureDataUris($bon);
-        return view('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri'));
+        $renderingForPdf = false;
+        return view('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri', 'renderingForPdf'));
     }
 
     public function publicPdf(Bon $bon)
     {
         $bon->load(['order.customer', 'driver', 'seals']);
         [$customerSigDataUri, $driverSigDataUri] = $this->signatureDataUris($bon);
-        $pdf = Pdf::loadView('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri'))->setPaper('a4');
+        $renderingForPdf = true;
+        $pdf = Pdf::loadView('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri', 'renderingForPdf'))->setPaper('a4');
         return $pdf->download("bon-{$bon->bon_number}.pdf");
     }
 
