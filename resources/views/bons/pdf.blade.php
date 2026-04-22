@@ -54,15 +54,18 @@
         $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
     @endphp
 
-    <section class="meta">
+    <section class="meta" style="grid-template-columns:1fr;">
         <div>
             <h3>Klant</h3>
             <div class="row"><span class="k">Naam</span><span class="v">{{ $bon->order->customer_name }}</span></div>
             <div class="row"><span class="k">Adres</span><span class="v">{{ $bon->order->customer_address }}, {{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</span></div>
             <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
         </div>
-        <div>
-            <h3>Inhoud</h3>
+    </section>
+
+    <section class="content">
+        <h3>Inhoud</h3>
+        <div style="margin-bottom:6mm;">
             <div class="row"><span class="k">Dozen</span><span class="v">{{ $actBoxes }}</span></div>
             <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $actCont }}</span></div>
             @foreach ($mediaLabels as $k => $label)
@@ -71,9 +74,7 @@
                 @endif
             @endforeach
         </div>
-    </section>
 
-    <section class="content">
         <h3>Chauffeur</h3>
         <div>{{ $bon->driver_name_snapshot ?? '—' }} &middot; rijbewijs <span style="font-family:monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>
 
