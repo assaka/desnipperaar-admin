@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RescheduleRequested;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class RescheduleController extends Controller
 {
@@ -33,6 +35,17 @@ class RescheduleController extends Controller
             'reschedule_requested_window' => $data['new_window'],
             'reschedule_notes'            => $data['notes'] ?? null,
         ]);
+
+        try {
+            $admin = $order->senderUser();
+            $mail  = Mail::to($order->customer_email);
+            if ($admin?->email && strcasecmp($admin->email, $order->customer_email) !== 0) {
+                $mail->cc($admin->email);
+            }
+            $mail->send(new RescheduleRequested($order->fresh(), $admin));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return view('public.reschedule-received', compact('order'));
     }
