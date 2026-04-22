@@ -73,15 +73,39 @@ class OrderController extends Controller
             }
         }
 
+        // Persist/update the customer record so they appear in the admin klanten-lijst.
+        $customer = Customer::firstOrCreate(
+            ['email' => strtolower(trim($data['email']))],
+            [
+                'name'     => $data['naam'],
+                'company'  => $data['bedrijf'] ?? null,
+                'phone'    => $data['telefoon'],
+                'address'  => $data['adres']   ?? null,
+                'postcode' => $postcode,
+                'city'     => $data['stad']    ?? null,
+                'branche'  => $data['branche'] ?? null,
+            ]
+        );
+        // On subsequent orders, fill in any missing details we did not have before.
+        $customer->fill(array_filter([
+            'company'  => $customer->company  ?: ($data['bedrijf'] ?? null),
+            'phone'    => $customer->phone    ?: $data['telefoon'],
+            'address'  => $customer->address  ?: ($data['adres'] ?? null),
+            'postcode' => $customer->postcode ?: $postcode,
+            'city'     => $customer->city     ?: ($data['stad'] ?? null),
+            'branche'  => $customer->branche  ?: ($data['branche'] ?? null),
+        ]))->save();
+
         $order = Order::create([
             'order_number'       => Order::generateOrderNumber(),
+            'customer_id'        => $customer->id,
             'customer_name'      => $data['naam'],
             'customer_email'     => $data['email'],
             'customer_phone'     => $data['telefoon'],
             'customer_address'   => $data['adres'] ?? null,
             'customer_postcode'  => $postcode,
             'customer_city'      => $data['stad']   ?? $data['plaats'] ?? null,
-            'customer_reference' => null,
+            'customer_reference' => $customer->reference,
             'delivery_mode'      => $mode,
             'box_count'          => (int) ($data['boxes']      ?? 0),
             'container_count'    => (int) ($data['containers'] ?? 0),

@@ -32,6 +32,9 @@
     <section class="grid grid-cols-2 gap-6 mb-6">
         <div>
             <h2 class="font-black mb-2">Klant</h2>
+            @if ($order->customer?->company)
+                <div class="font-bold">{{ $order->customer->company }}</div>
+            @endif
             <div>
                 @if ($order->customer)
                     <a href="{{ route('customers.show', $order->customer) }}" class="underline">{{ $order->customer_name }}</a>
