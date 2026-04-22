@@ -32,6 +32,14 @@
             <h2 class="font-black mb-2">Inhoud (verwacht)</h2>
             <div>Dozen: <strong>{{ $bon->order->box_count }}</strong></div>
             <div>Rolcontainers: <strong>{{ $bon->order->container_count }}</strong></div>
+            @php
+                $mediaLabelsInhoud = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+            @endphp
+            @foreach ($mediaLabelsInhoud as $k => $label)
+                @if (!empty($bon->order->media_items[$k]))
+                    <div>{{ $label }}: <strong>{{ (int) $bon->order->media_items[$k] }}</strong></div>
+                @endif
+            @endforeach
             @if ($bon->order->pickup_date)
                 <div class="mt-1 text-sm">Gewenst: {{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
             @endif
