@@ -117,11 +117,7 @@ class OrderController extends Controller
             'first_box_free'     => $this->isKennismakingEligible($data),
         ]);
 
-        Bon::create([
-            'bon_number' => Bon::generateBonNumber(),
-            'order_id'   => $order->id,
-            'mode'       => $order->delivery_mode,
-        ]);
+        // Bon is intentionally NOT created here — it's only created once admin plans the pickup.
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order));

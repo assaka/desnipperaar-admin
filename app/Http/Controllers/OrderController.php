@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
+use App\Mail\PickupConfirmed;
 use App\Mail\QuoteSent;
 use App\Models\Bon;
 use App\Models\Customer;
+use App\Models\Driver;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -119,28 +122,8 @@ class OrderController extends Controller
             'first_box_free'     => (bool) ($validated['first_box_free'] ?? false),
         ]);
 
-        $driver = !empty($validated['driver_id'])
-            ? \App\Models\Driver::find($validated['driver_id'])
-            : null;
-
-        $bon = Bon::create([
-            'bon_number' => Bon::generateBonNumber(),
-            'order_id'   => $order->id,
-            'mode'       => $order->delivery_mode,
-            'driver_id'  => $driver?->id,
-            'driver_name_snapshot' => $driver?->name,
-            'driver_license_last4' => $driver?->license_last4,
-        ]);
-
-        // Copy driver's stored signature onto the bon so it's pre-filled at pickup.
-        if ($driver && $driver->signature_path) {
-            $copy = "signatures/bon-{$bon->id}-driver.png";
-            \Illuminate\Support\Facades\Storage::disk('local')->put(
-                $copy,
-                \Illuminate\Support\Facades\Storage::disk('local')->get($driver->signature_path)
-            );
-            $bon->update(['driver_signature_path' => $copy]);
-        }
+        // Bon is NOT created here — created during the "Plan ophaling" step.
+        // (The driver_id field on the form, if any, is saved in notes for the planner.)
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order, $request->user()));
@@ -154,6 +137,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate']);
+        $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
         $availableTransitions = $this->nextStates($order->state);
         $quote = \App\Support\Pricing::quote(
             $order->box_count,
@@ -162,7 +146,54 @@ class OrderController extends Controller
             (bool) $order->first_box_free,
         );
         $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
-        return view('orders.show', compact('order', 'availableTransitions', 'quote', 'hasSignedBon'));
+        return view('orders.show', compact('order', 'availableTransitions', 'quote', 'hasSignedBon', 'drivers'));
+    }
+
+    public function confirmPickup(Request $request, Order $order)
+    {
+        $data = $request->validate([
+            'driver_id'     => 'required|exists:drivers,id',
+            'pickup_date'   => 'required|date|after_or_equal:today',
+            'pickup_window' => 'required|in:ochtend,middag,avond,flexibel',
+        ]);
+
+        $driver = Driver::findOrFail($data['driver_id']);
+        $bon    = $order->bons()->orderBy('id')->first();
+
+        if (!$bon) {
+            $bon = Bon::create([
+                'bon_number' => Bon::generateBonNumber(),
+                'order_id'   => $order->id,
+                'mode'       => $order->delivery_mode,
+            ]);
+        }
+
+        $bonPatch = [
+            'driver_id'            => $driver->id,
+            'driver_name_snapshot' => $driver->name,
+            'driver_license_last4' => $driver->license_last4,
+        ];
+        if ($driver->signature_path && empty($bon->driver_signature_path)) {
+            $copy = "signatures/bon-{$bon->id}-driver.png";
+            Storage::disk('local')->put($copy, Storage::disk('local')->get($driver->signature_path));
+            $bonPatch['driver_signature_path'] = $copy;
+        }
+        $bon->update($bonPatch);
+
+        $order->update([
+            'pickup_date'   => $data['pickup_date'],
+            'pickup_window' => $data['pickup_window'],
+            'state'         => Order::STATE_BEVESTIGD,
+        ]);
+
+        try {
+            Mail::to($order->customer_email)
+                ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));
+            return back()->with('status', "Ophaling gepland en bevestigingsmail verstuurd naar {$order->customer_email}.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['mail' => 'Planning opgeslagen maar mail kon niet worden verstuurd: ' . $e->getMessage()]);
+        }
     }
 
     public function transition(Request $request, Order $order)
@@ -220,7 +251,7 @@ class OrderController extends Controller
     private function nextStates(string $current): array
     {
         return match ($current) {
-            Order::STATE_NIEUW       => [Order::STATE_BEVESTIGD],
+            Order::STATE_NIEUW       => [],  // use Plan ophaling form instead
             Order::STATE_BEVESTIGD   => [Order::STATE_OPGEHAALD],
             Order::STATE_OPGEHAALD   => [Order::STATE_VERNIETIGD],
             Order::STATE_VERNIETIGD  => [Order::STATE_AFGESLOTEN],

@@ -125,6 +125,47 @@
         </section>
     @endif
 
+    @if ($order->state === 'nieuw')
+        <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <h2 class="font-black mb-3">Plan ophaling &amp; bevestig aan klant</h2>
+            <form method="POST" action="{{ route('orders.confirm-pickup', $order) }}">
+                @csrf
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-bold">Chauffeur *</label>
+                        <select name="driver_id" required class="w-full border p-2">
+                            <option value="">— kies —</option>
+                            @foreach ($drivers as $driver)
+                                <option value="{{ $driver->id }}">
+                                    {{ $driver->name }} (****{{ $driver->license_last4 }})
+                                    @if (!$driver->signature_path) — geen sig @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold">Ophaaldatum *</label>
+                        <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
+                               value="{{ $order->pickup_date?->format('Y-m-d') }}" class="w-full border p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold">Dagdeel *</label>
+                        <select name="pickup_window" required class="w-full border p-2">
+                            <option value="flexibel" @selected($order->pickup_window==='flexibel')>Flexibel</option>
+                            <option value="ochtend"  @selected($order->pickup_window==='ochtend')>Ochtend (08:00–12:00)</option>
+                            <option value="middag"   @selected($order->pickup_window==='middag')>Middag (12:00–17:00)</option>
+                            <option value="avond"    @selected($order->pickup_window==='avond')>Avond (17:00–20:00)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="mt-3 bg-black text-yellow-400 px-4 py-2 font-bold uppercase">
+                    Plan &amp; bevestig aan klant
+                </button>
+                <p class="text-xs text-gray-600 mt-2">Maakt een bon met de chauffeur (handtekening vooraf ingevuld als zijn profiel er een heeft) en stuurt een bevestigingsmail naar de klant met datum + dagdeel.</p>
+            </form>
+        </section>
+    @endif
+
     <section class="mb-6">
         <h2 class="font-black mb-2">Acties</h2>
         <div class="flex gap-2 flex-wrap items-center">

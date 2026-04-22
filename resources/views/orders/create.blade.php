@@ -132,14 +132,8 @@
                         Eerste doos gratis
                     </label>
                 </div>
-                <div class="col-span-3">
-                    <label class="block text-sm font-bold">Chauffeur toewijzen</label>
-                    <select name="driver_id" class="w-full border p-2">
-                        <option value="">— later toewijzen —</option>
-                        @foreach ($drivers as $driver)
-                            <option value="{{ $driver->id }}">{{ $driver->name }} (****{{ $driver->license_last4 }})</option>
-                        @endforeach
-                    </select>
+                <div class="col-span-3 text-xs text-gray-500 italic">
+                    Chauffeur + ophaaldatum komen in de volgende stap (Plan ophaling) op het order-detail.
                 </div>
             </div>
             <div class="mt-3">

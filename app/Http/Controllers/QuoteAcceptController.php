@@ -36,13 +36,7 @@ class QuoteAcceptController extends Controller
             'type'                 => Order::TYPE_DIRECT,
         ]);
 
-        if (!$order->bons()->exists()) {
-            Bon::create([
-                'bon_number' => Bon::generateBonNumber(),
-                'order_id'   => $order->id,
-                'mode'       => $order->delivery_mode,
-            ]);
-        }
+        // Bon is NOT created on accept — admin will plan the pickup and create the bon then.
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order));
