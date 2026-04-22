@@ -20,6 +20,7 @@
             @auth
                 <nav class="text-sm font-normal">
                     <a href="{{ route('orders.index') }}" class="mr-4">Orders</a>
+                    <a href="{{ route('offertes.index') }}" class="mr-4">Offertes</a>
                     <a href="{{ route('customers.index') }}" class="mr-4">Klanten</a>
                     <a href="{{ route('drivers.index') }}">Chauffeurs</a>
                 </nav>

@@ -15,8 +15,20 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('customer')->orderByDesc('id')->paginate(25);
+        $orders = Order::with('customer')
+            ->where('type', Order::TYPE_DIRECT)
+            ->orderByDesc('id')
+            ->paginate(25);
         return view('orders.index', compact('orders'));
+    }
+
+    public function offertes()
+    {
+        $offertes = Order::with('customer')
+            ->where('type', Order::TYPE_QUOTE)
+            ->orderByDesc('id')
+            ->paginate(25);
+        return view('offertes.index', compact('offertes'));
     }
 
     public function create(Request $request)
