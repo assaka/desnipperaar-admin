@@ -87,11 +87,69 @@
             <textarea name="notes" rows="3" class="w-full border p-2">{{ old('notes', $bon->notes) }}</textarea>
         </section>
 
+        <section>
+            <h2 class="font-black mb-3">Handtekeningen</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Klant — {{ $bon->order->customer_name }}</label>
+                    @if ($bon->customer_signature_path)
+                        <div class="border border-green-600 bg-green-50 p-2 text-center">
+                            <img src="{{ route('bons.signature', ['bon' => $bon, 'role' => 'customer']) }}" alt="klant-handtekening" style="max-height:120px;margin:0 auto;display:block;">
+                            <div class="text-xs text-green-800 mt-1 font-bold uppercase">✓ Getekend</div>
+                        </div>
+                        <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-cust-wrap').style.display='block';this.style.display='none';">Opnieuw tekenen</button>
+                    @endif
+                    <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
+                        <canvas id="sig-customer" class="border border-black bg-white" width="400" height="140" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                        <div class="flex gap-2 mt-1">
+                            <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">Wissen</button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="customer_signature" id="sig-customer-data">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Chauffeur — {{ $bon->driver_name_snapshot ?? 'nog niet toegewezen' }}</label>
+                    @if ($bon->driver_signature_path)
+                        <div class="border border-green-600 bg-green-50 p-2 text-center">
+                            <img src="{{ route('bons.signature', ['bon' => $bon, 'role' => 'driver']) }}" alt="chauffeur-handtekening" style="max-height:120px;margin:0 auto;display:block;">
+                            <div class="text-xs text-green-800 mt-1 font-bold uppercase">✓ Getekend</div>
+                        </div>
+                        <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-driv-wrap').style.display='block';this.style.display='none';">Opnieuw tekenen</button>
+                    @endif
+                    <div id="sig-driv-wrap" style="{{ $bon->driver_signature_path ? 'display:none;' : '' }}">
+                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="140" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                        <div class="flex gap-2 mt-1">
+                            <button type="button" class="text-xs underline" onclick="sigDriver.clear()">Wissen</button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="driver_signature" id="sig-driver-data">
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Zodra de klant-handtekening en ophaaltijd zijn ingevuld, gaat automatisch de getekende bon als PDF per e-mail naar de klant.</p>
+        </section>
+
         <div class="border-t pt-4 flex gap-3">
-            <button class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bon bijwerken</button>
+            <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bon bijwerken &amp; mailen</button>
             @if ($bon->picked_up_at)
                 <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="px-4 py-2 border font-bold uppercase underline">Print PDF</a>
             @endif
         </div>
     </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>
+    <script>
+    (function () {
+        var cCanvas = document.getElementById('sig-customer');
+        var dCanvas = document.getElementById('sig-driver');
+        if (!cCanvas || !dCanvas) return;
+        window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
+        window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
+
+        var form = cCanvas.closest('form');
+        form.addEventListener('submit', function () {
+            if (!sigCustomer.isEmpty()) document.getElementById('sig-customer-data').value = sigCustomer.toDataURL('image/png');
+            if (!sigDriver.isEmpty())   document.getElementById('sig-driver-data').value   = sigDriver.toDataURL('image/png');
+        });
+    })();
+    </script>
 @endsection

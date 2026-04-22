@@ -29,10 +29,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/transition', [\App\Http\Controllers\OrderController::class, 'transition'])->name('orders.transition');
     Route::post('/orders/{order}/mail', [\App\Http\Controllers\OrderController::class, 'mail'])->name('orders.mail');
     Route::post('/orders/{order}/send-quote', [\App\Http\Controllers\OrderController::class, 'sendQuote'])->name('orders.send-quote');
+    Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');
 
     Route::get('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'show'])->name('bons.show');
     Route::patch('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'update'])->name('bons.update');
     Route::get('/bons/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'pdf'])->name('bons.pdf');
+    Route::get('/bons/{bon}/signature/{role}', [\App\Http\Controllers\BonController::class, 'signature'])
+        ->where('role', 'customer|driver')->name('bons.signature');
 
     Route::post('/orders/{order}/certificate', [\App\Http\Controllers\CertificateController::class, 'generate'])->name('certificates.generate');
     Route::post('/certificates/{certificate}/mail', [\App\Http\Controllers\CertificateController::class, 'mail'])->name('certificates.mail');
