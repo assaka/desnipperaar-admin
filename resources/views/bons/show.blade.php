@@ -38,9 +38,21 @@
         </div>
     </section>
 
+    @php $locked = $bon->picked_up_at && $bon->customer_signature_path; @endphp
+
+    @if ($locked)
+        <div class="bg-green-100 border border-green-600 text-green-900 px-3 py-3 mb-4 flex justify-between items-center">
+            <div class="text-sm">
+                <strong>Bon is bevestigd &amp; getekend op {{ $bon->picked_up_at->format('d-m-Y H:i') }}.</strong>
+                Alle velden zijn vergrendeld voor audit-integriteit.
+            </div>
+            <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold no-underline">Bekijk PDF</a>
+        </div>
+    @endif
+
     @if (count($orderedQuote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
-            <h2 class="font-black mb-2">Prijsoverzicht
+            <h2 class="font-black mb-2">Origineel prijsoverzicht
                 @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
             </h2>
             <table class="w-full text-sm">
@@ -95,18 +107,6 @@
                 </p>
             </section>
         @endif
-    @endif
-
-    @php $locked = $bon->picked_up_at && $bon->customer_signature_path; @endphp
-
-    @if ($locked)
-        <div class="bg-green-100 border border-green-600 text-green-900 px-3 py-3 mb-4 flex justify-between items-center">
-            <div class="text-sm">
-                <strong>Bon is bevestigd &amp; getekend op {{ $bon->picked_up_at->format('d-m-Y H:i') }}.</strong>
-                Alle velden zijn vergrendeld voor audit-integriteit.
-            </div>
-            <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold no-underline">Bekijk PDF</a>
-        </div>
     @endif
 
     <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4"
