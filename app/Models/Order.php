@@ -97,6 +97,11 @@ class Order extends Model
         return $this->hasOne(Certificate::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function isQuoteExpired(): bool
     {
         return $this->quote_valid_until && $this->quote_valid_until->isPast();

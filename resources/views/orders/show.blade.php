@@ -251,6 +251,36 @@
     </section>
     @endif
 
+    @if ($order->invoices->count())
+        <section class="mb-6">
+            <h2 class="font-black mb-2">Factuur</h2>
+            @foreach ($order->invoices as $inv)
+                @php
+                    $statusColor = match($inv->status) {
+                        'draft' => 'bg-gray-400 text-white',
+                        'sent'  => $inv->due_at->isPast() ? 'bg-red-700 text-white' : 'bg-yellow-400 text-black',
+                        'paid'  => 'bg-green-700 text-white',
+                        'canceled' => 'bg-gray-700 text-white',
+                        default => 'bg-gray-300 text-gray-700',
+                    };
+                @endphp
+                <div class="border-l-4 border-yellow-400 pl-3 py-2 mb-2 flex justify-between items-baseline">
+                    <div>
+                        <a href="{{ route('invoices.show', $inv) }}" class="font-mono underline">{{ $inv->invoice_number }}</a>
+                        <span class="ml-2 inline-block px-2 py-0.5 text-xs font-bold uppercase {{ $statusColor }}">{{ $inv->status }}</span>
+                        <div class="text-sm">
+                            € {{ number_format($inv->amount_incl_btw, 2, ',', '.') }} incl. btw ·
+                            {{ $inv->issued_at->format('Y-m-d') }} · vervalt {{ $inv->due_at->format('Y-m-d') }}
+                            @if ($inv->sent_at) · verzonden {{ $inv->sent_at->format('Y-m-d H:i') }}@endif
+                            @if ($inv->paid_at) · betaald {{ $inv->paid_at->format('Y-m-d') }}@endif
+                        </div>
+                    </div>
+                    <a href="{{ route('invoices.pdf', $inv) }}" target="_blank" class="text-xs underline">PDF →</a>
+                </div>
+            @endforeach
+        </section>
+    @endif
+
     @if ($order->certificate || $hasSignedBon)
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>

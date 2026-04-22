@@ -136,7 +136,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate']);
+        $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate', 'invoices']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
         $availableTransitions = $this->nextStates($order->state);
         $quote = \App\Support\Pricing::quote(
