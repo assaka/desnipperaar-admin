@@ -43,7 +43,18 @@
                     {{ $order->customer_name }}
                 @endif
             </div>
-            <div><a href="mailto:{{ $order->customer_email }}" class="underline">{{ $order->customer_email }}</a></div>
+            <div class="flex items-center gap-2" x-data="{open:false,addr:'{{ $order->customer_email }}'}">
+                <a href="mailto:{{ $order->customer_email }}" class="underline">{{ $order->customer_email }}</a>
+                <form method="POST" action="{{ route('orders.mail', $order) }}" class="inline flex items-center gap-2">
+                    @csrf
+                    <button type="button" @click="open=!open"
+                            class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold">✉ Mail</button>
+                    <div x-show="open" x-cloak class="flex gap-1 items-center">
+                        <input type="email" name="to" x-model="addr" class="border p-1 text-xs w-44">
+                        <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Verstuur</button>
+                    </div>
+                </form>
+            </div>
             <div>{{ $order->customer_phone }}</div>
             <div class="mt-2 text-sm">{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</div>
             @if ($order->customer_reference)
@@ -56,12 +67,6 @@
                 <div><strong>Leveringsmethode:</strong> {{ ucfirst($order->delivery_mode) }}service</div>
                 <div><strong>Dozen:</strong> {{ $order->box_count }}</div>
                 <div><strong>Rolcontainers:</strong> {{ $order->container_count }}</div>
-                @if ($order->pickup_date)
-                    <div class="mt-2 p-2 bg-yellow-50 border-l-4 border-yellow-400">
-                        <strong>Ophaaldatum:</strong> {{ $order->pickup_date->format('l d F Y') }}
-                        @if ($order->pickup_window) ({{ $order->pickup_window }}) @endif
-                    </div>
-                @endif
                 @if ($order->notes)
                     <div class="mt-2 italic">{{ $order->notes }}</div>
                 @endif
@@ -125,71 +130,66 @@
         </section>
     @endif
 
-    @if ($order->state === 'nieuw')
-        <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <h2 class="font-black mb-3">Plan ophaling &amp; bevestig aan klant</h2>
-            <form method="POST" action="{{ route('orders.confirm-pickup', $order) }}">
-                @csrf
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-sm font-bold">Chauffeur *</label>
-                        <select name="driver_id" required class="w-full border p-2">
-                            <option value="">— kies —</option>
-                            @foreach ($drivers as $driver)
-                                <option value="{{ $driver->id }}">
-                                    {{ $driver->name }} (****{{ $driver->license_last4 }})
-                                    @if (!$driver->signature_path) — geen sig @endif
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold">Ophaaldatum *</label>
-                        <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
-                               value="{{ $order->pickup_date?->format('Y-m-d') }}" class="w-full border p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold">Dagdeel *</label>
-                        <select name="pickup_window" required class="w-full border p-2">
-                            <option value="flexibel" @selected($order->pickup_window==='flexibel')>Flexibel</option>
-                            <option value="ochtend"  @selected($order->pickup_window==='ochtend')>Ochtend (08:00–12:00)</option>
-                            <option value="middag"   @selected($order->pickup_window==='middag')>Middag (12:00–17:00)</option>
-                            <option value="avond"    @selected($order->pickup_window==='avond')>Avond (17:00–20:00)</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="mt-3 bg-black text-yellow-400 px-4 py-2 font-bold uppercase">
-                    Plan &amp; bevestig aan klant
-                </button>
-                <p class="text-xs text-gray-600 mt-2">Maakt een bon met de chauffeur (handtekening vooraf ingevuld als zijn profiel er een heeft) en stuurt een bevestigingsmail naar de klant met datum + dagdeel.</p>
-            </form>
-        </section>
-    @endif
-
-    <section class="mb-6">
-        <h2 class="font-black mb-2">Acties</h2>
-        <div class="flex gap-2 flex-wrap items-center">
-            @foreach ($availableTransitions as $to)
-                <form method="POST" action="{{ route('orders.transition', $order) }}">
-                    @csrf
-                    <input type="hidden" name="to" value="{{ $to }}">
-                    <button class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">→ {{ $to }}</button>
-                </form>
-            @endforeach
-
-            <form method="POST" action="{{ route('orders.mail', $order) }}" class="flex gap-2 items-center"
-                  x-data="{open:false,addr:'{{ $order->customer_email }}'}">
-                @csrf
-                <button type="button" @click="open=!open"
-                        class="bg-gray-200 text-black px-3 py-2 text-xs uppercase font-bold">✉ Mail bevestiging</button>
-                <div x-show="open" x-cloak class="flex gap-2 items-center">
-                    <input type="email" name="to" x-model="addr" class="border p-1 text-sm" placeholder="{{ $order->customer_email }}">
-                    <button class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">Verstuur</button>
-                </div>
-            </form>
+    <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' ? 'true' : 'false' }} }">
+        <div class="flex justify-between items-baseline mb-3">
+            <h2 class="font-black">Geplande ophaling</h2>
+            @if ($order->state !== 'nieuw')
+                <button type="button" @click="editing = !editing" class="text-xs underline"
+                        x-text="editing ? 'Annuleren' : 'Wijzig planning'"></button>
+            @endif
         </div>
+
+        @if ($order->pickup_date && !$order->bons->whereNull('picked_up_at')->isEmpty() || $order->state !== 'nieuw')
+            <div x-show="!editing" x-cloak class="text-sm">
+                @php $firstBon = $order->bons->first(); @endphp
+                <div><strong>Datum:</strong> {{ $order->pickup_date?->format('l d F Y') ?? '—' }}
+                    @if ($order->pickup_window) ({{ $order->pickup_window }}@switch($order->pickup_window)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch)@endif
+                </div>
+                <div><strong>Chauffeur:</strong> {{ $firstBon?->driver_name_snapshot ?? '—' }}
+                    @if ($firstBon?->driver_license_last4) <span class="font-mono text-xs">(****{{ $firstBon->driver_license_last4 }})</span>@endif
+                </div>
+                <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
+            </div>
+        @endif
+
+        <form x-show="editing" x-cloak method="POST" action="{{ route('orders.confirm-pickup', $order) }}">
+            @csrf
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-sm font-bold">Chauffeur *</label>
+                    <select name="driver_id" required class="w-full border p-2">
+                        <option value="">— kies —</option>
+                        @foreach ($drivers as $driver)
+                            <option value="{{ $driver->id }}" @selected($firstBon?->driver_id === $driver->id)>
+                                {{ $driver->name }} (****{{ $driver->license_last4 }})
+                                @if (!$driver->signature_path) — geen sig @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold">Ophaaldatum *</label>
+                    <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
+                           value="{{ $order->pickup_date?->format('Y-m-d') }}" class="w-full border p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold">Dagdeel *</label>
+                    <select name="pickup_window" required class="w-full border p-2">
+                        <option value="flexibel" @selected($order->pickup_window==='flexibel' || !$order->pickup_window)>Flexibel</option>
+                        <option value="ochtend"  @selected($order->pickup_window==='ochtend')>Ochtend (08:00–12:00)</option>
+                        <option value="middag"   @selected($order->pickup_window==='middag')>Middag (12:00–17:00)</option>
+                        <option value="avond"    @selected($order->pickup_window==='avond')>Avond (17:00–20:00)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="mt-3 bg-black text-yellow-400 px-4 py-2 font-bold uppercase">
+                {{ $order->state === 'nieuw' ? 'Plan & bevestig aan klant' : 'Planning bijwerken & klant mailen' }}
+            </button>
+            <p class="text-xs text-gray-600 mt-2">Maakt (of werkt bij) de bon met de chauffeur + ophaalmoment, en stuurt een bevestigingsmail naar de klant.</p>
+        </form>
     </section>
 
+    @if ($order->state !== 'nieuw')
     <section class="mb-6">
         <h2 class="font-black mb-2">Bons</h2>
         @forelse ($order->bons as $bon)
@@ -213,6 +213,7 @@
             <div class="text-sm text-gray-500">Nog geen bon.</div>
         @endforelse
     </section>
+    @endif
 
     <section>
         <h2 class="font-black mb-2">Certificaat</h2>
