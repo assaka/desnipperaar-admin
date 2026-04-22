@@ -36,8 +36,8 @@
     $mediaLabels = ['hdd' => 'HDD / harde schijf', 'ssd' => 'SSD / NVMe', 'usb' => 'USB-stick / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
 @endphp
 <ul style="font-size:14px;padding-left:20px;">
-    @if ($order->box_count) <li>{{ $order->box_count }} doos/dozen met papier of dossiers</li> @endif
-    @if ($order->container_count) <li>{{ $order->container_count }} rolcontainer(s) 240 L</li> @endif
+    @if ($order->box_count) <li>{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }} met papier of dossiers</li> @endif
+    @if ($order->container_count) <li>{{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }} 240 L</li> @endif
     @foreach ($mediaLabels as $key => $label)
         @if (!empty($order->media_items[$key]))
             <li>{{ (int) $order->media_items[$key] }}× {{ $label }}</li>
