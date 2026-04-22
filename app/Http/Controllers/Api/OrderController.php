@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderCreated;
 use App\Models\Bon;
+use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -84,7 +85,7 @@ class OrderController extends Controller
             'notes'              => $notes ?: null,
             'state'              => Order::STATE_NIEUW,
             'pilot'              => $pilot,
-            'first_box_free'     => (bool) ($data['first_box_free'] ?? false) && $pilot,
+            'first_box_free'     => $this->isKennismakingEligible($data, $pilot),
         ]);
 
         Bon::create([
@@ -102,6 +103,25 @@ class OrderController extends Controller
         return response()->json([
             'ok' => true,
             'order_number' => $order->order_number,
+            'kennismaking_applied' => (bool) $order->first_box_free,
         ], 201);
+    }
+
+    /**
+     * Kennismaking is granted only when:
+     *  - customer requested it (first_box_free flag)
+     *  - postcode is in the Noord pilot
+     *  - the email has not been seen before in any previous Order
+     */
+    private function isKennismakingEligible(array $data, bool $pilot): bool
+    {
+        if (!($data['first_box_free'] ?? false)) return false;
+        if (!$pilot) return false;
+
+        $email = strtolower(trim($data['email']));
+        $customer = Customer::whereRaw('LOWER(email) = ?', [$email])->first();
+        if (!$customer) return true;  // new customer — eligible
+
+        return !$customer->orders()->exists();
     }
 }
