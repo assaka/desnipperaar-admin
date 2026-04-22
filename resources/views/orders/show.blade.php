@@ -109,7 +109,9 @@
 
     @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
-            <h2 class="font-black mb-2">Prijsoverzicht</h2>
+            <h2 class="font-black mb-2">Prijsoverzicht
+                @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
+            </h2>
             <table class="w-full text-sm">
                 @foreach ($quote['lines'] as $line)
                     <tr class="border-b">
@@ -128,6 +130,40 @@
                 </tr>
             </table>
         </section>
+
+        @if ($actualQuote)
+            <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
+                <h2 class="font-black mb-2 flex items-center gap-2">
+                    <span style="color:#E67E22;">⚠</span>
+                    Gecorrigeerd prijsoverzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
+                </h2>
+                <table class="w-full text-sm">
+                    @foreach ($actualQuote['lines'] as $line)
+                        <tr class="border-b">
+                            <td class="py-1">{{ $line['label'] }}</td>
+                            <td class="text-right font-mono">{{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}</td>
+                            <td class="text-right font-bold font-mono">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                    <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
+                        <td class="text-right font-mono pt-2">€ {{ number_format($actualQuote['subtotal'], 2, ',', '.') }}</td></tr>
+                    <tr><td class="text-gray-600">BTW 21%</td><td></td>
+                        <td class="text-right font-mono">€ {{ number_format($actualQuote['vat'], 2, ',', '.') }}</td></tr>
+                    <tr class="border-t-2 border-black">
+                        <td class="pt-2 font-bold">Totaal incl. BTW</td><td></td>
+                        <td class="pt-2 text-right font-bold text-lg font-mono">€ {{ number_format($actualQuote['total'], 2, ',', '.') }}</td>
+                    </tr>
+                </table>
+                @php $delta = $actualQuote['total'] - $quote['total']; @endphp
+                <p class="text-sm mt-3">
+                    <strong>Verschil:</strong>
+                    <span class="font-mono {{ $delta > 0 ? 'text-red-700' : 'text-green-700' }} font-bold">
+                        {{ $delta > 0 ? '+' : '' }}€ {{ number_format($delta, 2, ',', '.') }}
+                    </span>
+                    {{ $delta > 0 ? 'meer dan besteld' : 'minder dan besteld' }}.
+                </p>
+            </section>
+        @endif
     @endif
 
     @php $firstBon = $order->bons->first(); @endphp

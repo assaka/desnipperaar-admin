@@ -123,10 +123,18 @@ class BonController extends Controller
                 session()->flash('warning', 'Bon opgeslagen maar mail kon niet worden verstuurd: ' . $e->getMessage());
             }
 
-            // Auto-generate a draft invoice based on the signed bon's actuals.
+            // Auto-generate invoice from signed bon's actuals.
+            // Also auto-send if company details are filled (not TBD placeholders).
             if (!Invoice::where('bon_id', $bon->id)->exists()) {
                 try {
-                    Invoice::fromBon($bon->fresh());
+                    $invoice = Invoice::fromBon($bon->fresh());
+                    $kvk = (string) config('desnipperaar.company.kvk', '');
+                    $isReady = $kvk !== '' && !str_contains($kvk, 'TBD') && !str_contains($kvk, '[');
+                    if ($isReady) {
+                        Mail::to($invoice->customer_email)
+                            ->send(new \App\Mail\InvoiceSent($invoice, $request->user()));
+                        $invoice->update(['status' => Invoice::STATUS_SENT, 'sent_at' => now()]);
+                    }
                 } catch (\Throwable $e) {
                     report($e);
                 }

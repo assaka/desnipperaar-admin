@@ -146,7 +146,24 @@ class OrderController extends Controller
             (bool) $order->first_box_free,
         );
         $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
-        return view('orders.show', compact('order', 'availableTransitions', 'quote', 'hasSignedBon', 'drivers'));
+
+        // If a bon exists with actuals that differ from the order, also compute the actual quote.
+        $actualQuote = null;
+        $bonWithActuals = $order->bons->first(fn ($b) =>
+            $b->actual_boxes !== null || $b->actual_containers !== null || !empty($b->actual_media)
+        );
+        if ($bonWithActuals) {
+            $boxes = $bonWithActuals->actual_boxes ?? $order->box_count;
+            $cntrs = $bonWithActuals->actual_containers ?? $order->container_count;
+            if ($boxes !== $order->box_count || $cntrs !== $order->container_count) {
+                $actualQuote = \App\Support\Pricing::quote(
+                    (int) $boxes, (int) $cntrs,
+                    (bool) $order->pilot, (bool) $order->first_box_free,
+                );
+            }
+        }
+
+        return view('orders.show', compact('order', 'availableTransitions', 'quote', 'hasSignedBon', 'drivers', 'actualQuote'));
     }
 
     public function confirmPickup(Request $request, Order $order)
