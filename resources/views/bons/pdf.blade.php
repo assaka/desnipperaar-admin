@@ -61,6 +61,11 @@
             <div class="row"><span class="k">Adres</span><span class="v">{{ $bon->order->customer_address }}, {{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</span></div>
             <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
         </div>
+        <div style="margin-top:6mm;">
+            <h3>Chauffeur</h3>
+            <div class="row"><span class="k">Naam</span><span class="v">{{ $bon->driver_name_snapshot ?? '—' }}</span></div>
+            <div class="row"><span class="k">Identificatie</span><span class="v">rijbewijs <span style="font-family:monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></span></div>
+        </div>
     </section>
 
     <section class="content">
@@ -74,9 +79,6 @@
                 @endif
             @endforeach
         </div>
-
-        <h3>Chauffeur</h3>
-        <div>{{ $bon->driver_name_snapshot ?? '—' }} &middot; rijbewijs <span style="font-family:monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>
 
         @if ($bon->seals->count())
             <div style="margin-top:6mm;">

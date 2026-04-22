@@ -176,7 +176,7 @@
             </div>
             <div class="text-sm">
                 <div><strong>Voorgesteld:</strong>
-                    {{ $order->reschedule_requested_date?->format('l d F Y') }}
+                    {{ $order->reschedule_requested_date ? ucfirst($order->reschedule_requested_date->locale('nl')->translatedFormat('l d F Y')) : '' }}
                     ({{ $order->reschedule_requested_window }})</div>
                 @if ($order->reschedule_notes)
                     <div class="mt-1 italic">"{{ $order->reschedule_notes }}"</div>
@@ -197,7 +197,7 @@
 
         @if ($order->state !== 'nieuw')
             <div x-show="!editing" x-cloak class="text-sm">
-                <div><strong>Datum:</strong> {{ $order->pickup_date?->format('l d F Y') ?? '—' }}
+                <div><strong>Datum:</strong> {{ $order->pickup_date ? ucfirst($order->pickup_date->locale('nl')->translatedFormat('l d F Y')) : '—' }}
                     @if ($order->pickup_window) ({{ $order->pickup_window }}@switch($order->pickup_window)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch)@endif
                 </div>
                 <div><strong>Chauffeur:</strong> {{ $firstBon?->driver_name_snapshot ?? '—' }}

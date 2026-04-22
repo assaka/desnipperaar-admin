@@ -33,7 +33,7 @@
             <div>Dozen: <strong>{{ $bon->order->box_count }}</strong></div>
             <div>Rolcontainers: <strong>{{ $bon->order->container_count }}</strong></div>
             @if ($bon->order->pickup_date)
-                <div class="mt-1 text-sm">Gewenst: {{ $bon->order->pickup_date->format('l d F Y') }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
+                <div class="mt-1 text-sm">Gewenst: {{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
             @endif
         </div>
         <div>
@@ -55,10 +55,66 @@
         </div>
     @endif
 
-    @if (count($orderedQuote['lines']))
+    @php
+        $expMedia  = $bon->order->media_items ?? [];
+        $actMedia  = !empty($bon->actual_media) ? $bon->actual_media : $expMedia;
+        $mediaKeys = ['hdd','ssd','usb','phone','laptop'];
+    @endphp
+
+    <div x-data="{
+        expBoxes: {{ $bon->order->box_count }},
+        expCont:  {{ $bon->order->container_count }},
+        expMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + ($expMedia ?: [])) }},
+        actBoxes: {{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) ?: 0 }},
+        actCont:  {{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) ?: 0 }},
+        actMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + array_map('intval', $actMedia ?: [])) }},
+        pilot: {{ $bon->order->pilot ? 'true' : 'false' }},
+        firstBoxFree: {{ $bon->order->first_box_free ? 'true' : 'false' }},
+        orderedTotal: {{ $orderedQuote['total'] }},
+        get diff() {
+            if ((this.actBoxes|0) !== this.expBoxes) return true;
+            if ((this.actCont|0)  !== this.expCont)  return true;
+            for (const k of Object.keys(this.expMedia)) {
+                if ((this.actMedia[k]|0) !== (this.expMedia[k]|0)) return true;
+            }
+            return false;
+        },
+        get liveQuote() {
+            const boxes = this.actBoxes|0, cont = this.actCont|0;
+            const bFirst = this.pilot ? 24 : 30, bNext = this.pilot ? 20 : 25;
+            const cFirst = this.pilot ? 96 : 120, cNext = this.pilot ? 36 : 45;
+            const mPrices = {hdd:9, ssd:15, usb:6, phone:12, laptop:19};
+            const mLabels = {hdd:'HDD', ssd:'SSD / NVMe', usb:'USB / SD', phone:'Telefoon / tablet', laptop:'Laptop'};
+            const lines = [];
+            if (boxes > 0) {
+                if (this.firstBoxFree) {
+                    lines.push({label:'Kennismaking — eerste doos', qty:1, unit:0, subtotal:0});
+                    if (boxes >= 2) lines.push({label:'Daarna eerste doos', qty:1, unit:bFirst, subtotal:bFirst});
+                    if (boxes >= 3) lines.push({label:'Volgende dozen', qty:boxes-2, unit:bNext, subtotal:bNext*(boxes-2)});
+                } else {
+                    lines.push({label:'Eerste doos', qty:1, unit:bFirst, subtotal:bFirst});
+                    if (boxes >= 2) lines.push({label:'Volgende dozen', qty:boxes-1, unit:bNext, subtotal:bNext*(boxes-1)});
+                }
+            }
+            if (cont > 0) {
+                lines.push({label:'Eerste rolcontainer 240 L', qty:1, unit:cFirst, subtotal:cFirst});
+                if (cont >= 2) lines.push({label:'Volgende rolcontainers', qty:cont-1, unit:cNext, subtotal:cNext*(cont-1)});
+            }
+            for (const k of Object.keys(mPrices)) {
+                const q = this.actMedia[k]|0;
+                if (q > 0) lines.push({label:mLabels[k], qty:q, unit:mPrices[k], subtotal:mPrices[k]*q});
+            }
+            const subtotal = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
+            const vat      = Math.round(subtotal * 0.21 * 100) / 100;
+            const total    = Math.round((subtotal + vat) * 100) / 100;
+            return {lines, subtotal, vat, total};
+        },
+        fmt(n) { return '€ ' + Number(n).toFixed(2).replace('.', ','); },
+    }">
+        @if (count($orderedQuote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Origineel prijsoverzicht
-                @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
+                <span x-show="diff" x-cloak class="text-xs font-normal text-gray-500">— op basis van bestelling</span>
             </h2>
             <table class="w-full text-sm">
                 @foreach ($orderedQuote['lines'] as $line)
@@ -79,40 +135,37 @@
             </table>
         </section>
 
-        @if ($actualQuote)
-            <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
-                <h2 class="font-black mb-2 flex items-center gap-2">
-                    <span style="color:#E67E22;">⚠</span>
-                    Gecorrigeerd prijsoverzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
-                </h2>
-                <table class="w-full text-sm">
-                    @foreach ($actualQuote['lines'] as $line)
-                        <tr class="border-b">
-                            <td class="py-1">{{ $line['label'] }}</td>
-                            <td class="text-right font-mono">{{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}</td>
-                            <td class="text-right font-bold font-mono">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                    <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                        <td class="text-right font-mono pt-2">€ {{ number_format($actualQuote['subtotal'], 2, ',', '.') }}</td></tr>
-                    <tr><td class="text-gray-600">BTW 21%</td><td></td>
-                        <td class="text-right font-mono">€ {{ number_format($actualQuote['vat'], 2, ',', '.') }}</td></tr>
-                    <tr class="border-t-2 border-black">
-                        <td class="pt-2 font-bold">Totaal incl. BTW</td><td></td>
-                        <td class="pt-2 text-right font-bold text-lg font-mono">€ {{ number_format($actualQuote['total'], 2, ',', '.') }}</td>
+        <section x-show="diff" x-cloak class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
+            <h2 class="font-black mb-2 flex items-center gap-2">
+                <span style="color:#E67E22;">⚠</span>
+                Gecorrigeerd prijsoverzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
+            </h2>
+            <table class="w-full text-sm">
+                <template x-for="(line, i) in liveQuote.lines" :key="i + ':' + line.label">
+                    <tr class="border-b">
+                        <td class="py-1" x-text="line.label"></td>
+                        <td class="text-right font-mono" x-text="line.qty + ' × ' + fmt(line.unit)"></td>
+                        <td class="text-right font-bold font-mono" x-text="fmt(line.subtotal)"></td>
                     </tr>
-                </table>
-                @php $delta = $actualQuote['total'] - $orderedQuote['total']; @endphp
-                <p class="text-sm mt-3">
-                    <strong>Verschil:</strong>
-                    <span class="font-mono {{ $delta > 0 ? 'text-red-700' : 'text-green-700' }} font-bold">
-                        {{ $delta > 0 ? '+' : '' }}€ {{ number_format($delta, 2, ',', '.') }}
-                    </span>
-                    {{ $delta > 0 ? 'meer dan besteld' : 'minder dan besteld' }}.
-                </p>
-            </section>
+                </template>
+                <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
+                    <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotal)"></td></tr>
+                <tr><td class="text-gray-600">BTW 21%</td><td></td>
+                    <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>
+                <tr class="border-t-2 border-black">
+                    <td class="pt-2 font-bold">Totaal incl. BTW</td><td></td>
+                    <td class="pt-2 text-right font-bold text-lg font-mono" x-text="fmt(liveQuote.total)"></td>
+                </tr>
+            </table>
+            <p class="text-sm mt-3">
+                <strong>Verschil:</strong>
+                <span class="font-mono font-bold"
+                      :class="(liveQuote.total - orderedTotal) > 0 ? 'text-red-700' : 'text-green-700'"
+                      x-text="((liveQuote.total - orderedTotal) > 0 ? '+' : '') + fmt(liveQuote.total - orderedTotal)"></span>
+                <span x-text="(liveQuote.total - orderedTotal) > 0 ? ' meer dan besteld.' : ' minder dan besteld.'"></span>
+            </p>
+        </section>
         @endif
-    @endif
 
     <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4"
           {{ $locked ? 'onsubmit=return false' : '' }}>
@@ -137,28 +190,7 @@
             </select>
         </section>
 
-        @php
-            $expMedia  = $bon->order->media_items ?? [];
-            // Empty saved array should still fall back to ordered media — `??` only falls through on null.
-            $actMedia  = !empty($bon->actual_media) ? $bon->actual_media : $expMedia;
-            $mediaKeys = ['hdd','ssd','usb','phone','laptop'];
-        @endphp
-        <section x-data="{
-            expBoxes: {{ $bon->order->box_count }},
-            expCont:  {{ $bon->order->container_count }},
-            expMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + ($expMedia ?: [])) }},
-            actBoxes: {{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) ?: 0 }},
-            actCont:  {{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) ?: 0 }},
-            actMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + array_map('intval', $actMedia ?: [])) }},
-            get diff() {
-                if (this.actBoxes !== this.expBoxes) return true;
-                if (this.actCont !== this.expCont) return true;
-                for (const k of Object.keys(this.expMedia)) {
-                    if ((this.actMedia[k] || 0) !== (this.expMedia[k] || 0)) return true;
-                }
-                return false;
-            }
-        }">
+        <section>
             <h2 class="font-black mb-3">Werkelijk opgehaald</h2>
             <div x-show="diff" x-cloak class="bg-orange-100 border-l-4 border-orange-500 text-orange-900 px-3 py-2 mb-3 font-bold text-sm flex items-center gap-2">
                 <span style="font-size:18px;">⚠</span>
@@ -259,6 +291,7 @@
         </div>
         </fieldset>
     </form>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>
     <script>
