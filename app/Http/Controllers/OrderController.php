@@ -169,9 +169,10 @@ class OrderController extends Controller
     public function confirmPickup(Request $request, Order $order)
     {
         $data = $request->validate([
-            'driver_id'     => 'required|exists:drivers,id',
-            'pickup_date'   => 'required|date|after_or_equal:today',
-            'pickup_window' => 'required|in:ochtend,middag,avond,flexibel',
+            'driver_id'        => 'required|exists:drivers,id',
+            'pickup_date'      => 'required|date|after_or_equal:today',
+            'pickup_window'    => 'required|in:ochtend,middag,avond,flexibel',
+            'duration_minutes' => 'nullable|integer|min:5|max:480',
         ]);
 
         $driver = Driver::findOrFail($data['driver_id']);
@@ -198,10 +199,11 @@ class OrderController extends Controller
         $bon->update($bonPatch);
 
         $order->update([
-            'pickup_date'   => $data['pickup_date'],
-            'pickup_window' => $data['pickup_window'],
-            'state'         => Order::STATE_BEVESTIGD,
-            'public_token'  => $order->public_token ?: Str::random(40),
+            'pickup_date'      => $data['pickup_date'],
+            'pickup_window'    => $data['pickup_window'],
+            'duration_minutes' => $data['duration_minutes'] ?? $order->duration_minutes,
+            'state'            => Order::STATE_BEVESTIGD,
+            'public_token'     => $order->public_token ?: Str::random(40),
             // Any pending reschedule request is resolved by a new confirmation.
             'reschedule_requested_at'     => null,
             'reschedule_requested_date'   => null,

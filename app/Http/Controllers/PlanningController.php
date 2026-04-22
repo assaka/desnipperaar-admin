@@ -151,13 +151,16 @@ class PlanningController extends Controller
             '_address'    => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
         ];
 
+        $duration = (int) ($order->duration_minutes ?? 30);
         if ($window === 'flexibel' || !$window) {
             $event['start'] = $date->toDateString();
             $event['end']   = $date->toDateString();
         } else {
-            [$from, $to]    = self::WINDOW_HOURS[$window];
-            $event['start'] = $date->toDateString() . ' ' . $from;
-            $event['end']   = $date->toDateString() . ' ' . $to;
+            [$from, $to] = self::WINDOW_HOURS[$window];
+            $startTs     = strtotime($date->toDateString() . ' ' . $from);
+            $endTs       = min(strtotime($date->toDateString() . ' ' . $to), $startTs + $duration * 60);
+            $event['start'] = date('Y-m-d H:i', $startTs);
+            $event['end']   = date('Y-m-d H:i', $endTs);
         }
 
         return $event;

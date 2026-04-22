@@ -241,6 +241,14 @@
                     </select>
                 </div>
             </div>
+            <div class="mt-3 grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-sm font-bold">Duur (min) <span class="text-xs font-normal text-gray-500">intern — voor planning</span></label>
+                    <input type="number" name="duration_minutes" min="5" max="480" step="5"
+                           value="{{ old('duration_minutes', $order->duration_minutes ?? 30) }}"
+                           class="w-full border p-2">
+                </div>
+            </div>
             <button class="mt-3 bg-black text-yellow-400 px-4 py-2 font-bold uppercase">
                 {{ $order->state === 'nieuw' ? 'Plan & bevestig aan klant' : 'Planning bijwerken & klant mailen' }}
             </button>

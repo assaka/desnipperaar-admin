@@ -41,6 +41,7 @@ class Order extends Model
         'pilot',
         'pickup_date',
         'pickup_window',
+        'duration_minutes',
         'first_box_free',
         'quoted_amount_excl_btw',
         'quote_body',
@@ -67,6 +68,7 @@ class Order extends Model
         'quoted_amount_excl_btw' => 'decimal:2',
         'box_count' => 'integer',
         'container_count' => 'integer',
+        'duration_minutes' => 'integer',
         'reschedule_requested_at'   => 'datetime',
         'reschedule_requested_date' => 'date',
     ];
