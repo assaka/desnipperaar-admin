@@ -64,7 +64,7 @@ class Invoice extends Model
 
         $boxes      = $bon->actual_boxes      ?? $order->box_count;
         $containers = $bon->actual_containers ?? $order->container_count;
-        $media      = $bon->actual_media      ?? $order->media_items ?? [];
+        $media      = !empty($bon->actual_media) ? $bon->actual_media : ($order->media_items ?? []);
 
         $quote = \App\Support\Pricing::quote(
             (int) $boxes,

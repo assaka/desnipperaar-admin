@@ -138,8 +138,9 @@
         </section>
 
         @php
-            $expMedia = $bon->order->media_items ?? [];
-            $actMedia = $bon->actual_media ?? $bon->order->media_items ?? [];
+            $expMedia  = $bon->order->media_items ?? [];
+            // Empty saved array should still fall back to ordered media — `??` only falls through on null.
+            $actMedia  = !empty($bon->actual_media) ? $bon->actual_media : $expMedia;
             $mediaKeys = ['hdd','ssd','usb','phone','laptop'];
         @endphp
         <section x-data="{
@@ -166,7 +167,7 @@
             <p class="text-xs text-gray-500 mb-2">Pas aan als de klant meer of minder aanbood dan besteld. Besteld is voorgevuld.</p>
             @php
                 $mediaCatalog = ['hdd'=>['label'=>'HDD','price'=>9], 'ssd'=>['label'=>'SSD / NVMe','price'=>15], 'usb'=>['label'=>'USB / SD','price'=>6], 'phone'=>['label'=>'Telefoon / tablet','price'=>12], 'laptop'=>['label'=>'Laptop','price'=>19]];
-                $actualMedia = $bon->actual_media ?? $bon->order->media_items ?? [];
+                $actualMedia = !empty($bon->actual_media) ? $bon->actual_media : ($bon->order->media_items ?? []);
             @endphp
             <div class="grid grid-cols-2 gap-3">
                 <div>

@@ -46,7 +46,8 @@ class BonController extends Controller
 
         $actualBoxes = $bon->actual_boxes ?? $order->box_count;
         $actualCont  = $bon->actual_containers ?? $order->container_count;
-        $actualMedia = $bon->actual_media ?? $order->media_items ?? [];
+        // Empty array fallthrough: `??` only triggers on null, but update() persists actual_media as `[]` when all media were zero.
+        $actualMedia = !empty($bon->actual_media) ? $bon->actual_media : ($order->media_items ?? []);
 
         $orderedMediaInt = array_map('intval', (array) ($order->media_items ?? []));
         $actualMediaInt  = array_map('intval', (array) $actualMedia);
@@ -97,7 +98,13 @@ class BonController extends Controller
             'actual_containers' => $data['actual_containers'] ?? $bon->actual_containers,
         ];
         if (array_key_exists('actual_media', $data) && is_array($data['actual_media'])) {
-            $patch['actual_media'] = array_filter($data['actual_media'], fn ($v) => (int) $v > 0);
+            // Store the full 5-key dict (preserving explicit zeros). Empty-array saves were indistinguishable
+            // from "never saved" and caused media to appear reset to 0 on reload.
+            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop'];
+            $patch['actual_media'] = array_combine(
+                $mediaKeys,
+                array_map(fn ($k) => (int) ($data['actual_media'][$k] ?? 0), $mediaKeys)
+            );
         }
 
         if (!empty($data['driver_id']) && (int) $data['driver_id'] !== (int) $bon->driver_id) {
