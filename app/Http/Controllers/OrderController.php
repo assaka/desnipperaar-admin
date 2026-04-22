@@ -123,7 +123,7 @@ class OrderController extends Controller
             ? \App\Models\Driver::find($validated['driver_id'])
             : null;
 
-        Bon::create([
+        $bon = Bon::create([
             'bon_number' => Bon::generateBonNumber(),
             'order_id'   => $order->id,
             'mode'       => $order->delivery_mode,
@@ -131,6 +131,16 @@ class OrderController extends Controller
             'driver_name_snapshot' => $driver?->name,
             'driver_license_last4' => $driver?->license_last4,
         ]);
+
+        // Copy driver's stored signature onto the bon so it's pre-filled at pickup.
+        if ($driver && $driver->signature_path) {
+            $copy = "signatures/bon-{$bon->id}-driver.png";
+            \Illuminate\Support\Facades\Storage::disk('local')->put(
+                $copy,
+                \Illuminate\Support\Facades\Storage::disk('local')->get($driver->signature_path)
+            );
+            $bon->update(['driver_signature_path' => $copy]);
+        }
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order, $request->user()));
