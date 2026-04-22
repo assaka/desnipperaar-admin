@@ -41,6 +41,13 @@ class Order extends Model
         'pickup_date',
         'pickup_window',
         'first_box_free',
+        'quoted_amount_excl_btw',
+        'quote_body',
+        'quote_sent_at',
+        'quote_valid_until',
+        'quote_accepted_at',
+        'quote_acceptance_ip',
+        'quote_token',
     ];
 
     protected $casts = [
@@ -48,6 +55,10 @@ class Order extends Model
         'pilot' => 'boolean',
         'first_box_free' => 'boolean',
         'pickup_date' => 'date',
+        'quote_sent_at' => 'datetime',
+        'quote_valid_until' => 'date',
+        'quote_accepted_at' => 'datetime',
+        'quoted_amount_excl_btw' => 'decimal:2',
         'box_count' => 'integer',
         'container_count' => 'integer',
     ];
@@ -76,6 +87,11 @@ class Order extends Model
     public function certificate()
     {
         return $this->hasOne(Certificate::class);
+    }
+
+    public function isQuoteExpired(): bool
+    {
+        return $this->quote_valid_until && $this->quote_valid_until->isPast();
     }
 
     public static function generateOrderNumber(): string

@@ -2,14 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Public API — called by the static site form.
+// Direct order (transparent price, customer accepts prijs on submit).
+Route::post('/order', [\App\Http\Controllers\Api\OrderController::class, 'store'])
+    ->middleware('throttle:20,1');
+
+// Custom / maatwerk quote request — admin replies with tailored offer.
 Route::post('/offerte', [\App\Http\Controllers\Api\OfferteController::class, 'store'])
     ->middleware('throttle:20,1');
 
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])
-    ->middleware('throttle:20,1');
-
-Route::post('/offerte-maatwerk', [\App\Http\Controllers\Api\MaatwerkController::class, 'store'])
     ->middleware('throttle:20,1');
 
 // GitHub push-webhook / manual deploy trigger. Auth via DEPLOY_HOOK_SECRET.
