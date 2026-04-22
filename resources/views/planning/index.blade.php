@@ -6,7 +6,7 @@
 
 <div class="flex justify-between items-baseline mb-3">
     <h1 class="text-2xl font-black">Planning</h1>
-    <div class="text-xs text-gray-600">Sleep een bevestigde afspraak — klant krijgt automatisch een nieuwe bevestigingsmail.</div>
+    <div class="text-xs text-gray-600">Sleep een bevestigde afspraak. Na handmatige bevestiging van de verplaatsing gaat er een nieuwe bevestigingsmail naar de klant.</div>
 </div>
 
 <div class="flex gap-4 mb-3 text-sm flex-wrap items-center">
