@@ -43,11 +43,22 @@ class CertificateController extends Controller
             'operator_name'      => $request->user()->name,
         ]);
 
-        if ($order->state !== Order::STATE_AFGESLOTEN) {
-            $order->update(['state' => Order::STATE_VERNIETIGD]);
+        // Auto-send — admin can resend from the show page if it fails.
+        try {
+            Mail::to($order->customer_email)
+                ->send(new CertificateIssued($certificate->fresh()->load('order'), $request->user()));
+            $certificate->update(['emailed_at' => now()]);
+            $order->update(['state' => Order::STATE_AFGESLOTEN]);
+            return redirect()->route('certificates.show', $certificate)
+                ->with('status', "Certificaat {$certificate->certificate_number} gemaakt en verzonden naar {$order->customer_email}.");
+        } catch (\Throwable $e) {
+            report($e);
+            if ($order->state !== Order::STATE_AFGESLOTEN) {
+                $order->update(['state' => Order::STATE_VERNIETIGD]);
+            }
+            return redirect()->route('certificates.show', $certificate)
+                ->withErrors(['mail' => 'Certificaat gemaakt maar mail kon niet worden verstuurd: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('certificates.show', $certificate);
     }
 
     public function mail(Request $request, Certificate $certificate)
