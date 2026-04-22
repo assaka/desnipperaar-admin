@@ -148,6 +148,22 @@ class OrderController extends Controller
         return back();
     }
 
+    public function mail(Request $request, Order $order)
+    {
+        $data = $request->validate([
+            'to' => 'nullable|email',
+        ]);
+        $to = $data['to'] ?? $order->customer_email;
+
+        try {
+            Mail::to($to)->send(new OrderCreated($order, $request->user()));
+            return back()->with('status', "Bevestiging verzonden naar {$to}.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['mail' => 'Kon mail niet versturen: ' . $e->getMessage()]);
+        }
+    }
+
     private function nextStates(string $current): array
     {
         return match ($current) {

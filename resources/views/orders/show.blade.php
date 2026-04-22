@@ -19,6 +19,9 @@
             @foreach ($errors->all() as $err) <div>{{ $err }}</div> @endforeach
         </div>
     @endif
+    @if (session('status'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
+    @endif
 
     <section class="grid grid-cols-2 gap-6 mb-6">
         <div>
@@ -82,7 +85,7 @@
 
     <section class="mb-6">
         <h2 class="font-black mb-2">Acties</h2>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap items-center">
             @foreach ($availableTransitions as $to)
                 <form method="POST" action="{{ route('orders.transition', $order) }}">
                     @csrf
@@ -90,6 +93,17 @@
                     <button class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">→ {{ $to }}</button>
                 </form>
             @endforeach
+
+            <form method="POST" action="{{ route('orders.mail', $order) }}" class="flex gap-2 items-center"
+                  x-data="{open:false,addr:'{{ $order->customer_email }}'}">
+                @csrf
+                <button type="button" @click="open=!open"
+                        class="bg-gray-200 text-black px-3 py-2 text-xs uppercase font-bold">✉ Mail bevestiging</button>
+                <div x-show="open" x-cloak class="flex gap-2 items-center">
+                    <input type="email" name="to" x-model="addr" class="border p-1 text-sm" placeholder="{{ $order->customer_email }}">
+                    <button class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">Verstuur</button>
+                </div>
+            </form>
         </div>
     </section>
 
