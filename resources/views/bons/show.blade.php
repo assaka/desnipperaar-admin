@@ -38,8 +38,22 @@
         </div>
     </section>
 
-    <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4">
+    @php $locked = $bon->picked_up_at && $bon->customer_signature_path; @endphp
+
+    @if ($locked)
+        <div class="bg-green-100 border border-green-600 text-green-900 px-3 py-3 mb-4 flex justify-between items-center">
+            <div class="text-sm">
+                <strong>Bon is bevestigd &amp; getekend op {{ $bon->picked_up_at->format('d-m-Y H:i') }}.</strong>
+                Alle velden zijn vergrendeld voor audit-integriteit.
+            </div>
+            <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold no-underline">Bekijk PDF</a>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('bons.update', $bon) }}" class="space-y-4"
+          {{ $locked ? 'onsubmit=return false' : '' }}>
         @csrf @method('PATCH')
+        <fieldset {{ $locked ? 'disabled' : '' }} class="space-y-4 {{ $locked ? 'opacity-60 pointer-events-none' : '' }}">
 
         @if ($errors->any())
             <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 text-sm">
@@ -129,11 +143,14 @@
         </section>
 
         <div class="border-t pt-4 flex gap-3">
-            <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bevestig &amp; mailen</button>
+            @if (!$locked)
+                <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bevestig &amp; mailen</button>
+            @endif
             @if ($bon->picked_up_at)
                 <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="px-4 py-2 border font-bold uppercase underline">Print PDF</a>
             @endif
         </div>
+        </fieldset>
     </form>
 
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4/dist/signature_pad.umd.min.js"></script>

@@ -21,6 +21,12 @@ class BonController extends Controller
 
     public function update(Request $request, Bon $bon)
     {
+        // Lock: once bon is both picked up AND signed by customer, it becomes immutable.
+        if ($bon->picked_up_at && $bon->customer_signature_path) {
+            return redirect()->route('bons.show', $bon)
+                ->withErrors(['locked' => 'Bon is al bevestigd en getekend — verdere wijzigingen niet toegestaan.']);
+        }
+
         $data = $request->validate([
             'driver_id'           => 'nullable|exists:drivers,id',
             'picked_up_at'        => 'nullable|date',
