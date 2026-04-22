@@ -15,7 +15,10 @@ class CertificateIssued extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Certificate $certificate, public ?User $sender = null) {}
+    public function __construct(public Certificate $certificate, public ?User $sender = null)
+    {
+        $this->sender ??= $certificate->order?->senderUser();
+    }
 
     public function envelope(): Envelope
     {

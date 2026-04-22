@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'customer_id',
+        'created_by_user_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -49,6 +51,17 @@ class Order extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    /** Resolve the user whose name/email should appear as From: on mails about this order. */
+    public function senderUser(): ?User
+    {
+        return $this->createdBy ?? User::orderBy('id')->first();
     }
 
     public function bons()

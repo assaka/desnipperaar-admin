@@ -86,6 +86,7 @@ class OrderController extends Controller
         $order = Order::create([
             'order_number'       => Order::generateOrderNumber(),
             'customer_id'        => $customer->id,
+            'created_by_user_id' => $request->user()?->id,
             'customer_name'      => $customer->name,
             'customer_email'     => $customer->email,
             'customer_phone'     => $customer->phone,
@@ -128,7 +129,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'bons.driver', 'bons.seals', 'certificate']);
+        $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate']);
         $availableTransitions = $this->nextStates($order->state);
         $quote = \App\Support\Pricing::quote(
             $order->box_count,
@@ -156,7 +157,8 @@ class OrderController extends Controller
         $to = $data['to'] ?? $order->customer_email;
 
         try {
-            Mail::to($to)->send(new OrderCreated($order, $request->user()));
+            // Sender defaults to the order's creator — consistent no matter who clicks resend.
+            Mail::to($to)->send(new OrderCreated($order));
             return back()->with('status', "Bevestiging verzonden naar {$to}.");
         } catch (\Throwable $e) {
             report($e);

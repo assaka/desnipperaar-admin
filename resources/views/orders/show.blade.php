@@ -9,6 +9,9 @@
                 Status: <span class="font-bold uppercase">{{ $order->state }}</span>
                 @if ($order->pilot) · <span class="bg-yellow-400 text-black px-1">Noord-pilot</span> @endif
                 @if ($order->first_box_free) · <span class="bg-yellow-400 text-black px-1">Kennismaking</span> @endif
+                @if ($order->createdBy)
+                    · aangemaakt door <strong>{{ $order->createdBy->name }}</strong>
+                @endif
             </div>
         </div>
         <a href="{{ route('orders.index') }}" class="text-sm underline">← terug</a>

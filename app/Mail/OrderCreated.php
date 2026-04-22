@@ -15,11 +15,14 @@ class OrderCreated extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order, public ?User $sender = null) {}
+    public function __construct(public Order $order, public ?User $sender = null)
+    {
+        $this->sender ??= $order->senderUser();
+    }
 
     public function envelope(): Envelope
     {
-        $envelope = new Envelope(
+        return new Envelope(
             subject: "Bevestiging offerte {$this->order->order_number} — DeSnipperaar",
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
@@ -28,7 +31,6 @@ class OrderCreated extends Mailable
                 ? [new Address($this->sender->email, $this->sender->name)]
                 : [],
         );
-        return $envelope;
     }
 
     public function content(): Content
