@@ -170,7 +170,7 @@
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
-            @if ($order->state !== 'nieuw')
+            @if ($order->state === 'bevestigd')
                 <button type="button" @click="editing = !editing" class="text-xs underline"
                         x-text="editing ? 'Annuleren' : 'Wijzig planning'"></button>
             @endif

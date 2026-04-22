@@ -17,7 +17,42 @@ class BonController extends Controller
     {
         $bon->load(['order.customer', 'driver', 'seals']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4']);
-        return view('bons.show', compact('bon', 'drivers'));
+
+        $order        = $bon->order;
+        $mediaPrices  = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
+        $mediaLabels  = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+
+        $buildQuote = function ($boxes, $containers, $media) use ($order, $mediaPrices, $mediaLabels) {
+            $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
+            foreach ((array) $media as $k => $qty) {
+                $qty = (int) $qty;
+                if ($qty > 0 && isset($mediaPrices[$k])) {
+                    $q['lines'][] = ['label' => $mediaLabels[$k], 'qty' => $qty, 'unit' => $mediaPrices[$k], 'subtotal' => $mediaPrices[$k] * $qty];
+                }
+            }
+            $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
+            $q['vat']      = round($q['subtotal'] * 0.21, 2);
+            $q['total']    = round($q['subtotal'] + $q['vat'], 2);
+            return $q;
+        };
+
+        $orderedQuote = $buildQuote($order->box_count, $order->container_count, $order->media_items ?? []);
+
+        $actualBoxes = $bon->actual_boxes ?? $order->box_count;
+        $actualCont  = $bon->actual_containers ?? $order->container_count;
+        $actualMedia = $bon->actual_media ?? $order->media_items ?? [];
+
+        $orderedMediaInt = array_map('intval', (array) ($order->media_items ?? []));
+        $actualMediaInt  = array_map('intval', (array) $actualMedia);
+        ksort($orderedMediaInt); ksort($actualMediaInt);
+
+        $hasActualDiff = (int) $actualBoxes !== (int) $order->box_count
+                      || (int) $actualCont !== (int) $order->container_count
+                      || $orderedMediaInt !== $actualMediaInt;
+
+        $actualQuote = $hasActualDiff ? $buildQuote($actualBoxes, $actualCont, $actualMedia) : null;
+
+        return view('bons.show', compact('bon', 'drivers', 'orderedQuote', 'actualQuote'));
     }
 
     public function update(Request $request, Bon $bon)
@@ -103,8 +138,8 @@ class BonController extends Controller
             }
         }
 
-        // Advance order state when pickup is finalized.
-        if (!empty($data['picked_up_at']) && in_array($bon->order->state, [\App\Models\Order::STATE_NIEUW, \App\Models\Order::STATE_BEVESTIGD])) {
+        // Advance order state when pickup is finalized — triggers on explicit datetime OR on auto-fill at customer sign.
+        if ($bon->picked_up_at && in_array($bon->order->state, [\App\Models\Order::STATE_NIEUW, \App\Models\Order::STATE_BEVESTIGD])) {
             $bon->order->update(['state' => \App\Models\Order::STATE_OPGEHAALD]);
         }
 
