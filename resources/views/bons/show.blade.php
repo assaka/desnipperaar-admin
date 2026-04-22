@@ -191,22 +191,6 @@
         </section>
 
         <section>
-            <h2 class="font-black mb-3">Aanlevering</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-bold">Datum + tijd opgehaald</label>
-                    <input type="datetime-local" name="picked_up_at"
-                           value="{{ old('picked_up_at', $bon->picked_up_at?->format('Y-m-d\\TH:i')) }}"
-                           class="w-full border p-2">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold">Gewicht (kg)</label>
-                    <input type="number" step="0.1" name="weight_kg" value="{{ old('weight_kg', $bon->weight_kg) }}" class="w-full border p-2">
-                </div>
-            </div>
-        </section>
-
-        <section>
             <h2 class="font-black mb-3">Zegelnummers</h2>
             <p class="text-xs text-gray-500 mb-2">Eén per regel of gescheiden door komma's.</p>
             <textarea name="seals" rows="4" class="w-full border p-2 font-mono"
