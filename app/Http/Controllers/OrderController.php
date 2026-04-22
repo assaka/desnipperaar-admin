@@ -31,7 +31,8 @@ class OrderController extends Controller
                 ];
             }
         }
-        return view('orders.create', compact('preselected'));
+        $drivers = \App\Models\Driver::active()->orderBy('name')->get(['id','name','license_last4']);
+        return view('orders.create', compact('preselected', 'drivers'));
     }
 
     public function store(Request $request)
@@ -45,6 +46,7 @@ class OrderController extends Controller
             'pickup_window'  => 'nullable|in:ochtend,middag,avond,flexibel',
             'first_box_free' => 'nullable|boolean',
             'notes'          => 'nullable|string|max:5000',
+            'driver_id'      => 'nullable|exists:drivers,id',
         ];
 
         // Only validate inline-new-customer fields when no existing customer selected.
@@ -102,10 +104,17 @@ class OrderController extends Controller
             'first_box_free'     => (bool) ($validated['first_box_free'] ?? false),
         ]);
 
+        $driver = !empty($validated['driver_id'])
+            ? \App\Models\Driver::find($validated['driver_id'])
+            : null;
+
         Bon::create([
             'bon_number' => Bon::generateBonNumber(),
             'order_id'   => $order->id,
             'mode'       => $order->delivery_mode,
+            'driver_id'  => $driver?->id,
+            'driver_name_snapshot' => $driver?->name,
+            'driver_license_last4' => $driver?->license_last4,
         ]);
 
         try {
@@ -119,9 +128,16 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'bons.driver', 'certificate']);
+        $order->load(['customer', 'bons.driver', 'bons.seals', 'certificate']);
         $availableTransitions = $this->nextStates($order->state);
-        return view('orders.show', compact('order', 'availableTransitions'));
+        $quote = \App\Support\Pricing::quote(
+            $order->box_count,
+            $order->container_count,
+            (bool) $order->pilot,
+            (bool) $order->first_box_free,
+        );
+        $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
+        return view('orders.show', compact('order', 'availableTransitions', 'quote', 'hasSignedBon'));
     }
 
     public function transition(Request $request, Order $order)

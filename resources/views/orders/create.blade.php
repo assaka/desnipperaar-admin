@@ -132,6 +132,15 @@
                         Eerste doos gratis
                     </label>
                 </div>
+                <div class="col-span-3">
+                    <label class="block text-sm font-bold">Chauffeur toewijzen</label>
+                    <select name="driver_id" class="w-full border p-2">
+                        <option value="">— later toewijzen —</option>
+                        @foreach ($drivers as $driver)
+                            <option value="{{ $driver->id }}">{{ $driver->name }} (****{{ $driver->license_last4 }})</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="mt-3">
                 <label class="block text-sm font-bold">Notities</label>

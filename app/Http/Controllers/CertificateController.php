@@ -28,6 +28,13 @@ class CertificateController extends Controller
             return redirect()->route('certificates.show', $order->certificate);
         }
 
+        $hasSignedBon = $order->bons()->whereNotNull('picked_up_at')->exists();
+        if (!$hasSignedBon) {
+            return back()->withErrors([
+                'certificate' => 'Nog geen getekende bon — materiaal is nog niet opgehaald/afgeleverd.'
+            ]);
+        }
+
         $certificate = Certificate::create([
             'certificate_number' => Certificate::generateCertificateNumber(),
             'order_id'           => $order->id,
