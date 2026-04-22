@@ -31,9 +31,10 @@ class OrderController extends Controller
             'termijn'    => 'nullable|string|max:100',
             'bericht'    => 'nullable|string|max:5000',
             'akkoord'    => 'nullable',
-            'boxes'      => 'nullable|integer|min:0|max:500',
-            'containers' => 'nullable|integer|min:0|max:50',
-            'media_json' => 'nullable|string|max:2000',
+            'boxes'          => 'nullable|integer|min:0|max:500',
+            'containers'     => 'nullable|integer|min:0|max:50',
+            'media_json'     => 'nullable|string|max:2000',
+            'first_box_free' => 'nullable|in:0,1,true,false',
         ]);
 
         // Postcode extraction — from "plaats" field which may contain city+postcode.
@@ -83,6 +84,7 @@ class OrderController extends Controller
             'notes'              => $notes ?: null,
             'state'              => Order::STATE_NIEUW,
             'pilot'              => $pilot,
+            'first_box_free'     => (bool) ($data['first_box_free'] ?? false) && $pilot,
         ]);
 
         Bon::create([
