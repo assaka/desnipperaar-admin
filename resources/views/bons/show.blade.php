@@ -22,6 +22,15 @@
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-3 py-2 mb-4 text-sm">{{ session('warning') }}</div>
     @endif
 
+    <section class="mb-6 border border-gray-200 p-3 flex items-start gap-4">
+        <img src="{{ $qrDataUri }}" alt="QR — publieke PDF-download" style="width:120px;height:120px;flex-shrink:0;">
+        <div class="text-sm flex-1 min-w-0">
+            <div class="font-black mb-1">QR-code → publieke PDF-download</div>
+            <p class="text-gray-700 mb-2">Scan om zonder login een PDF van deze bon te downloaden. De link is cryptografisch gesigneerd en werkt zolang de signing-key niet wijzigt.</p>
+            <div class="font-mono text-xs text-gray-500 break-all">{{ $publicPdfUrl }}</div>
+        </div>
+    </section>
+
     <section class="grid grid-cols-2 gap-6 mb-6">
         <div>
             <h2 class="font-black mb-2">Klant</h2>

@@ -32,18 +32,12 @@
 <div class="sheet">
     <header class="brand">DESNIPPERAAR</header>
 
-    <section class="hero" style="position:relative;">
+    <section class="hero">
         <div style="font-family:'Courier New',monospace;font-size:9pt;letter-spacing:0.14em;text-transform:uppercase;color:#555;margin-bottom:4px;">
             {{ ucfirst($bon->mode) }}bon
         </div>
         <h1 style="font-weight:900;font-size:22pt;margin-bottom:6px;">Afhaalbewijs</h1>
         <div class="num">{{ $bon->bon_number }}</div>
-        @isset($qrDataUri)
-            <div style="position:absolute;top:8mm;right:14mm;text-align:center;">
-                <img src="{{ $qrDataUri }}" alt="QR — download bon" style="width:25mm;height:25mm;display:block;">
-                <div style="font-size:7pt;color:#555;margin-top:2px;letter-spacing:0.05em;">Scan voor PDF</div>
-            </div>
-        @endisset
     </section>
 
     <section class="meta">
@@ -86,8 +80,26 @@
     </section>
 
     <section class="signoff">
-        <div><div class="box">&nbsp;</div><div class="lbl">Handtekening klant</div></div>
-        <div><div class="box">&nbsp;</div><div class="lbl">Handtekening chauffeur</div></div>
+        <div>
+            @if (!empty($customerSigDataUri))
+                <div class="box" style="padding:2mm 0 2mm;height:20mm;text-align:left;">
+                    <img src="{{ $customerSigDataUri }}" alt="klant-handtekening" style="max-height:18mm;max-width:60mm;">
+                </div>
+            @else
+                <div class="box">&nbsp;</div>
+            @endif
+            <div class="lbl">Handtekening klant — {{ $bon->order->customer_name }}</div>
+        </div>
+        <div>
+            @if (!empty($driverSigDataUri))
+                <div class="box" style="padding:2mm 0 2mm;height:20mm;text-align:left;">
+                    <img src="{{ $driverSigDataUri }}" alt="chauffeur-handtekening" style="max-height:18mm;max-width:60mm;">
+                </div>
+            @else
+                <div class="box">&nbsp;</div>
+            @endif
+            <div class="lbl">Handtekening chauffeur — {{ $bon->driver_name_snapshot ?? '—' }}</div>
+        </div>
     </section>
 </div>
 </body>

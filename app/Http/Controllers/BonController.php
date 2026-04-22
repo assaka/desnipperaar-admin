@@ -58,7 +58,10 @@ class BonController extends Controller
 
         $actualQuote = $hasActualDiff ? $buildQuote($actualBoxes, $actualCont, $actualMedia) : null;
 
-        return view('bons.show', compact('bon', 'drivers', 'orderedQuote', 'actualQuote'));
+        $qrDataUri = $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]));
+        $publicPdfUrl = URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]);
+
+        return view('bons.show', compact('bon', 'drivers', 'orderedQuote', 'actualQuote', 'qrDataUri', 'publicPdfUrl'));
     }
 
     public function update(Request $request, Bon $bon)
@@ -183,16 +186,28 @@ class BonController extends Controller
     public function pdf(Bon $bon)
     {
         $bon->load(['order.customer', 'driver', 'seals']);
-        $qrDataUri = $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]));
-        return view('bons.pdf', compact('bon', 'qrDataUri'));
+        [$customerSigDataUri, $driverSigDataUri] = $this->signatureDataUris($bon);
+        return view('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri'));
     }
 
     public function publicPdf(Bon $bon)
     {
         $bon->load(['order.customer', 'driver', 'seals']);
-        $qrDataUri = $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]));
-        $pdf = Pdf::loadView('bons.pdf', compact('bon', 'qrDataUri'))->setPaper('a4');
+        [$customerSigDataUri, $driverSigDataUri] = $this->signatureDataUris($bon);
+        $pdf = Pdf::loadView('bons.pdf', compact('bon', 'customerSigDataUri', 'driverSigDataUri'))->setPaper('a4');
         return $pdf->download("bon-{$bon->bon_number}.pdf");
+    }
+
+    private function signatureDataUris(Bon $bon): array
+    {
+        $toDataUri = function (?string $path): ?string {
+            if (!$path || !Storage::disk('local')->exists($path)) return null;
+            return 'data:image/png;base64,' . base64_encode(Storage::disk('local')->get($path));
+        };
+        return [
+            $toDataUri($bon->customer_signature_path),
+            $toDataUri($bon->driver_signature_path),
+        ];
     }
 
     private function qrDataUri(string $payload): string
