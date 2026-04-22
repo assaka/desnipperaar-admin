@@ -136,10 +136,11 @@
         </section>
 
         @if (count($orderedQuote['lines']))
+        <h2 class="font-black mb-3">Overzicht</h2>
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
-            <h2 class="font-black mb-2">Origineel overzicht
+            <h3 class="font-black mb-2">Origineel
                 <span x-show="diff" x-cloak class="text-xs font-normal text-gray-500">— op basis van bestelling</span>
-            </h2>
+            </h3>
             <table class="w-full text-sm">
                 @foreach ($orderedQuote['lines'] as $line)
                     <tr class="border-b">
@@ -160,10 +161,10 @@
         </section>
 
         <section x-show="diff" x-cloak class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
-            <h2 class="font-black mb-2 flex items-center gap-2">
+            <h3 class="font-black mb-2 flex items-center gap-2">
                 <span style="color:#E67E22;">⚠</span>
-                Gecorrigeerd overzicht <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
-            </h2>
+                Gecorrigeerd <span class="text-xs font-normal text-gray-700">— op basis van werkelijk opgehaald (dit wordt gefactureerd)</span>
+            </h3>
             <table class="w-full text-sm">
                 <template x-for="(line, i) in liveQuote.lines" :key="i + ':' + line.label">
                     <tr class="border-b">
