@@ -28,6 +28,11 @@ return [
         'payment_terms_days' => (int) env('DESNIPPERAAR_PAYMENT_TERMS_DAYS', 14),
     ],
 
+    'notifications' => [
+        // CC'd on every OrderCreated confirmation so a human sees each new order in real time.
+        'admin_email' => env('ADMIN_NOTIFY_EMAIL', 'hamid@desnipperaar.nl'),
+    ],
+
     'company' => [
         'name'     => env('COMPANY_NAME', 'DeSnipperaar'),
         'address'  => env('COMPANY_ADDRESS', ''),

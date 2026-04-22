@@ -22,6 +22,11 @@ class OrderCreated extends Mailable
 
     public function envelope(): Envelope
     {
+        $adminEmail = config('desnipperaar.notifications.admin_email');
+        $cc = ($adminEmail && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
+            ? [new Address($adminEmail, 'DeSnipperaar')]
+            : [];
+
         return new Envelope(
             subject: "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
             from: $this->sender
@@ -30,6 +35,7 @@ class OrderCreated extends Mailable
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
                 : [],
+            cc: $cc,
         );
     }
 
