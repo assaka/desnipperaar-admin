@@ -56,11 +56,11 @@ class OrderController extends Controller
         $mode = str_contains($loc, 'brengen') ? 'breng'
               : (str_contains($loc, 'mobiel')  ? 'mobiel' : 'ophaal');
 
+        // Volume line dropped — box_count / container_count / media_items carry the same info structurally.
         $notes = collect([
             !empty($data['bedrijf']) ? 'Bedrijf: '  . $data['bedrijf']  : null,
             !empty($data['branche']) ? 'Branche: '  . $data['branche']  : null,
             !empty($data['type'])    ? 'Type: '     . $data['type']     : null,
-            !empty($data['volume'])  ? 'Volume: '   . $data['volume']   : null,
             !empty($data['termijn']) ? 'Termijn: '  . $data['termijn']  : null,
             !empty($data['bericht']) ? "\n"         . $data['bericht']  : null,
         ])->filter()->implode("\n");
