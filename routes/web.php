@@ -15,6 +15,10 @@ Route::get('/b/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'publicP
     ->middleware('signed')
     ->name('bons.public-pdf');
 
+// Customer self-service reschedule (no auth) — token-gated.
+Route::get('/herplan/{token}',  [\App\Http\Controllers\RescheduleController::class, 'show'])->name('reschedule.show');
+Route::post('/herplan/{token}', [\App\Http\Controllers\RescheduleController::class, 'store'])->name('reschedule.store');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/customers',          [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create',   [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');

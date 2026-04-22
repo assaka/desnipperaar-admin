@@ -167,7 +167,26 @@
     @endif
 
     @php $firstBon = $order->bons->first(); @endphp
-    <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' ? 'true' : 'false' }} }">
+
+    @if ($order->reschedule_requested_at)
+        <section class="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4">
+            <div class="flex justify-between items-baseline mb-2">
+                <h2 class="font-black text-orange-900">⚠ Klant vraagt andere ophaaldatum</h2>
+                <span class="text-xs text-gray-600">{{ $order->reschedule_requested_at->format('d-m-Y H:i') }}</span>
+            </div>
+            <div class="text-sm">
+                <div><strong>Voorgesteld:</strong>
+                    {{ $order->reschedule_requested_date?->format('l d F Y') }}
+                    ({{ $order->reschedule_requested_window }})</div>
+                @if ($order->reschedule_notes)
+                    <div class="mt-1 italic">"{{ $order->reschedule_notes }}"</div>
+                @endif
+                <p class="text-xs text-gray-700 mt-2">Gebruik <strong>Wijzig planning</strong> hieronder om de datum aan te passen en de klant te mailen; daarmee wordt dit verzoek afgesloten.</p>
+            </div>
+        </section>
+    @endif
+
+    <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
             @if ($order->state === 'bevestigd')
@@ -203,18 +222,22 @@
                         @endforeach
                     </select>
                 </div>
+                @php
+                    $prefillDate   = $order->reschedule_requested_date?->format('Y-m-d') ?? $order->pickup_date?->format('Y-m-d');
+                    $prefillWindow = $order->reschedule_requested_window ?? $order->pickup_window;
+                @endphp
                 <div>
                     <label class="block text-sm font-bold">Ophaaldatum *</label>
                     <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
-                           value="{{ $order->pickup_date?->format('Y-m-d') }}" class="w-full border p-2">
+                           value="{{ $prefillDate }}" class="w-full border p-2">
                 </div>
                 <div>
                     <label class="block text-sm font-bold">Dagdeel *</label>
                     <select name="pickup_window" required class="w-full border p-2">
-                        <option value="flexibel" @selected($order->pickup_window==='flexibel' || !$order->pickup_window)>Flexibel</option>
-                        <option value="ochtend"  @selected($order->pickup_window==='ochtend')>Ochtend (08:00–12:00)</option>
-                        <option value="middag"   @selected($order->pickup_window==='middag')>Middag (12:00–17:00)</option>
-                        <option value="avond"    @selected($order->pickup_window==='avond')>Avond (17:00–20:00)</option>
+                        <option value="flexibel" @selected($prefillWindow==='flexibel' || !$prefillWindow)>Flexibel</option>
+                        <option value="ochtend"  @selected($prefillWindow==='ochtend')>Ochtend (08:00–12:00)</option>
+                        <option value="middag"   @selected($prefillWindow==='middag')>Middag (12:00–17:00)</option>
+                        <option value="avond"    @selected($prefillWindow==='avond')>Avond (17:00–20:00)</option>
                     </select>
                 </div>
             </div>
