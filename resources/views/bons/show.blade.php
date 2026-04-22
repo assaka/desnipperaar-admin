@@ -22,13 +22,19 @@
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-3 py-2 mb-4 text-sm">{{ session('warning') }}</div>
     @endif
 
-    <section class="grid grid-cols-2 gap-6 mb-6">
+    <section class="grid grid-cols-3 gap-6 mb-6">
         <div>
             <h2 class="font-black mb-2">Klant</h2>
             <div>{{ $bon->order->customer_name }}</div>
             <div class="text-sm">{{ $bon->order->customer_address }}<br>{{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
+        </div>
+        <div>
+            <h2 class="font-black mb-2">Ophaalmoment</h2>
             @if ($bon->order->pickup_date)
-                <div class="mt-2 text-sm">Gewenst: {{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }} ({{ $bon->order->pickup_window ?? 'flexibel' }})</div>
+                <div>{{ ucfirst($bon->order->pickup_date->locale('nl')->translatedFormat('l d F Y')) }}</div>
+                <div class="text-sm">{{ ucfirst($bon->order->pickup_window ?? 'flexibel') }}@switch($bon->order->pickup_window)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch</div>
+            @else
+                <div class="text-sm text-gray-500">—</div>
             @endif
         </div>
         <div class="text-right">
