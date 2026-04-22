@@ -161,9 +161,19 @@
             <thead><tr><th></th><th>Materiaal</th><th>Aantal / gewicht</th><th>Methode (DIN 66399 / ISO 21964)</th></tr></thead>
             <tbody>
                 <tr>
-                    <td class="chk"><span class="cbox {{ ($order->box_count + $order->container_count) > 0 ? 'on' : '' }}"></span></td>
-                    <td>Papier / dossiers</td>
-                    <td class="val">{{ $certificate->weight_kg_final ? number_format($certificate->weight_kg_final, 1, ',', '.') : '___' }} kg / {{ $order->container_count ?: '___' }} rolcontainers</td>
+                    <td class="chk"><span class="cbox {{ $order->box_count > 0 ? 'on' : '' }}"></span></td>
+                    <td>Papier / dossiers (dozen)</td>
+                    <td class="val">{{ $order->box_count ?: '___' }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
+                    <td>
+                        @foreach ($paperMethods as $m => $on)
+                            <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                        @endforeach
+                    </td>
+                </tr>
+                <tr>
+                    <td class="chk"><span class="cbox {{ $order->container_count > 0 ? 'on' : '' }}"></span></td>
+                    <td>Papier / dossiers (rolcontainers 240 L)</td>
+                    <td class="val">{{ $order->container_count ?: '___' }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}@if ($certificate->weight_kg_final) &middot; {{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif</td>
                     <td>
                         @foreach ($paperMethods as $m => $on)
                             <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
@@ -232,8 +242,8 @@
                 <span class="meth"><span class="cbox {{ $locDepot ? 'on' : '' }}"></span>Bij depot Amsterdam-Noord (1034DN)</span>
             </div>
             <div><strong style="font-size:7.5pt; letter-spacing:0.08em; text-transform:uppercase;">Restmateriaal afgevoerd via</strong><br>
-                <span style="font-family:'Courier New',monospace; display:inline-block; min-width:55mm; border-bottom:1px solid #0A0A0A;">&nbsp;</span>
-                (gecertificeerde recycler)
+                <span style="font-family:'Courier New',monospace; display:inline-block; min-width:55mm; border-bottom:1px solid #0A0A0A;">&nbsp;</span><br>
+                <span style="font-size:8.5pt; color:#555;">(gecertificeerde recycler)</span>
             </div>
         </div>
 
