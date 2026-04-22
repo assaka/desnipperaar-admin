@@ -54,8 +54,23 @@
                 <h3>Aanlevering</h3>
                 <div class="row"><span class="k">Datum</span><span class="v">{{ $bon->picked_up_at?->format('d-m-Y H:i') ?? '—' }}</span></div>
                 <div class="row"><span class="k">Gewicht</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
-                <div class="row"><span class="k">Dozen</span><span class="v">{{ $bon->order->box_count }}</span></div>
-                <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $bon->order->container_count }}</span></div>
+                @php
+                    $boxes   = $bon->actual_boxes     ?? $bon->order->box_count;
+                    $cntrs   = $bon->actual_containers ?? $bon->order->container_count;
+                    $boxDiff = $bon->actual_boxes     !== null && $bon->actual_boxes     !== $bon->order->box_count;
+                    $cntDiff = $bon->actual_containers !== null && $bon->actual_containers !== $bon->order->container_count;
+                @endphp
+                <div class="row"><span class="k">Dozen</span><span class="v">{{ $boxes }}@if ($boxDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->box_count }})</span>@endif</span></div>
+                <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $cntrs }}@if ($cntDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->container_count }})</span>@endif</span></div>
+                @php $actualMedia = $bon->actual_media ?? $bon->order->media_items ?? []; @endphp
+                @if (!empty($actualMedia))
+                    @foreach ($actualMedia as $k => $q)
+                        @if ((int) $q > 0)
+                            @php $lbl = ['hdd'=>'HDD','ssd'=>'SSD/NVMe','usb'=>'USB/SD','phone'=>'Telefoon','laptop'=>'Laptop'][$k] ?? ucfirst($k); @endphp
+                            <div class="row"><span class="k">{{ $lbl }}</span><span class="v">{{ $q }}</span></div>
+                        @endif
+                    @endforeach
+                @endif
                 <div class="row"><span class="k">Chauffeur</span><span class="v">{{ $bon->driver_name_snapshot ?? '—' }}</span></div>
                 <div class="row"><span class="k">Rijbewijs</span><span class="v" style="font-family:'Courier New',monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>
             </td>

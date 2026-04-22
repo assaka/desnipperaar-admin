@@ -20,6 +20,9 @@ class Bon extends Model
         'driver_name_snapshot',
         'driver_license_last4',
         'mode',
+        'actual_boxes',
+        'actual_containers',
+        'actual_media',
         'picked_up_at',
         'weight_kg',
         'notes',
@@ -28,8 +31,11 @@ class Bon extends Model
     ];
 
     protected $casts = [
-        'picked_up_at' => 'datetime',
-        'weight_kg'    => 'decimal:2',
+        'picked_up_at'     => 'datetime',
+        'weight_kg'        => 'decimal:2',
+        'actual_boxes'     => 'integer',
+        'actual_containers'=> 'integer',
+        'actual_media'     => 'array',
     ];
 
     public function order()

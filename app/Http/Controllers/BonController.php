@@ -35,16 +35,25 @@ class BonController extends Controller
             'seals'               => 'nullable|string|max:5000',
             'customer_signature'  => 'nullable|string',
             'driver_signature'    => 'nullable|string',
+            'actual_boxes'        => 'nullable|integer|min:0|max:500',
+            'actual_containers'   => 'nullable|integer|min:0|max:50',
+            'actual_media'        => 'nullable|array',
+            'actual_media.*'      => 'nullable|integer|min:0|max:5000',
         ]);
 
         $hadSignatureBefore = !empty($bon->customer_signature_path);
         $hadPickupBefore    = !empty($bon->picked_up_at);
 
         $patch = [
-            'picked_up_at' => $data['picked_up_at'] ?? $bon->picked_up_at,
-            'weight_kg'    => $data['weight_kg']    ?? $bon->weight_kg,
-            'notes'        => $data['notes']        ?? $bon->notes,
+            'picked_up_at'      => $data['picked_up_at']      ?? $bon->picked_up_at,
+            'weight_kg'         => $data['weight_kg']         ?? $bon->weight_kg,
+            'notes'             => $data['notes']             ?? $bon->notes,
+            'actual_boxes'      => $data['actual_boxes']      ?? $bon->actual_boxes,
+            'actual_containers' => $data['actual_containers'] ?? $bon->actual_containers,
         ];
+        if (array_key_exists('actual_media', $data) && is_array($data['actual_media'])) {
+            $patch['actual_media'] = array_filter($data['actual_media'], fn ($v) => (int) $v > 0);
+        }
 
         if (!empty($data['driver_id']) && (int) $data['driver_id'] !== (int) $bon->driver_id) {
             $driver = Driver::find($data['driver_id']);
