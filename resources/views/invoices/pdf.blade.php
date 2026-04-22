@@ -32,13 +32,13 @@
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
-    .pay { margin-top: 8mm; padding: 5mm; border: 2px solid #0A0A0A; }
-    .pay h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 3mm; letter-spacing: 0.04em; }
-    .pay .row { margin-bottom: 1.5mm; }
-    .pay .k { display: inline-block; width: 30mm; color: #555; font-size: 9pt; }
+    .pay { margin-top: 8mm; padding: 4mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
+    .pay h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
+    .pay .row { margin-bottom: 1mm; font-size: 9.5pt; }
+    .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
     .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
     .small { font-size: 8pt; color: #555; margin-top: 4mm; }
-    .foot { background: #F7F7F4; padding: 4mm 14mm; font-family: 'Courier New', monospace; font-size: 8pt; letter-spacing: 0.1em; color: #555; text-align: center; margin-top: 10mm; border-top: 1px solid #DDD; }
+    .foot { background: #F7F7F4; padding: 4mm 14mm; font-family: 'Courier New', monospace; font-size: 8pt; letter-spacing: 0.1em; color: #555; text-align: center; margin-top: 6mm; border-top: 1px solid #DDD; page-break-inside: avoid; }
 </style>
 </head>
 <body>
@@ -115,8 +115,8 @@
         @if ($co['iban']) <div class="row"><span class="k">IBAN</span><span class="v">{{ $co['iban'] }}</span></div> @endif
         @if ($co['bic']) <div class="row"><span class="k">BIC</span><span class="v">{{ $co['bic'] }}</span></div> @endif
         <div class="row"><span class="k">Kenmerk</span><span class="v">{{ $invoice->invoice_number }}</span></div>
-        <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }}.</p>
     </div>
+    <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }}.</p>
 
 </div>
 

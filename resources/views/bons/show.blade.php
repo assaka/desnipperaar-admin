@@ -73,12 +73,26 @@
             </select>
         </section>
 
+        @php
+            $expMedia = $bon->order->media_items ?? [];
+            $actMedia = $bon->actual_media ?? $bon->order->media_items ?? [];
+            $mediaKeys = ['hdd','ssd','usb','phone','laptop'];
+        @endphp
         <section x-data="{
             expBoxes: {{ $bon->order->box_count }},
             expCont:  {{ $bon->order->container_count }},
+            expMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + ($expMedia ?: [])) }},
             actBoxes: {{ old('actual_boxes', $bon->actual_boxes ?? $bon->order->box_count) ?: 0 }},
             actCont:  {{ old('actual_containers', $bon->actual_containers ?? $bon->order->container_count) ?: 0 }},
-            get diff() { return this.actBoxes !== this.expBoxes || this.actCont !== this.expCont; }
+            actMedia: {{ \Illuminate\Support\Js::from(array_fill_keys($mediaKeys, 0) + array_map('intval', $actMedia ?: [])) }},
+            get diff() {
+                if (this.actBoxes !== this.expBoxes) return true;
+                if (this.actCont !== this.expCont) return true;
+                for (const k of Object.keys(this.expMedia)) {
+                    if ((this.actMedia[k] || 0) !== (this.expMedia[k] || 0)) return true;
+                }
+                return false;
+            }
         }">
             <h2 class="font-black mb-3">Werkelijk opgehaald</h2>
             <div x-show="diff" x-cloak class="bg-orange-100 border-l-4 border-orange-500 text-orange-900 px-3 py-2 mb-3 font-bold text-sm flex items-center gap-2">
@@ -109,7 +123,9 @@
                     <div>
                         <label class="block text-xs font-bold">{{ $item['label'] }} <span class="text-gray-500">({{ $bon->order->media_items[$key] ?? 0 }})</span></label>
                         <input type="number" min="0" name="actual_media[{{ $key }}]"
-                               value="{{ old('actual_media.'.$key, $actualMedia[$key] ?? 0) }}" class="w-full border p-1 text-sm">
+                               x-model.number="actMedia.{{ $key }}"
+                               :class="actMedia.{{ $key }} !== expMedia.{{ $key }} ? 'border-orange-500 border-2 bg-orange-50' : ''"
+                               class="w-full border p-1 text-sm">
                     </div>
                 @endforeach
             </div>
