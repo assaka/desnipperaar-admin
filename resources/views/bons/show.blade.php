@@ -316,9 +316,6 @@
             @if (!$locked)
                 <button type="submit" class="bg-black text-yellow-400 px-4 py-2 font-bold uppercase">Bevestig &amp; mailen</button>
             @endif
-            @if ($bon->picked_up_at)
-                <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="px-4 py-2 border font-bold uppercase underline">Print PDF</a>
-            @endif
         </div>
         </fieldset>
     </form>
