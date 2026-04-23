@@ -95,8 +95,18 @@
                 <tr>
                     <td>{{ $line['label'] }}</td>
                     <td class="r">{{ $line['qty'] }}</td>
-                    <td class="r">€ {{ number_format($line['unit'], 2, ',', '.') }}</td>
-                    <td class="r">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
+                    <td class="r">
+                        € {{ number_format($line['unit'], 2, ',', '.') }}
+                        @if (!empty($line['was_unit']))
+                            <span style="text-decoration:line-through;color:#999;margin-left:4px;">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                        @endif
+                    </td>
+                    <td class="r">
+                        € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                        @if (!empty($line['was_subtotal']))
+                            <span style="text-decoration:line-through;color:#999;margin-left:4px;font-size:11px;">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
+                        @endif
+                    </td>
                 </tr>
             @endforeach
         </tbody>

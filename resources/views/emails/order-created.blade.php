@@ -15,9 +15,15 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $line['label'] }}</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;">
                 {{ $line['qty'] }} &times; € {{ number_format($line['unit'], 2, ',', '.') }}
+                @if (!empty($line['was_unit']))
+                    <span style="text-decoration:line-through;color:#999;margin-left:4px;">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                @endif
             </td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                @if (!empty($line['was_subtotal']))
+                    <span style="text-decoration:line-through;color:#999;font-weight:400;font-size:11px;margin-left:4px;">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
+                @endif
             </td>
         </tr>
     @endforeach

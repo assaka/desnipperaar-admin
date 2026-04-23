@@ -88,7 +88,10 @@
             const mLabels = {hdd:'HDD', ssd:'SSD / NVMe', usb:'USB / SD', phone:'Telefoon / tablet', laptop:'Laptop'};
             const mk = (label, qty, unit, regularUnit) => {
                 const row = {label, qty, unit, subtotal: unit * qty};
-                if (regularUnit > unit) row.was_subtotal = regularUnit * qty;
+                if (regularUnit > unit) {
+                    row.was_unit     = regularUnit;
+                    row.was_subtotal = regularUnit * qty;
+                }
                 return row;
             };
             const lines = [];
@@ -190,8 +193,18 @@
                 @foreach ($orderedQuote['lines'] as $line)
                     <tr class="border-b">
                         <td class="py-1">{{ $line['label'] }}</td>
-                        <td class="text-right font-mono">{{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}</td>
-                        <td class="text-right font-bold font-mono">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
+                        <td class="text-right font-mono">
+                            {{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}
+                            @if (!empty($line['was_unit']))
+                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                            @endif
+                        </td>
+                        <td class="text-right font-bold font-mono">
+                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                            @if (!empty($line['was_subtotal']))
+                                <span class="line-through text-gray-400 font-normal ml-1 text-xs">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
@@ -218,8 +231,14 @@
                 <template x-for="(line, i) in liveQuote.lines" :key="i + ':' + line.label">
                     <tr class="border-b">
                         <td class="py-1" x-text="line.label"></td>
-                        <td class="text-right font-mono" x-text="line.qty + ' × ' + fmt(line.unit)"></td>
-                        <td class="text-right font-bold font-mono" x-text="fmt(line.subtotal)"></td>
+                        <td class="text-right font-mono">
+                            <span x-text="line.qty + ' × ' + fmt(line.unit)"></span>
+                            <span x-show="line.was_unit" class="line-through text-gray-400 ml-1" x-text="fmt(line.was_unit)"></span>
+                        </td>
+                        <td class="text-right font-bold font-mono">
+                            <span x-text="fmt(line.subtotal)"></span>
+                            <span x-show="line.was_subtotal" class="line-through text-gray-400 font-normal ml-1 text-xs" x-text="fmt(line.was_subtotal)"></span>
+                        </td>
                     </tr>
                 </template>
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
