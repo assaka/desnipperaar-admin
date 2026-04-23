@@ -194,16 +194,13 @@
                     <tr class="border-b">
                         <td class="py-1">{{ $line['label'] }}</td>
                         <td class="text-right font-mono">
-                            {{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}
-                            @if (!empty($line['was_unit']))
-                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                            @if (!empty($line['was_subtotal']))
+                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
                             @endif
                         </td>
                         <td class="text-right font-bold font-mono">
-                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
-                            @if (!empty($line['was_subtotal']))
-                                <span class="line-through text-gray-400 font-normal ml-1 text-xs">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
-                            @endif
+                            € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
                         </td>
                     </tr>
                 @endforeach
@@ -232,12 +229,11 @@
                     <tr class="border-b">
                         <td class="py-1" x-text="line.label"></td>
                         <td class="text-right font-mono">
-                            <span x-text="line.qty + ' × ' + fmt(line.unit)"></span>
-                            <span x-show="line.was_unit" class="line-through text-gray-400 ml-1" x-text="fmt(line.was_unit)"></span>
+                            <span x-text="fmt(line.subtotal)"></span>
+                            <span x-show="line.was_subtotal" class="line-through text-gray-400 ml-1" x-text="fmt(line.was_subtotal)"></span>
                         </td>
                         <td class="text-right font-bold font-mono">
-                            <span x-text="fmt(line.subtotal)"></span>
-                            <span x-show="line.was_subtotal" class="line-through text-gray-400 font-normal ml-1 text-xs" x-text="fmt(line.was_subtotal)"></span>
+                            <span x-text="fmt(line.was_subtotal ?? line.subtotal)"></span>
                         </td>
                     </tr>
                 </template>

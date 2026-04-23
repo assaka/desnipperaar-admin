@@ -60,10 +60,7 @@
                             @endif
                         </td>
                         <td class="text-right font-mono font-bold">
-                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
-                            @if (!empty($line['was_subtotal']))
-                                <span class="line-through text-gray-400 font-normal ml-1 text-xs">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
-                            @endif
+                            € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
                         </td>
                     </tr>
                 @endforeach

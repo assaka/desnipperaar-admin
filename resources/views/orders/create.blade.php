@@ -153,12 +153,11 @@
                     <tr class="border-b">
                         <td class="py-1" x-text="line.label"></td>
                         <td class="text-right font-mono">
-                            <span x-text="line.qty + ' × € ' + line.unit.toFixed(2).replace('.',',')"></span>
-                            <span x-show="line.was_unit" class="line-through text-gray-400 ml-1" x-text="'€ ' + (line.was_unit ?? 0).toFixed(2).replace('.',',')"></span>
+                            <span x-text="'€ ' + line.subtotal.toFixed(2).replace('.',',')"></span>
+                            <span x-show="line.was_subtotal" class="line-through text-gray-400 ml-1" x-text="'€ ' + (line.was_subtotal ?? 0).toFixed(2).replace('.',',')"></span>
                         </td>
                         <td class="text-right font-bold font-mono">
-                            <span x-text="'€ ' + line.subtotal.toFixed(2).replace('.',',')"></span>
-                            <span x-show="line.was_subtotal" class="line-through text-gray-400 font-normal ml-1 text-xs" x-text="'€ ' + (line.was_subtotal ?? 0).toFixed(2).replace('.',',')"></span>
+                            <span x-text="'€ ' + ((line.was_subtotal ?? line.subtotal) ?? 0).toFixed(2).replace('.',',')"></span>
                         </td>
                     </tr>
                 </template>
