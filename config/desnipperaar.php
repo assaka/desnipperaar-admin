@@ -29,8 +29,8 @@ return [
     ],
 
     'notifications' => [
-        // sales@ gets a visible CC (customer sees it too — shows who handles the order);
-        // admin_email gets a silent BCC (delivery proof / oversight without exposing the address).
+        // sales@ is the From-address on customer-facing mails (OrderCreated, QuoteRequested);
+        // admin_email gets a silent BCC for delivery proof / oversight.
         'sales_email' => env('SALES_EMAIL',         'sales@desnipperaar.nl'),
         'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'hamid@desnipperaar.nl'),
     ],

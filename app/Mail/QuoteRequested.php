@@ -33,10 +33,10 @@ class QuoteRequested extends Mailable
 
         return new Envelope(
             subject: "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
-            from: new Address($salesEmail, 'Team DeSnipperaar'),
+            from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
-                : [new Address($salesEmail, 'Team DeSnipperaar')],
+                : [new Address($salesEmail, 'DeSnipperaar')],
             bcc: $bcc,
         );
     }

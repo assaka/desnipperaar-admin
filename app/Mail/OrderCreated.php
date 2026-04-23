@@ -25,22 +25,18 @@ class OrderCreated extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
         $adminEmail = config('desnipperaar.notifications.admin_email');
 
-        $cc  = ($salesEmail && strcasecmp($salesEmail, $this->order->customer_email) !== 0)
-            ? [new Address($salesEmail, 'DeSnipperaar Sales')] : [];
+        // BCC admin for silent oversight, skip if same as recipient or same as from.
         $bcc = ($adminEmail
                 && strcasecmp($adminEmail, $this->order->customer_email) !== 0
                 && strcasecmp($adminEmail, $salesEmail) !== 0)
-            ? [new Address($adminEmail, 'DeSnipperaar')] : [];
+            ? [new Address($adminEmail, 'Hamid El Abassi')] : [];
 
         return new Envelope(
             subject: "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
-            from: $this->sender
-                ? new Address($this->sender->email, $this->sender->name)
-                : null,
+            from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
-                : [],
-            cc: $cc,
+                : [new Address($salesEmail, 'DeSnipperaar')],
             bcc: $bcc,
         );
     }
