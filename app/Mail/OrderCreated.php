@@ -64,21 +64,25 @@ class OrderCreated extends Mailable
             ];
         }
 
-        $mediaSubtotal = array_sum(array_column($mediaLines, 'subtotal'));
-        $subtotal      = $quote['subtotal'] + $mediaSubtotal;
-        $vat           = round($subtotal * 0.21, 2);
-        $total         = round($subtotal + $vat, 2);
+        $mediaSubtotal   = array_sum(array_column($mediaLines, 'subtotal'));
+        $subtotal        = $quote['subtotal'] + $mediaSubtotal;
+        $subtotalRegular = ($quote['subtotal_regular'] ?? $quote['subtotal']) + $mediaSubtotal;
+        $discount        = round($subtotalRegular - $subtotal, 2);
+        $vat             = round($subtotal * 0.21, 2);
+        $total           = round($subtotal + $vat, 2);
 
         return new Content(
             view: 'emails.order-created',
             with: [
-                'order'       => $this->order,
-                'sender'      => $this->sender,
-                'quote'       => $quote,
-                'mediaLines'  => $mediaLines,
-                'subtotal'    => $subtotal,
-                'vat'         => $vat,
-                'total'       => $total,
+                'order'           => $this->order,
+                'sender'          => $this->sender,
+                'quote'           => $quote,
+                'mediaLines'      => $mediaLines,
+                'subtotal'        => $subtotal,
+                'subtotalRegular' => $subtotalRegular,
+                'discount'        => $discount,
+                'vat'             => $vat,
+                'total'           => $total,
             ],
         );
     }

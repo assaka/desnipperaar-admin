@@ -159,7 +159,12 @@
                 <tr>
                     <td class="pt-2 text-gray-600">Subtotaal</td>
                     <td></td>
-                    <td class="text-right font-mono pt-2" x-text="'€ ' + (quote?.subtotal ?? 0).toFixed(2).replace('.',',')"></td>
+                    <td class="text-right font-mono pt-2" x-text="'€ ' + (quote?.subtotal_regular ?? quote?.subtotal ?? 0).toFixed(2).replace('.',',')"></td>
+                </tr>
+                <tr x-show="(quote?.discount ?? 0) > 0">
+                    <td class="text-green-700">Korting Noord-pilot</td>
+                    <td></td>
+                    <td class="text-right font-mono text-green-700" x-text="'− € ' + (quote?.discount ?? 0).toFixed(2).replace('.',',')"></td>
                 </tr>
                 <tr>
                     <td class="text-gray-600">BTW 21%</td>

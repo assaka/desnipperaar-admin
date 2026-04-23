@@ -102,8 +102,15 @@
         </tbody>
     </table>
 
+    @php
+        $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
+        $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
+    @endphp
     <table class="totals">
-        <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($invoice->amount_excl_btw, 2, ',', '.') }}</td></tr>
+        <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
+        @if ($discount > 0)
+            <tr><td class="k">Korting Noord-pilot</td><td class="v">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
+        @endif
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
     </table>

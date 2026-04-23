@@ -86,29 +86,36 @@
             const cFirst = this.pilot ? 96 : 120, cNext = this.pilot ? 36 : 45;
             const mPrices = {hdd:9, ssd:15, usb:6, phone:12, laptop:19};
             const mLabels = {hdd:'HDD', ssd:'SSD / NVMe', usb:'USB / SD', phone:'Telefoon / tablet', laptop:'Laptop'};
+            const mk = (label, qty, unit, regularUnit) => {
+                const row = {label, qty, unit, subtotal: unit * qty};
+                if (regularUnit > unit) row.was_subtotal = regularUnit * qty;
+                return row;
+            };
             const lines = [];
             if (boxes > 0) {
                 if (this.firstBoxFree) {
-                    lines.push({label:'Kennismaking — eerste doos', qty:1, unit:0, subtotal:0});
-                    if (boxes >= 2) lines.push({label:'Daarna eerste doos', qty:1, unit:bFirst, subtotal:bFirst});
-                    if (boxes >= 3) lines.push({label:'Volgende dozen', qty:boxes-2, unit:bNext, subtotal:bNext*(boxes-2)});
+                    lines.push(mk('Kennismaking — eerste doos', 1, 0, 30));
+                    if (boxes >= 2) lines.push(mk('Daarna eerste doos', 1, bFirst, 30));
+                    if (boxes >= 3) lines.push(mk('Volgende dozen', boxes-2, bNext, 25));
                 } else {
-                    lines.push({label:'Eerste doos', qty:1, unit:bFirst, subtotal:bFirst});
-                    if (boxes >= 2) lines.push({label:'Volgende dozen', qty:boxes-1, unit:bNext, subtotal:bNext*(boxes-1)});
+                    lines.push(mk('Eerste doos', 1, bFirst, 30));
+                    if (boxes >= 2) lines.push(mk('Volgende dozen', boxes-1, bNext, 25));
                 }
             }
             if (cont > 0) {
-                lines.push({label:'Eerste rolcontainer 240 L', qty:1, unit:cFirst, subtotal:cFirst});
-                if (cont >= 2) lines.push({label:'Volgende rolcontainers', qty:cont-1, unit:cNext, subtotal:cNext*(cont-1)});
+                lines.push(mk('Eerste rolcontainer 240 L', 1, cFirst, 120));
+                if (cont >= 2) lines.push(mk('Volgende rolcontainers', cont-1, cNext, 45));
             }
             for (const k of Object.keys(mPrices)) {
                 const q = this.actMedia[k]|0;
-                if (q > 0) lines.push({label:mLabels[k], qty:q, unit:mPrices[k], subtotal:mPrices[k]*q});
+                if (q > 0) lines.push(mk(mLabels[k], q, mPrices[k], mPrices[k]));
             }
-            const subtotal = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
-            const vat      = Math.round(subtotal * 0.21 * 100) / 100;
-            const total    = Math.round((subtotal + vat) * 100) / 100;
-            return {lines, subtotal, vat, total};
+            const subtotal        = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
+            const subtotalRegular = Math.round(lines.reduce((s,l)=>s+(l.was_subtotal ?? l.subtotal),0) * 100) / 100;
+            const discount        = Math.round((subtotalRegular - subtotal) * 100) / 100;
+            const vat             = Math.round(subtotal * 0.21 * 100) / 100;
+            const total           = Math.round((subtotal + vat) * 100) / 100;
+            return {lines, subtotal, subtotalRegular, discount, vat, total};
         },
         fmt(n) { return '€ ' + Number(n).toFixed(2).replace('.', ','); },
     }">
@@ -188,7 +195,11 @@
                     </tr>
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                    <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
+                    <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal_regular'] ?? $orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
+                @if (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0)
+                    <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount'], 2, ',', '.') }}</td></tr>
+                @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($orderedQuote['vat'], 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black">
@@ -212,7 +223,10 @@
                     </tr>
                 </template>
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                    <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotal)"></td></tr>
+                    <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotalRegular)"></td></tr>
+                <tr x-show="liveQuote.discount > 0">
+                    <td class="text-green-700">Korting Noord-pilot</td><td></td>
+                    <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discount)"></td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>
                 <tr class="border-t-2 border-black">

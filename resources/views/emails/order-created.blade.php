@@ -36,8 +36,14 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
     <tr>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">Subtotaal (excl. btw)</td>
-        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotal, 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
     </tr>
+    @if (!empty($discount) && $discount > 0)
+        <tr>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Korting Noord-pilot</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discount, 2, ',', '.') }}</td>
+        </tr>
+    @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">BTW 21%</td>
         <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($vat, 2, ',', '.') }}</td>
