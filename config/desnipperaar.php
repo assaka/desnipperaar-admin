@@ -29,8 +29,10 @@ return [
     ],
 
     'notifications' => [
-        // CC'd on every OrderCreated confirmation so a human sees each new order in real time.
-        'admin_email' => env('ADMIN_NOTIFY_EMAIL', 'hamid@desnipperaar.nl'),
+        // sales@ gets a visible CC (customer sees it too — shows who handles the order);
+        // admin_email gets a silent BCC (delivery proof / oversight without exposing the address).
+        'sales_email' => env('SALES_EMAIL',         'sales@desnipperaar.nl'),
+        'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'hamid@desnipperaar.nl'),
     ],
 
     'company' => [

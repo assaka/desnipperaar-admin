@@ -22,12 +22,15 @@ class OrderCreated extends Mailable
 
     public function envelope(): Envelope
     {
+        $salesEmail = config('desnipperaar.notifications.sales_email');
         $adminEmail = config('desnipperaar.notifications.admin_email');
-        // BCC instead of CC — when from == admin the recipient's mail client would otherwise
-        // suppress a CC-of-self; BCC to the same address is still delivered as a regular inbox item.
-        $bcc = ($adminEmail && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
-            ? [new Address($adminEmail, 'DeSnipperaar')]
-            : [];
+
+        $cc  = ($salesEmail && strcasecmp($salesEmail, $this->order->customer_email) !== 0)
+            ? [new Address($salesEmail, 'DeSnipperaar Sales')] : [];
+        $bcc = ($adminEmail
+                && strcasecmp($adminEmail, $this->order->customer_email) !== 0
+                && strcasecmp($adminEmail, $salesEmail) !== 0)
+            ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
             subject: "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
@@ -37,6 +40,7 @@ class OrderCreated extends Mailable
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
                 : [],
+            cc: $cc,
             bcc: $bcc,
         );
     }
