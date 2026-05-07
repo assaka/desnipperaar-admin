@@ -30,9 +30,9 @@ return [
 
     'notifications' => [
         // sales@ is the From-address on customer-facing mails (OrderCreated, QuoteRequested);
-        // admin_email gets a silent BCC for delivery proof / oversight.
+        // admin_email gets a silent BCC so the team inbox receives a copy.
         'sales_email' => env('SALES_EMAIL',         'sales@desnipperaar.nl'),
-        'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'hamid@desnipperaar.nl'),
+        'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'sales@desnipperaar.nl'),
     ],
 
     'company' => [

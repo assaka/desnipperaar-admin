@@ -25,11 +25,12 @@ class QuoteRequested extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
         $adminEmail = config('desnipperaar.notifications.admin_email');
 
-        // BCC admin for delivery proof, but only if it is not already the recipient or the from-address.
+        // BCC admin so the team inbox gets a copy. Skip only if the customer is the same address
+        // (avoid duplicate). Sales@ is allowed even when it equals From, since Resend does not
+        // deliver outbound mail back to the From-mailbox.
         $bcc = ($adminEmail
-                && strcasecmp($adminEmail, $this->order->customer_email) !== 0
-                && strcasecmp($adminEmail, $salesEmail) !== 0)
-            ? [new Address($adminEmail, 'Hamid El Abassi')] : [];
+                && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
+            ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
             subject: "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
