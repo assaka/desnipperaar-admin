@@ -44,6 +44,12 @@ return [
         // Hard cap on participants per deal.
         'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),
 
+        // Minimum group target the organizer can propose. Use this to keep the
+        // smallest deal economically viable (e.g. min 20 boxes to make a route
+        // worth driving). Set to 1 (default) to allow any positive target.
+        'min_target_boxes'        => (int) env('GROUP_DEAL_MIN_TARGET_BOXES', 1),
+        'min_target_containers'   => (int) env('GROUP_DEAL_MIN_TARGET_CONTAINERS', 0),
+
         // Joining closes T-N days before pickup_date; the cron materializes orders
         // at that boundary.
         'join_cutoff_days'    => (int) env('GROUP_DEAL_JOIN_CUTOFF_DAYS', 2),

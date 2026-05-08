@@ -453,15 +453,22 @@ class GroupDealController extends Controller
     {
         $update = [];
 
-        // target_box_count: editable in draft + open. Floored at current filled total
-        // so a downgrade can't orphan participants who already joined.
+        $minBoxes      = (int) config('desnipperaar.group_deal.min_target_boxes', 1);
+        $minContainers = (int) config('desnipperaar.group_deal.min_target_containers', 0);
+
+        // target_box_count: editable in draft + open. Floored at max(config minimum,
+        // current filled total) so a downgrade can't orphan participants and stays
+        // above the economically-viable minimum.
         if (array_key_exists('target_box_count', $dealData) && $dealData['target_box_count'] !== null) {
             $newTarget = (int) $dealData['target_box_count'];
             $filled = (int) $deal->participants()->sum('box_count');
-            if ($newTarget < $filled) {
+            $floor = max($minBoxes, $filled);
+            if ($newTarget < $floor) {
                 return response()->json([
                     'ok'    => false,
-                    'error' => "Doel dozen ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
+                    'error' => $newTarget < $minBoxes
+                        ? "Doel dozen ({$newTarget}) is lager dan het minimum ({$minBoxes})."
+                        : "Doel dozen ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
                 ], 422);
             }
             $update['target_box_count'] = $newTarget;
@@ -470,10 +477,13 @@ class GroupDealController extends Controller
         if (array_key_exists('target_container_count', $dealData) && $dealData['target_container_count'] !== null) {
             $newTarget = (int) $dealData['target_container_count'];
             $filled = (int) $deal->participants()->sum('container_count');
-            if ($newTarget < $filled) {
+            $floor = max($minContainers, $filled);
+            if ($newTarget < $floor) {
                 return response()->json([
                     'ok'    => false,
-                    'error' => "Doel rolcontainers ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
+                    'error' => $newTarget < $minContainers
+                        ? "Doel rolcontainers ({$newTarget}) is lager dan het minimum ({$minContainers})."
+                        : "Doel rolcontainers ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
                 ], 422);
             }
             $update['target_container_count'] = $newTarget;
@@ -588,8 +598,10 @@ class GroupDealController extends Controller
 
     private function validateDealAndOrganizer(Request $request): array
     {
-        $minHorizon = (int) config('desnipperaar.group_deal.min_horizon_days', 7);
-        $maxHorizon = (int) config('desnipperaar.group_deal.max_horizon_days', 90);
+        $minHorizon         = (int) config('desnipperaar.group_deal.min_horizon_days', 7);
+        $maxHorizon         = (int) config('desnipperaar.group_deal.max_horizon_days', 90);
+        $minTargetBoxes     = (int) config('desnipperaar.group_deal.min_target_boxes', 1);
+        $minTargetContainers = (int) config('desnipperaar.group_deal.min_target_containers', 0);
 
         return $request->validate([
             'city'                          => ['required', 'string', 'max:120'],
@@ -598,8 +610,8 @@ class GroupDealController extends Controller
                 'after_or_equal:' . now()->addDays($minHorizon)->toDateString(),
                 'before_or_equal:' . now()->addDays($maxHorizon)->toDateString(),
             ],
-            'target_box_count'              => ['required', 'integer', 'min:1', 'max:10000'],
-            'target_container_count'        => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'target_box_count'              => ['required', 'integer', "min:{$minTargetBoxes}", 'max:10000'],
+            'target_container_count'        => ['nullable', 'integer', "min:{$minTargetContainers}", 'max:1000'],
             'organizer'                     => ['required', 'array'],
             'organizer.customer_name'       => ['required', 'string', 'max:180'],
             'organizer.customer_email'      => ['required', 'email', 'max:180'],
