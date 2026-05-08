@@ -5,8 +5,16 @@
 
 <p>Je bent ingeschreven voor de groepsdeal in <strong>{{ $deal->city }}</strong>, ophaaldag <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong>.</p>
 
+@php
+    $filledBoxes = $deal->participants()->sum('box_count');
+    $filledContainers = $deal->participants()->sum('container_count');
+@endphp
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
   <tr><td style="color:#666;">Deelnemers tot nu toe:</td><td><strong>{{ $deal->participants_count }}</strong></td></tr>
+  <tr><td style="color:#666;">Voortgang dozen:</td><td><strong>{{ $filledBoxes }}</strong> van {{ $deal->target_box_count }}</td></tr>
+  @if ($deal->target_container_count > 0)
+    <tr><td style="color:#666;">Voortgang rolcontainers:</td><td><strong>{{ $filledContainers }}</strong> van {{ $deal->target_container_count }}</td></tr>
+  @endif
   <tr><td style="color:#666;">Inschrijven sluit:</td><td><strong>{{ $deal->joinCutoffAt()->format('l j F Y') }}</strong></td></tr>
   <tr><td style="color:#666;">Adres:</td><td>{{ $participant->customer_address }}, {{ $participant->customer_postcode }} {{ $participant->customer_city }}</td></tr>
   <tr><td style="color:#666;">Dozen / containers:</td><td>{{ $participant->box_count }} / {{ $participant->container_count }}</td></tr>

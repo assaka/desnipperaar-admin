@@ -11,8 +11,16 @@
         <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-900 px-4 py-2">{{ session('status') }}</div>
     @endif
 
+    @php
+        $filledBoxes = $deal->participants->sum('box_count');
+        $filledContainers = $deal->participants->sum('container_count');
+    @endphp
     <table class="text-sm mb-6">
         <tr><td class="pr-4 text-gray-600">Slug:</td><td class="font-mono">{{ $deal->slug }}</td></tr>
+        <tr><td class="pr-4 text-gray-600">Doel dozen:</td><td>{{ $filledBoxes }} / {{ $deal->target_box_count }}</td></tr>
+        @if ($deal->target_container_count > 0)
+            <tr><td class="pr-4 text-gray-600">Doel rolcontainers:</td><td>{{ $filledContainers }} / {{ $deal->target_container_count }}</td></tr>
+        @endif
         <tr><td class="pr-4 text-gray-600">Inschrijven sluit:</td><td>{{ $deal->joinCutoffAt()->format('Y-m-d H:i') }}</td></tr>
         <tr><td class="pr-4 text-gray-600">Aangemaakt:</td><td>{{ $deal->created_at->format('Y-m-d H:i') }}</td></tr>
         @if ($deal->approved_at)<tr><td class="pr-4 text-gray-600">Goedgekeurd:</td><td>{{ $deal->approved_at->format('Y-m-d H:i') }}</td></tr>@endif

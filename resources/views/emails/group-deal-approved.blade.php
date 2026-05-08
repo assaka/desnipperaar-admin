@@ -9,7 +9,7 @@
 
 <p><a href="https://desnipperaar.nl/groepsdeals/{{ $deal->slug }}" style="color:#0A0A0A;text-decoration:underline;font-weight:700;">desnipperaar.nl/groepsdeals/{{ $deal->slug }}</a></p>
 
-<p>Deel deze pagina met buren en collega's. Hoe meer mensen meedoen, hoe rendabeler de rit. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
+<p>Deel deze pagina met buren en collega's. Het groepsdoel staat op <strong>{{ $deal->target_box_count }} dozen@if ($deal->target_container_count > 0) en {{ $deal->target_container_count }} rolcontainers@endif</strong>; bezoekers zien een voortgangsbalk die meegroeit naarmate er deelnemers bijkomen. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
 
 <p>Je krijgt als organisator je eerste doos gratis vernietigd, tenzij je in de Noord-pilot (1020-1039) zit; daar geldt al een 20% korting die de perk vervangt.</p>
 

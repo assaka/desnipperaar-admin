@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\GroupDealCancelled;
 use App\Mail\GroupDealJoined;
+use App\Mail\GroupDealReceived;
 use App\Mail\GroupDealSubmitted;
 use App\Models\GroupDeal;
 use App\Models\GroupDealParticipant;
@@ -77,10 +78,12 @@ class GroupDealController extends Controller
 
         $deal = DB::transaction(function () use ($data, $snapshot) {
             $deal = GroupDeal::create([
-                'slug'        => GroupDeal::generateSlug($data['city'], \Illuminate\Support\Carbon::parse($data['pickup_date'])),
-                'city'        => $data['city'],
-                'pickup_date' => $data['pickup_date'],
-                'status'      => GroupDeal::STATUS_DRAFT,
+                'slug'                   => GroupDeal::generateSlug($data['city'], \Illuminate\Support\Carbon::parse($data['pickup_date'])),
+                'city'                   => $data['city'],
+                'pickup_date'            => $data['pickup_date'],
+                'target_box_count'       => (int) $data['target_box_count'],
+                'target_container_count' => (int) ($data['target_container_count'] ?? 0),
+                'status'                 => GroupDeal::STATUS_DRAFT,
             ]);
 
             $organizer = GroupDealParticipant::create([
@@ -106,6 +109,15 @@ class GroupDealController extends Controller
             Mail::send(new GroupDealSubmitted($deal));
         } catch (\Throwable $e) {
             report($e);
+        }
+
+        if ($deal->organizerParticipant) {
+            try {
+                Mail::to($deal->organizerParticipant->customer_email)
+                    ->send(new GroupDealReceived($deal));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return response()->json([
@@ -269,6 +281,8 @@ class GroupDealController extends Controller
                 'after_or_equal:' . now()->addDays($minHorizon)->toDateString(),
                 'before_or_equal:' . now()->addDays($maxHorizon)->toDateString(),
             ],
+            'target_box_count'              => ['required', 'integer', 'min:1', 'max:10000'],
+            'target_container_count'        => ['nullable', 'integer', 'min:0', 'max:1000'],
             'organizer'                     => ['required', 'array'],
             'organizer.customer_name'       => ['required', 'string', 'max:180'],
             'organizer.customer_email'      => ['required', 'email', 'max:180'],
@@ -294,16 +308,24 @@ class GroupDealController extends Controller
             $organizerFirstName = $parts[0] ?? null;
         }
 
+        $progress = $deal->participants()
+            ->selectRaw('COALESCE(SUM(box_count), 0) AS boxes, COALESCE(SUM(container_count), 0) AS containers')
+            ->first();
+
         return array_filter([
-            'slug'                 => $deal->slug,
-            'city'                 => $deal->city,
-            'pickup_date'          => $deal->pickup_date->toDateString(),
-            'status'               => $deal->status,
-            'joined'               => $joinedCount,
-            'cap'                  => $cap,
-            'join_cutoff_at'       => $deal->joinCutoffAt()->toIso8601String(),
-            'joining_open'         => $deal->joiningOpen(),
-            'organizer_first_name' => $organizerFirstName,
+            'slug'                   => $deal->slug,
+            'city'                   => $deal->city,
+            'pickup_date'            => $deal->pickup_date->toDateString(),
+            'status'                 => $deal->status,
+            'joined'                 => $joinedCount,
+            'cap'                    => $cap,
+            'join_cutoff_at'         => $deal->joinCutoffAt()->toIso8601String(),
+            'joining_open'           => $deal->joiningOpen(),
+            'organizer_first_name'   => $organizerFirstName,
+            'target_box_count'       => (int) $deal->target_box_count,
+            'target_container_count' => (int) $deal->target_container_count,
+            'filled_box_count'       => (int) ($progress->boxes ?? 0),
+            'filled_container_count' => (int) ($progress->containers ?? 0),
         ], fn ($v) => $v !== null);
     }
 }

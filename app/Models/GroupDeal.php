@@ -22,6 +22,8 @@ class GroupDeal extends Model
         'slug',
         'city',
         'pickup_date',
+        'target_box_count',
+        'target_container_count',
         'organizer_participant_id',
         'status',
         'approved_at',
@@ -31,10 +33,12 @@ class GroupDeal extends Model
     ];
 
     protected $casts = [
-        'pickup_date'  => 'date',
-        'approved_at'  => 'datetime',
-        'closed_at'    => 'datetime',
-        'cancelled_at' => 'datetime',
+        'pickup_date'            => 'date',
+        'approved_at'            => 'datetime',
+        'closed_at'              => 'datetime',
+        'cancelled_at'           => 'datetime',
+        'target_box_count'       => 'integer',
+        'target_container_count' => 'integer',
     ];
 
     public function participants()
