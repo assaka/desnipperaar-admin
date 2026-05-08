@@ -24,6 +24,7 @@
                     <a href="{{ route('offertes.index') }}" class="mr-4">Offertes</a>
                     <a href="{{ route('invoices.index') }}" class="mr-4">Facturen</a>
                     <a href="{{ route('customers.index') }}" class="mr-4">Klanten</a>
+                    <a href="{{ route('group-deals.index') }}" class="mr-4">Groepdeals</a>
                     <a href="{{ route('drivers.index') }}">Chauffeurs</a>
                 </nav>
             @endauth

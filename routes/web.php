@@ -61,6 +61,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/certificates/{certificate}', [\App\Http\Controllers\CertificateController::class, 'show'])->name('certificates.show');
     Route::get('/certificates/{certificate}/pdf', [\App\Http\Controllers\CertificateController::class, 'pdf'])->name('certificates.pdf');
 
+    Route::get('/group-deals',                          [\App\Http\Controllers\GroupDealController::class, 'index'])->name('group-deals.index');
+    Route::get('/group-deals/{groupDeal}',              [\App\Http\Controllers\GroupDealController::class, 'show'])->name('group-deals.show');
+    Route::post('/group-deals/{groupDeal}/approve',     [\App\Http\Controllers\GroupDealController::class, 'approve'])->name('group-deals.approve');
+    Route::post('/group-deals/{groupDeal}/reject',      [\App\Http\Controllers\GroupDealController::class, 'reject'])->name('group-deals.reject');
+    Route::post('/group-deals/{groupDeal}/cancel',      [\App\Http\Controllers\GroupDealController::class, 'cancel'])->name('group-deals.cancel');
+    Route::post('/group-deals/{groupDeal}/close',       [\App\Http\Controllers\GroupDealController::class, 'manualClose'])->name('group-deals.close');
+
     Route::get('/drivers', [\App\Http\Controllers\DriverController::class, 'index'])->name('drivers.index');
     Route::post('/drivers', [\App\Http\Controllers\DriverController::class, 'store'])->name('drivers.store');
     Route::get('/drivers/{driver}/edit', [\App\Http\Controllers\DriverController::class, 'edit'])->name('drivers.edit');

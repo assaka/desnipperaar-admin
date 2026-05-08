@@ -35,6 +35,28 @@ return [
         'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'sales@desnipperaar.nl'),
     ],
 
+    'group_deal' => [
+        // Perk applied to the organizer's order at materialization. Currently only
+        // 'first_box_free' is wired up; extend the Pricing snapshot helper if more
+        // perk types get added.
+        'organizer_perk_type' => env('GROUP_DEAL_ORGANIZER_PERK', 'first_box_free'),
+
+        // Hard cap on participants per deal.
+        'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),
+
+        // Joining closes T-N days before pickup_date; the cron materializes orders
+        // at that boundary.
+        'join_cutoff_days'    => (int) env('GROUP_DEAL_JOIN_CUTOFF_DAYS', 2),
+
+        // Pickup-date validation window at deal-creation time.
+        'min_horizon_days'    => (int) env('GROUP_DEAL_MIN_HORIZON_DAYS', 7),
+        'max_horizon_days'    => (int) env('GROUP_DEAL_MAX_HORIZON_DAYS', 90),
+
+        // Hard rule: cannot have two non-rejected/cancelled deals on the same
+        // (city, pickup_date). Kept enabled by default.
+        'one_per_city_per_day' => (bool) env('GROUP_DEAL_ONE_PER_CITY_PER_DAY', true),
+    ],
+
     'company' => [
         'name'     => env('COMPANY_NAME', 'DeSnipperaar'),
         'address'  => env('COMPANY_ADDRESS', ''),

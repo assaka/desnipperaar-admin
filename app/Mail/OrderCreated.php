@@ -44,46 +44,34 @@ class OrderCreated extends Mailable
 
     public function content(): Content
     {
-        $quote = \App\Support\Pricing::quote(
-            (int) $this->order->box_count,
-            (int) $this->order->container_count,
-            (bool) $this->order->pilot,
-            (bool) $this->order->first_box_free,
-        );
-
-        $mediaLines = [];
-        $mediaPrices = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
-        $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
-        foreach (($this->order->media_items ?? []) as $key => $qty) {
-            $qty = (int) $qty;
-            if ($qty <= 0 || !isset($mediaPrices[$key])) continue;
-            $mediaLines[] = [
-                'label'    => $mediaLabels[$key] ?? ucfirst($key),
-                'qty'      => $qty,
-                'unit'     => $mediaPrices[$key],
-                'subtotal' => $mediaPrices[$key] * $qty,
-            ];
-        }
-
-        $mediaSubtotal   = array_sum(array_column($mediaLines, 'subtotal'));
-        $subtotal        = $quote['subtotal'] + $mediaSubtotal;
-        $subtotalRegular = ($quote['subtotal_regular'] ?? $quote['subtotal']) + $mediaSubtotal;
-        $discount        = round($subtotalRegular - $subtotal, 2);
-        $vat             = round($subtotal * 0.21, 2);
-        $total           = round($subtotal + $vat, 2);
+        // Locked snapshot for group-deal materialized orders; live recompute otherwise.
+        $snap = ($this->order->quote_locked && $this->order->price_snapshot)
+            ? $this->order->price_snapshot
+            : \App\Support\Pricing::snapshot(
+                (int) $this->order->box_count,
+                (int) $this->order->container_count,
+                $this->order->media_items,
+                (bool) $this->order->pilot,
+                (bool) $this->order->first_box_free,
+            );
 
         return new Content(
             view: 'emails.order-created',
             with: [
                 'order'           => $this->order,
                 'sender'          => $this->sender,
-                'quote'           => $quote,
-                'mediaLines'      => $mediaLines,
-                'subtotal'        => $subtotal,
-                'subtotalRegular' => $subtotalRegular,
-                'discount'        => $discount,
-                'vat'             => $vat,
-                'total'           => $total,
+                'quote'           => [
+                    'lines'            => $snap['lines'],
+                    'subtotal'         => $snap['subtotal'] - array_sum(array_column($snap['media_lines'] ?? [], 'subtotal')),
+                    'subtotal_regular' => $snap['subtotal_regular'] - array_sum(array_column($snap['media_lines'] ?? [], 'subtotal')),
+                    'pilot'            => $snap['pilot'] ?? false,
+                ],
+                'mediaLines'      => $snap['media_lines'] ?? [],
+                'subtotal'        => $snap['subtotal'],
+                'subtotalRegular' => $snap['subtotal_regular'],
+                'discount'        => $snap['discount'],
+                'vat'             => $snap['vat'],
+                'total'           => $snap['total'],
             ],
         );
     }

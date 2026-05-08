@@ -55,6 +55,10 @@ class Order extends Model
         'reschedule_requested_date',
         'reschedule_requested_window',
         'reschedule_notes',
+        'group_deal_id',
+        'is_organizer',
+        'quote_locked',
+        'price_snapshot',
     ];
 
     protected $casts = [
@@ -71,6 +75,9 @@ class Order extends Model
         'duration_minutes' => 'integer',
         'reschedule_requested_at'   => 'datetime',
         'reschedule_requested_date' => 'date',
+        'is_organizer' => 'boolean',
+        'quote_locked' => 'boolean',
+        'price_snapshot' => 'array',
     ];
 
     public function customer()
@@ -102,6 +109,16 @@ class Order extends Model
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function groupDeal()
+    {
+        return $this->belongsTo(GroupDeal::class);
+    }
+
+    public function groupDealParticipant()
+    {
+        return $this->hasOne(GroupDealParticipant::class);
     }
 
     public function isQuoteExpired(): bool

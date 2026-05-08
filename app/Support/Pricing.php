@@ -18,6 +18,34 @@ class Pricing
 
     public const VAT_RATE              = 0.21;
 
+    public const MEDIA_PRICES = [
+        'hdd'    => 9,
+        'ssd'    => 15,
+        'usb'    => 6,
+        'phone'  => 12,
+        'laptop' => 19,
+    ];
+
+    public const MEDIA_LABELS = [
+        'hdd'    => 'HDD',
+        'ssd'    => 'SSD / NVMe',
+        'usb'    => 'USB / SD',
+        'phone'  => 'Telefoon / tablet',
+        'laptop' => 'Laptop',
+    ];
+
+    /**
+     * Postcode prefix range that gets the Noord-pilot 20% discount.
+     */
+    public static function isPilotPostcode(?string $postcode): bool
+    {
+        if (!$postcode) {
+            return false;
+        }
+        $prefix = (int) substr(preg_replace('/\s+/', '', $postcode), 0, 4);
+        return $prefix >= 1020 && $prefix <= 1039;
+    }
+
     /**
      * Build one priced line, attaching was_unit / was_subtotal when the effective
      * unit is below the regular rate — consumers can then sum was_subtotal ?? subtotal
@@ -85,6 +113,69 @@ class Pricing
             'vat'              => $vat,
             'total'            => $total,
             'pilot'            => $pilot,
+        ];
+    }
+
+    /**
+     * Build a full priced snapshot including media line items, ready to be persisted
+     * on a group-deal participant or on a quote_locked order. Mirrors the shape that
+     * OrderCreated's content() method reconstructs for non-locked orders, so the
+     * email/invoice templates can render either source without branching.
+     *
+     * Pilot/perk rules:
+     *  - $pilot is the authoritative pilot flag (caller decides; usually
+     *    Pricing::isPilotPostcode($postcode)).
+     *  - When pilot is true, the organizer perk is suppressed (pilot replaces perk),
+     *    so $firstBoxFree is forced to false in that case.
+     */
+    public static function snapshot(
+        int $boxes,
+        int $containers,
+        ?array $mediaItems,
+        bool $pilot,
+        bool $firstBoxFree
+    ): array {
+        if ($pilot) {
+            $firstBoxFree = false;
+        }
+
+        $quote = self::quote($boxes, $containers, $pilot, $firstBoxFree);
+
+        $mediaLines = [];
+        foreach (($mediaItems ?? []) as $key => $qty) {
+            $qty = (int) $qty;
+            if ($qty <= 0 || !isset(self::MEDIA_PRICES[$key])) {
+                continue;
+            }
+            $unit = self::MEDIA_PRICES[$key];
+            $mediaLines[] = [
+                'key'      => $key,
+                'label'    => self::MEDIA_LABELS[$key] ?? ucfirst($key),
+                'qty'      => $qty,
+                'unit'     => $unit,
+                'subtotal' => $unit * $qty,
+            ];
+        }
+
+        $mediaSubtotal   = array_sum(array_column($mediaLines, 'subtotal'));
+        $subtotal        = round($quote['subtotal'] + $mediaSubtotal, 2);
+        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotal, 2);
+        $discount        = round($subtotalRegular - $subtotal, 2);
+        $vat             = round($subtotal * self::VAT_RATE, 2);
+        $total           = round($subtotal + $vat, 2);
+
+        return [
+            'lines'            => $quote['lines'],
+            'media_lines'      => $mediaLines,
+            'subtotal'         => $subtotal,
+            'subtotal_regular' => $subtotalRegular,
+            'discount'         => $discount,
+            'vat'              => $vat,
+            'total'            => $total,
+            'pilot'            => $pilot,
+            'first_box_free'   => $firstBoxFree,
+            'pricing_version'  => 1,
+            'computed_at'      => now()->toIso8601String(),
         ];
     }
 }
