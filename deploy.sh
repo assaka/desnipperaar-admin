@@ -52,12 +52,15 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# 8. Permissions for web user (adjust if not www-data)
-if [ -n "${WEB_USER:-}" ]; then
-  log "chown ${WEB_USER} on storage + bootstrap/cache"
-  chown -R "${WEB_USER}:${WEB_USER}" storage bootstrap/cache || true
-  chmod -R ug+rwX storage bootstrap/cache || true
-fi
+# 8. Permissions for web user (defaults to www-data; override with WEB_USER env).
+# Steps 6+7 above run as whoever invoked deploy.sh and write cache files as
+# that user. If that's root and PHP-FPM runs as www-data, the next email
+# render fails with EACCES because Mailer can't compile a new view template
+# into storage/framework/views/. Chown unconditionally to keep cache writable.
+WEB_USER="${WEB_USER:-www-data}"
+log "chown ${WEB_USER} on storage + bootstrap/cache"
+chown -R "${WEB_USER}:${WEB_USER}" storage bootstrap/cache || true
+chmod -R ug+rwX storage bootstrap/cache || true
 
 # 9. Restart queue workers (supervisord / systemd will pick up the signal)
 log "queue:restart"
