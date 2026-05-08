@@ -34,7 +34,7 @@
                         'rejected'  => 'bg-red-200 text-red-900',
                     ][$deal->status] ?? 'bg-gray-200';
                 @endphp
-                <tr class="border-b hover:bg-yellow-50">
+                <tr class="border-b hover:bg-yellow-50 cursor-pointer" data-href="{{ route('group-deals.show', $deal) }}">
                     <td class="py-2 font-mono"><a href="{{ route('group-deals.show', $deal) }}">{{ $deal->id }}</a></td>
                     <td>{{ $deal->city }}</td>
                     <td>{{ $deal->pickup_date->format('Y-m-d') }}</td>
@@ -50,4 +50,13 @@
     </table>
 
     <div class="mt-6">{{ $deals->links() }}</div>
+
+    <script>
+        document.querySelectorAll('tr[data-href]').forEach(function (tr) {
+            tr.addEventListener('click', function (e) {
+                if (e.target.closest('a, button, input, label, form')) return;
+                window.location = tr.dataset.href;
+            });
+        });
+    </script>
 @endsection
