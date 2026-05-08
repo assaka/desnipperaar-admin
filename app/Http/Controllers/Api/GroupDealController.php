@@ -21,6 +21,22 @@ use Illuminate\Support\Facades\Mail;
 
 class GroupDealController extends Controller
 {
+    /** GET /api/group-deals/check-postcode?postcode=1234&city=Haarlem
+     *  Live-validates a postcode/city pair from the static-site forms while
+     *  the user is typing. Mirrors the rule the create/join endpoints enforce. */
+    public function checkPostcode(Request $request): JsonResponse
+    {
+        $postcode = trim((string) $request->query('postcode', ''));
+        $city     = trim((string) $request->query('city', ''));
+        if ($postcode === '' || $city === '') {
+            return response()->json(['match' => true]); // not enough data to judge
+        }
+        return response()->json([
+            'match'     => PostcodeLookup::matches($postcode, $city),
+            'suggested' => PostcodeLookup::suggestedCityFor($postcode),
+        ]);
+    }
+
     /** GET /api/group-deals/config — public config used by the static-site forms. */
     public function config(): JsonResponse
     {

@@ -19,6 +19,8 @@ Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityCo
 // Group deals — public listing, single deal, create draft, join, manage.
 Route::get('/group-deals/config', [\App\Http\Controllers\Api\GroupDealController::class, 'config'])
     ->middleware('throttle:120,1');
+Route::get('/group-deals/check-postcode', [\App\Http\Controllers\Api\GroupDealController::class, 'checkPostcode'])
+    ->middleware('throttle:120,1');
 Route::get('/group-deals', [\App\Http\Controllers\Api\GroupDealController::class, 'index'])
     ->middleware('throttle:120,1');
 Route::get('/group-deals/manage/{token}', [\App\Http\Controllers\Api\GroupDealController::class, 'manageShow'])
