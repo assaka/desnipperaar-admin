@@ -6,7 +6,7 @@
 
 <p>Beste {{ explode(' ', $participant->customer_name)[0] }},</p>
 
-<p>Bedankt — we hebben je gegevens bijgewerkt voor de groepsdeal in <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong>.</p>
+<p>Bedankt, we hebben je gegevens bijgewerkt voor de groepsdeal in <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong>.</p>
 
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;margin-bottom:16px;">
   <tr><td style="color:#666;">Adres:</td><td>{{ $participant->customer_address }}, {{ $participant->customer_postcode }} {{ $participant->customer_city }}</td></tr>
