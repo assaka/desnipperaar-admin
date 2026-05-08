@@ -208,7 +208,7 @@ class GroupDealController extends Controller
         ]);
 
         try {
-            Mail::send(new GroupDealJoined($deal, $participant));
+            Mail::to($participant->customer_email)->send(new GroupDealJoined($deal, $participant));
         } catch (\Throwable $e) {
             report($e);
         }
