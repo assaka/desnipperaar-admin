@@ -35,6 +35,19 @@ class Pricing
     ];
 
     /**
+     * Tiered organizer-extra discount: base + per_joiner * joiners, capped.
+     * Caller is responsible for suppressing this in the pilot postcode range.
+     */
+    public static function organizerExtraDiscountPct(int $nonOrganizerCount): int
+    {
+        $base = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
+        $per  = (int) config('desnipperaar.group_deal.organizer_extra_discount_per_joiner_pct', 0);
+        $cap  = (int) config('desnipperaar.group_deal.organizer_extra_discount_cap_pct', 100);
+        $raw  = $base + ($per * max(0, $nonOrganizerCount));
+        return max(0, min($cap, $raw));
+    }
+
+    /**
      * Postcode prefix range that gets the Noord-pilot 20% discount.
      */
     public static function isPilotPostcode(?string $postcode): bool

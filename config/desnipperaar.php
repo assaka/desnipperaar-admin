@@ -43,10 +43,15 @@ return [
 
         // Extra percentage discount the organizer gets on every line item, on
         // top of the perk above. Incentivises organizers to bring more boxes
-        // themselves (the marginal cost of every additional doos drops). Suppressed
-        // for organizers in the Noord-pilot postcode range — pilot still wins.
-        // Set to 0 to disable.
-        'organizer_extra_discount_pct' => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PCT', 10),
+        // themselves (the marginal cost of every additional doos drops) AND to
+        // recruit deelnemers (the per-joiner bonus pushes the rate up to the
+        // cap). Suppressed for organizers in the Noord-pilot postcode range —
+        // pilot still wins. The effective rate is:
+        //   min(cap_pct, base_pct + per_joiner_pct * non_organizer_count)
+        // Set base to 0 to disable the entire perk.
+        'organizer_extra_discount_pct'             => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PCT', 10),
+        'organizer_extra_discount_per_joiner_pct'  => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PER_JOINER_PCT', 1),
+        'organizer_extra_discount_cap_pct'         => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_CAP_PCT', 25),
 
         // Hard cap on participants per deal.
         'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),

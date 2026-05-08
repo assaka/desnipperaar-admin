@@ -43,13 +43,16 @@ class GroupDealController extends Controller
     {
         $cfg = config('desnipperaar.group_deal');
         return response()->json([
-            'min_target_boxes'      => (int) ($cfg['min_target_boxes']      ?? 1),
-            'max_target_boxes'      => 10000,
-            'min_target_containers' => (int) ($cfg['min_target_containers'] ?? 0),
-            'max_target_containers' => 1000,
-            'min_horizon_days'      => (int) ($cfg['min_horizon_days']      ?? 7),
-            'max_horizon_days'      => (int) ($cfg['max_horizon_days']      ?? 90),
-            'max_joiners'           => (int) ($cfg['max_joiners']           ?? 30),
+            'min_target_boxes'                        => (int) ($cfg['min_target_boxes']      ?? 1),
+            'max_target_boxes'                        => 10000,
+            'min_target_containers'                   => (int) ($cfg['min_target_containers'] ?? 0),
+            'max_target_containers'                   => 1000,
+            'min_horizon_days'                        => (int) ($cfg['min_horizon_days']      ?? 7),
+            'max_horizon_days'                        => (int) ($cfg['max_horizon_days']      ?? 90),
+            'max_joiners'                             => (int) ($cfg['max_joiners']           ?? 30),
+            'organizer_extra_discount_pct'            => (int) ($cfg['organizer_extra_discount_pct']            ?? 0),
+            'organizer_extra_discount_per_joiner_pct' => (int) ($cfg['organizer_extra_discount_per_joiner_pct'] ?? 0),
+            'organizer_extra_discount_cap_pct'        => (int) ($cfg['organizer_extra_discount_cap_pct']        ?? 100),
         ]);
     }
 
@@ -147,11 +150,11 @@ class GroupDealController extends Controller
             }
         }
 
-        $perkType        = config('desnipperaar.group_deal.organizer_perk_type');
-        $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
-        $isPilot         = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
-        $applyPerk       = $perkType === 'first_box_free' && !$isPilot;
-        $applyExtra      = $isPilot ? 0 : $extraDiscountPct;
+        $perkType   = config('desnipperaar.group_deal.organizer_perk_type');
+        $isPilot    = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
+        $applyPerk  = $perkType === 'first_box_free' && !$isPilot;
+        // Draft-create: organizer is the only participant, joiner count = 0 → base rate.
+        $applyExtra = $isPilot ? 0 : Pricing::organizerExtraDiscountPct(0);
 
         $snapshot = Pricing::snapshot(
             (int) $data['organizer']['box_count'],
@@ -277,6 +280,9 @@ class GroupDealController extends Controller
             'notes'             => $data['notes'] ?? null,
             'price_snapshot'    => $snapshot,
         ]);
+
+        // New joiner pushes the organizer's tier up. Rebuild their snapshot.
+        $this->recomputeOrganizerSnapshot($deal);
 
         try {
             Mail::to($participant->customer_email)->send(new GroupDealJoined($deal, $participant));
@@ -426,11 +432,18 @@ class GroupDealController extends Controller
             }
         }
 
-        $isPilot         = Pricing::isPilotPostcode($data['customer_postcode']);
-        $perkType        = config('desnipperaar.group_deal.organizer_perk_type');
-        $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
-        $applyPerk       = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
-        $applyExtra      = ($isOrganizer && !$isPilot) ? $extraDiscountPct : 0;
+        $isPilot   = Pricing::isPilotPostcode($data['customer_postcode']);
+        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
+        $applyPerk = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
+        // Tier rate uses the live joiner count (= participants minus the
+        // organizer themselves). Joiners' own snapshots don't get the perk;
+        // pass 0 in that branch.
+        $joinerCount = $deal->participants()
+            ->where('id', '!=', $deal->organizer_participant_id)
+            ->count();
+        $applyExtra = ($isOrganizer && !$isPilot)
+            ? Pricing::organizerExtraDiscountPct($joinerCount)
+            : 0;
 
         $snapshot = Pricing::snapshot(
             (int) $data['box_count'],
@@ -603,7 +616,10 @@ class GroupDealController extends Controller
             $p->delete();
 
             if (!$isOrganizer) {
-                // Non-organizer left: notify the organizer with updated stats.
+                // Joiner left: organizer's tier drops by one — recompute their
+                // snapshot before notifying so the email reflects the new total.
+                $this->recomputeOrganizerSnapshot($deal);
+
                 $organizer = $deal->organizerParticipant;
                 if ($organizer) {
                     try {
@@ -634,25 +650,11 @@ class GroupDealController extends Controller
                 return;
             }
 
-            // Hand off: recompute the new organizer's snapshot with the perk applied
-            // (subject to the pilot-replaces-perk rule) and the organizer-extra
-            // discount layered on top for non-pilot postcodes.
-            $perkType         = config('desnipperaar.group_deal.organizer_perk_type');
-            $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
-            $isPilot          = Pricing::isPilotPostcode($next->customer_postcode);
-            $applyPerk        = $perkType === 'first_box_free' && !$isPilot;
-            $applyExtra       = $isPilot ? 0 : $extraDiscountPct;
-
-            $snapshot = Pricing::snapshot(
-                (int) $next->box_count,
-                (int) $next->container_count,
-                $next->media_items,
-                $isPilot,
-                $applyPerk,
-                $applyExtra,
-            );
-            $next->update(['price_snapshot' => $snapshot]);
+            // Hand off: promote $next to organizer, then recompute their snapshot
+            // with the live joiner count (excluding $next themselves).
             $deal->update(['organizer_participant_id' => $next->id]);
+            $deal->refresh();
+            $this->recomputeOrganizerSnapshot($deal);
         });
     }
 
@@ -699,6 +701,32 @@ class GroupDealController extends Controller
             'organizer.customer_address.required' => 'Vul je adres in.',
             'organizer.box_count.required'        => 'Vul je eigen aantal dozen in.',
         ]);
+    }
+
+    /** Rebuild the organizer's price_snapshot using the current joiner count.
+     *  Call after any participant event (join, cancel, edit-volume) that
+     *  changes the count, so the tiered organizer-extra discount stays in
+     *  sync. No-op for pilot organizers (they get pilot pricing instead). */
+    private function recomputeOrganizerSnapshot(GroupDeal $deal): void
+    {
+        $organizer = $deal->organizerParticipant()->first();
+        if (!$organizer) return;
+
+        $isPilot   = Pricing::isPilotPostcode($organizer->customer_postcode);
+        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
+        $applyPerk = $perkType === 'first_box_free' && !$isPilot;
+        $joiners   = $deal->participants()->where('id', '!=', $organizer->id)->count();
+        $applyExtra = $isPilot ? 0 : Pricing::organizerExtraDiscountPct($joiners);
+
+        $snapshot = Pricing::snapshot(
+            (int) $organizer->box_count,
+            (int) $organizer->container_count,
+            $organizer->media_items,
+            $isPilot,
+            $applyPerk,
+            $applyExtra,
+        );
+        $organizer->update(['price_snapshot' => $snapshot]);
     }
 
     /** Returns a 422 JsonResponse when postcode/city are both known and disagree, null otherwise. */
