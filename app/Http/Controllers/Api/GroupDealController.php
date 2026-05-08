@@ -147,9 +147,11 @@ class GroupDealController extends Controller
             }
         }
 
-        $perkType    = config('desnipperaar.group_deal.organizer_perk_type');
-        $isPilot     = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
-        $applyPerk   = $perkType === 'first_box_free' && !$isPilot;
+        $perkType        = config('desnipperaar.group_deal.organizer_perk_type');
+        $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
+        $isPilot         = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
+        $applyPerk       = $perkType === 'first_box_free' && !$isPilot;
+        $applyExtra      = $isPilot ? 0 : $extraDiscountPct;
 
         $snapshot = Pricing::snapshot(
             (int) $data['organizer']['box_count'],
@@ -157,6 +159,7 @@ class GroupDealController extends Controller
             $data['organizer']['media_items'] ?? null,
             $isPilot,
             $applyPerk,
+            $applyExtra,
         );
 
         $deal = DB::transaction(function () use ($data, $snapshot) {
@@ -423,9 +426,11 @@ class GroupDealController extends Controller
             }
         }
 
-        $isPilot   = Pricing::isPilotPostcode($data['customer_postcode']);
-        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
-        $applyPerk = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
+        $isPilot         = Pricing::isPilotPostcode($data['customer_postcode']);
+        $perkType        = config('desnipperaar.group_deal.organizer_perk_type');
+        $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
+        $applyPerk       = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
+        $applyExtra      = ($isOrganizer && !$isPilot) ? $extraDiscountPct : 0;
 
         $snapshot = Pricing::snapshot(
             (int) $data['box_count'],
@@ -433,6 +438,7 @@ class GroupDealController extends Controller
             $p->media_items,
             $isPilot,
             $applyPerk,
+            $applyExtra,
         );
 
         $oldBoxCount       = (int) $p->box_count;
@@ -629,10 +635,13 @@ class GroupDealController extends Controller
             }
 
             // Hand off: recompute the new organizer's snapshot with the perk applied
-            // (subject to the pilot-replaces-perk rule).
-            $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
-            $isPilot   = Pricing::isPilotPostcode($next->customer_postcode);
-            $applyPerk = $perkType === 'first_box_free' && !$isPilot;
+            // (subject to the pilot-replaces-perk rule) and the organizer-extra
+            // discount layered on top for non-pilot postcodes.
+            $perkType         = config('desnipperaar.group_deal.organizer_perk_type');
+            $extraDiscountPct = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
+            $isPilot          = Pricing::isPilotPostcode($next->customer_postcode);
+            $applyPerk        = $perkType === 'first_box_free' && !$isPilot;
+            $applyExtra       = $isPilot ? 0 : $extraDiscountPct;
 
             $snapshot = Pricing::snapshot(
                 (int) $next->box_count,
@@ -640,6 +649,7 @@ class GroupDealController extends Controller
                 $next->media_items,
                 $isPilot,
                 $applyPerk,
+                $applyExtra,
             );
             $next->update(['price_snapshot' => $snapshot]);
             $deal->update(['organizer_participant_id' => $next->id]);

@@ -41,6 +41,13 @@ return [
         // perk types get added.
         'organizer_perk_type' => env('GROUP_DEAL_ORGANIZER_PERK', 'first_box_free'),
 
+        // Extra percentage discount the organizer gets on every line item, on
+        // top of the perk above. Incentivises organizers to bring more boxes
+        // themselves (the marginal cost of every additional doos drops). Suppressed
+        // for organizers in the Noord-pilot postcode range — pilot still wins.
+        // Set to 0 to disable.
+        'organizer_extra_discount_pct' => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PCT', 10),
+
         // Hard cap on participants per deal.
         'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),
 

@@ -17,7 +17,7 @@
 
 <p>Deel deze pagina via je netwerk: kantoren, MKB-collega's, ZZP'ers, VvE-bestuur of buurorganisaties in {{ $deal->city }}. Particulieren met een archief zijn ook welkom. Het groepsdoel staat op <strong>{{ $goalText }}</strong>; bezoekers zien een voortgangsbalk die meegroeit zodra er deelnemers bijkomen. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
 
-<p>Als organisator vernietigen wij je eerste doos kosteloos.</p>
+<p>Als organisator vernietigen wij je eerste doos kosteloos &eacute;n krijg je 10% extra korting op alle andere items. Hoe meer deelnemers en dozen jullie bundelen, hoe hoger je bonus uitvalt.</p>
 
 @if ($deal->organizerParticipant)
 <p style="margin-top:20px;">
