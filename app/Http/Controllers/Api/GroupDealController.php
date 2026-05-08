@@ -21,6 +21,21 @@ use Illuminate\Support\Facades\Mail;
 
 class GroupDealController extends Controller
 {
+    /** GET /api/group-deals/config — public config used by the static-site forms. */
+    public function config(): JsonResponse
+    {
+        $cfg = config('desnipperaar.group_deal');
+        return response()->json([
+            'min_target_boxes'      => (int) ($cfg['min_target_boxes']      ?? 1),
+            'max_target_boxes'      => 10000,
+            'min_target_containers' => (int) ($cfg['min_target_containers'] ?? 0),
+            'max_target_containers' => 1000,
+            'min_horizon_days'      => (int) ($cfg['min_horizon_days']      ?? 7),
+            'max_horizon_days'      => (int) ($cfg['max_horizon_days']      ?? 90),
+            'max_joiners'           => (int) ($cfg['max_joiners']           ?? 30),
+        ]);
+    }
+
     /** GET /api/group-deals — public listing of joinable + recently-closed deals. */
     public function index(Request $request): JsonResponse
     {
