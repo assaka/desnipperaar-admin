@@ -319,17 +319,30 @@ class GroupDealController extends Controller
         }
 
         $data = $request->validate([
-            'customer_name'     => ['required', 'string', 'max:180'],
-            'customer_email'    => ['required', 'email', 'max:180'],
-            'customer_phone'    => ['nullable', 'string', 'max:40'],
-            'customer_postcode' => ['required', 'string', 'max:10'],
-            'customer_address'  => ['required', 'string', 'max:255'],
-            'box_count'         => ['required', 'integer', 'min:0', 'max:200'],
-            'container_count'   => ['nullable', 'integer', 'min:0', 'max:50'],
-            'notes'             => ['nullable', 'string', 'max:2000'],
+            'customer_name'                 => ['required', 'string', 'max:180'],
+            'customer_email'                => ['required', 'email', 'max:180'],
+            'customer_phone'                => ['nullable', 'string', 'max:40'],
+            'customer_postcode'             => ['required', 'string', 'max:10'],
+            'customer_address'              => ['required', 'string', 'max:255'],
+            'box_count'                     => ['required', 'integer', 'min:0', 'max:200'],
+            'container_count'               => ['nullable', 'integer', 'min:0', 'max:50'],
+            'notes'                         => ['nullable', 'string', 'max:2000'],
+            // Deal-level fields — silently ignored unless the participant is the organizer.
+            'deal'                          => ['nullable', 'array'],
+            'deal.target_box_count'         => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'deal.target_container_count'   => ['nullable', 'integer', 'min:0', 'max:1000'],
+            'deal.pickup_date'              => ['nullable', 'date'],
         ]);
 
         $isOrganizer = $p->id === $deal->organizer_participant_id;
+
+        // Apply deal-level edits before participant cap-check, so a target raise
+        // can unblock a simultaneous organizer-bijdrage raise in one PATCH.
+        if ($isOrganizer && !empty($data['deal'])) {
+            $err = $this->applyOrganizerDealEdits($deal, $data['deal']);
+            if ($err) return $err;
+            $deal->refresh();
+        }
 
         // Organizer's own contribution is capped by the group target.
         if ($isOrganizer) {
@@ -393,6 +406,87 @@ class GroupDealController extends Controller
         $this->cancelParticipant($deal, $p);
 
         return response()->json(['ok' => true]);
+    }
+
+    /** Apply organizer-driven edits to a GroupDeal (target volumes, pickup_date in draft).
+     *  Returns a JsonResponse on validation failure, or null on success — caller must
+     *  short-circuit when non-null. */
+    private function applyOrganizerDealEdits(GroupDeal $deal, array $dealData): ?JsonResponse
+    {
+        $update = [];
+
+        // target_box_count: editable in draft + open. Floored at current filled total
+        // so a downgrade can't orphan participants who already joined.
+        if (array_key_exists('target_box_count', $dealData) && $dealData['target_box_count'] !== null) {
+            $newTarget = (int) $dealData['target_box_count'];
+            $filled = (int) $deal->participants()->sum('box_count');
+            if ($newTarget < $filled) {
+                return response()->json([
+                    'ok'    => false,
+                    'error' => "Doel dozen ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
+                ], 422);
+            }
+            $update['target_box_count'] = $newTarget;
+        }
+
+        if (array_key_exists('target_container_count', $dealData) && $dealData['target_container_count'] !== null) {
+            $newTarget = (int) $dealData['target_container_count'];
+            $filled = (int) $deal->participants()->sum('container_count');
+            if ($newTarget < $filled) {
+                return response()->json([
+                    'ok'    => false,
+                    'error' => "Doel rolcontainers ({$newTarget}) kan niet lager zijn dan al ingeschreven aantal ({$filled}).",
+                ], 422);
+            }
+            $update['target_container_count'] = $newTarget;
+        }
+
+        // pickup_date: only editable in draft. After approval the day is frozen since
+        // joiners signed up for that specific date. No-op when the submitted value
+        // equals the current pickup_date — this lets the manage form post the field
+        // unconditionally without erroring on open deals.
+        if (array_key_exists('pickup_date', $dealData) && $dealData['pickup_date'] !== null) {
+            $newDate    = \Illuminate\Support\Carbon::parse($dealData['pickup_date']);
+            $newDateStr = $newDate->toDateString();
+            $changed    = $newDateStr !== $deal->pickup_date->toDateString();
+            if ($changed) {
+                if ($deal->status !== GroupDeal::STATUS_DRAFT) {
+                    return response()->json([
+                        'ok'    => false,
+                        'error' => 'Ophaaldag kan alleen in concept-fase gewijzigd worden.',
+                    ], 422);
+                }
+                $minHorizon = (int) config('desnipperaar.group_deal.min_horizon_days', 7);
+                $maxHorizon = (int) config('desnipperaar.group_deal.max_horizon_days', 90);
+                $minAllowed = now()->addDays($minHorizon)->startOfDay();
+                $maxAllowed = now()->addDays($maxHorizon)->endOfDay();
+                if ($newDate->lt($minAllowed) || $newDate->gt($maxAllowed)) {
+                    return response()->json([
+                        'ok'    => false,
+                        'error' => "Ophaaldag moet tussen {$minAllowed->toDateString()} en {$maxAllowed->toDateString()} liggen.",
+                    ], 422);
+                }
+                $clash = GroupDeal::where('city', $deal->city)
+                    ->whereDate('pickup_date', $newDateStr)
+                    ->where('id', '!=', $deal->id)
+                    ->whereNotIn('status', [GroupDeal::STATUS_REJECTED, GroupDeal::STATUS_CANCELLED])
+                    ->exists();
+                if ($clash) {
+                    return response()->json([
+                        'ok'    => false,
+                        'error' => 'Er bestaat al een groepsdeal voor deze stad op deze datum.',
+                    ], 422);
+                }
+                $update['pickup_date'] = $newDateStr;
+                // Slug encodes the date; regenerate so the public URL stays consistent.
+                $update['slug'] = GroupDeal::generateSlug($deal->city, $newDate);
+            }
+        }
+
+        if (!empty($update)) {
+            $deal->update($update);
+        }
+        return null;
     }
 
     /** Soft-delete a participant; if they were the organizer, hand off to the next-oldest
