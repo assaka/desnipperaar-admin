@@ -7,6 +7,7 @@ use App\Mail\GroupDealCancelled;
 use App\Mail\GroupDealJoined;
 use App\Mail\GroupDealParticipantJoined;
 use App\Mail\GroupDealParticipantLeft;
+use App\Mail\GroupDealParticipantSelfUpdated;
 use App\Mail\GroupDealParticipantUpdated;
 use App\Mail\GroupDealReceived;
 use App\Mail\GroupDealSubmitted;
@@ -448,21 +449,25 @@ class GroupDealController extends Controller
             'price_snapshot'    => $snapshot,
         ]);
 
-        // Notify the organizer if a non-organizer joiner adjusted their volume.
-        // Other field changes (phone, address typo) don't change group stats so
-        // they don't warrant an email.
-        $volumeChanged = $oldBoxCount !== (int) $p->box_count
-            || $oldContainerCount !== (int) $p->container_count;
-        if (!$isOrganizer && $volumeChanged) {
-            $organizer = $deal->organizerParticipant;
-            if ($organizer) {
-                try {
-                    Mail::send(new GroupDealParticipantUpdated(
-                        $deal, $p, $organizer, $oldBoxCount, $oldContainerCount,
-                    ));
-                } catch (\Throwable $e) {
-                    report($e);
-                }
+        // 1. Confirmation to the editor themselves (sales BCC'd via envelope).
+        try {
+            Mail::send(new GroupDealParticipantSelfUpdated($deal, $p));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // 2. Notify the organizer when someone else made the change. Skip when
+        //    the editor IS the organizer (they already got the self-confirmation
+        //    above). Sales gets BCC via the envelope, so the team always has a
+        //    paper trail regardless of the volume-changed branch.
+        $organizer = $deal->organizerParticipant;
+        if (!$isOrganizer && $organizer) {
+            try {
+                Mail::send(new GroupDealParticipantUpdated(
+                    $deal, $p, $organizer, $oldBoxCount, $oldContainerCount,
+                ));
+            } catch (\Throwable $e) {
+                report($e);
             }
         }
 
