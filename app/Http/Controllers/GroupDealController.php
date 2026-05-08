@@ -87,7 +87,20 @@ class GroupDealController extends Controller
     public function manualClose(GroupDeal $groupDeal)
     {
         abort_unless($groupDeal->status === GroupDeal::STATUS_OPEN, 422);
-        \Illuminate\Support\Facades\Artisan::call('group-deals:close');
-        return back()->with('status', 'Sluiten getriggerd; orders worden aangemaakt.');
+
+        // --deal=ID bypasses the cron's pickup_date filter so admin can close
+        // a deal early (e.g. target reached, no need to wait for the cutoff).
+        $exit = \Illuminate\Support\Facades\Artisan::call('group-deals:close', [
+            '--deal' => $groupDeal->id,
+        ]);
+        $output = trim(\Illuminate\Support\Facades\Artisan::output());
+
+        if ($exit !== 0) {
+            return back()->with('status', "Sluiten mislukt: {$output}");
+        }
+
+        $groupDeal->refresh();
+        $orderCount = $groupDeal->participants()->whereNotNull('order_id')->count();
+        return back()->with('status', "Deal gesloten. {$orderCount} order(s) aangemaakt en bevestigingsmails zijn verstuurd.");
     }
 }

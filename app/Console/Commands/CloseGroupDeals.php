@@ -18,17 +18,33 @@ use Illuminate\Support\Facades\Mail;
  */
 class CloseGroupDeals extends Command
 {
-    protected $signature = 'group-deals:close {--dry-run : List affected deals without writing changes}';
+    protected $signature = 'group-deals:close
+        {--dry-run : List affected deals without writing changes}
+        {--deal= : Close this specific deal id, ignoring the join-cutoff date filter (admin manual close)}';
     protected $description = 'Close open group deals past their join cutoff and materialize orders for each participant.';
 
     public function handle(): int
     {
-        $cutoffDays = (int) config('desnipperaar.group_deal.join_cutoff_days', 2);
-        $today      = now()->startOfDay();
+        $dealId = $this->option('deal');
 
-        $deals = GroupDeal::where('status', GroupDeal::STATUS_OPEN)
-            ->whereDate('pickup_date', '<=', $today->copy()->addDays($cutoffDays)->toDateString())
-            ->get();
+        if ($dealId) {
+            // Manual close from admin — force this specific open deal regardless of
+            // pickup_date. Useful when admin needs to close early (e.g. target met).
+            $deals = GroupDeal::where('status', GroupDeal::STATUS_OPEN)
+                ->where('id', (int) $dealId)
+                ->get();
+            if ($deals->isEmpty()) {
+                $this->error("Deal #{$dealId} is not open or does not exist.");
+                return self::FAILURE;
+            }
+        } else {
+            // Cron path: only deals whose pickup_date is within join_cutoff_days.
+            $cutoffDays = (int) config('desnipperaar.group_deal.join_cutoff_days', 2);
+            $today      = now()->startOfDay();
+            $deals = GroupDeal::where('status', GroupDeal::STATUS_OPEN)
+                ->whereDate('pickup_date', '<=', $today->copy()->addDays($cutoffDays)->toDateString())
+                ->get();
+        }
 
         if ($deals->isEmpty()) {
             $this->info('No deals due for closing.');
