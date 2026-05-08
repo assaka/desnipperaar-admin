@@ -43,18 +43,46 @@ class PostcodeLookup
     }
 
     /**
-     * Returns true if the postcode and city are compatible. Permissive:
-     * if the postcode is unknown to the dataset, returns true (don't reject).
+     * City-anchored match: if the typed city has any ranges in the dataset,
+     * the postcode prefix must fall in one of *those* ranges. If the city is
+     * not in the dataset at all, pass through (we can't say it's wrong).
+     *
+     * This catches the previous false-negative where typing an in-gap postcode
+     * (e.g. 1234) plus a known city (e.g. "Haarlem") passed because cityFor(
+     * 1234) returned null.
      */
     public static function matches(?string $postcode, ?string $city): bool
     {
-        $canonicals = self::canonicalsFor($postcode);
-        if (empty($canonicals)) return true; // unknown prefix → pass-through
+        $prefix = self::extractPrefix($postcode);
+        if ($prefix === null) return true; // postcode unparseable → can't check
 
         $cityNorm = self::normalize((string) $city);
-        if ($cityNorm === '') return false; // postcode known, city blank → mismatch
+        if ($cityNorm === '') return false; // postcode given, city blank → mismatch
 
-        return in_array($cityNorm, $canonicals, true);
+        $matching = [];
+        foreach (self::ranges() as $r) {
+            $names = self::namesFor($r);
+            if (in_array($cityNorm, $names, true)) {
+                $matching[] = $r;
+            }
+        }
+
+        if (empty($matching)) {
+            // City unknown to dataset → can't reject what we don't know.
+            return true;
+        }
+
+        foreach ($matching as $r) {
+            if ($prefix >= $r['from'] && $prefix <= $r['to']) return true;
+        }
+        return false;
+    }
+
+    /** @return array<int, string> normalized canonical + alias names for a range. */
+    private static function namesFor(array $r): array
+    {
+        $names = array_merge([$r['city']], $r['aliases'] ?? []);
+        return array_map([self::class, 'normalize'], $names);
     }
 
     /** Returns the first canonical city name (for error messages) or null. */
