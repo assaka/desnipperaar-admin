@@ -16,6 +16,6 @@
 </table>
 
 <p style="margin-top:24px;">
-  <a href="https://admin.desnipperaar.nl/admin/group-deals/{{ $deal->id }}" style="background:#F5C518;color:#0A0A0A;padding:10px 18px;text-decoration:none;font-weight:700;display:inline-block;">Open in admin</a>
+  <a href="https://admin.desnipperaar.nl/group-deals/{{ $deal->id }}" style="background:#F5C518;color:#0A0A0A;padding:10px 18px;text-decoration:none;font-weight:700;display:inline-block;">Open in admin</a>
 </p>
 @endcomponent
