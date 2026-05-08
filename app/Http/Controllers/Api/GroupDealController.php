@@ -347,10 +347,11 @@ class GroupDealController extends Controller
                 ->get()
                 ->map(function (GroupDealParticipant $row) use ($deal) {
                     $first = preg_split('/\s+/', trim($row->customer_name))[0] ?? $row->customer_name;
+                    $postcodePrefix = substr(preg_replace('/\s+/', '', (string) $row->customer_postcode), 0, 4);
                     return [
                         'id'              => $row->id,
                         'first_name'      => $first,
-                        'postcode'        => $row->customer_postcode,
+                        'postcode'        => $postcodePrefix,
                         'box_count'       => $row->box_count,
                         'container_count' => $row->container_count,
                         'total'           => $row->price_snapshot['total'] ?? null,
