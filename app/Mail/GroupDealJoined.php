@@ -27,8 +27,13 @@ class GroupDealJoined extends Mailable
                 && strcasecmp($adminEmail, $this->participant->customer_email) !== 0)
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
+        $isOrganizer = $this->participant->id === $this->deal->organizer_participant_id;
+        $subject = $isOrganizer
+            ? "Welkom in de groepsdeal als organisator · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})"
+            : "Welkom in de groepsdeal · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})";
+
         return new Envelope(
-            subject: "Welkom in de groepsdeal · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
+            subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
             bcc: $bcc,
         );
