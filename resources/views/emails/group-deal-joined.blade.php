@@ -69,6 +69,12 @@
     </tr>
 </table>
 
+@if ($participant->id === $deal->organizer_participant_id)
+    <p style="background:#0A0A0A;color:#F5C518;padding:6px 10px;display:inline-block;font-size:12px;font-weight:700;margin:0 0 16px;">
+        ✨ Als organisator &middot; eerste doos gratis
+    </p>
+@endif
+
 <p style="margin-top:20px;">Twee dagen voor de ophaaldag sluit de inschrijving en ontvang je een orderbevestiging met de definitieve planning.</p>
 
 <p style="margin-top:20px;">

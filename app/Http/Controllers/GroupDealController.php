@@ -35,11 +35,23 @@ class GroupDealController extends Controller
             'status'      => GroupDeal::STATUS_OPEN,
             'approved_at' => now(),
         ]);
-        try {
-            Mail::to($groupDeal->organizerParticipant->customer_email)
-                ->send(new GroupDealApproved($groupDeal));
-        } catch (\Throwable $e) {
-            report($e);
+        $organizer = $groupDeal->organizerParticipant;
+        if ($organizer) {
+            try {
+                // "Your proposal is live, share it" mail.
+                Mail::to($organizer->customer_email)->send(new GroupDealApproved($groupDeal));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+            try {
+                // Same welcome confirmation joiners get (locked price + perk badge),
+                // since the organizer is also a participant — they shouldn't have
+                // to wait for the cron close to see their own locked numbers.
+                Mail::to($organizer->customer_email)
+                    ->send(new \App\Mail\GroupDealJoined($groupDeal, $organizer));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
         return back()->with('status', 'Groepsdeal goedgekeurd en gepubliceerd.');
     }
