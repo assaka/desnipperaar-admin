@@ -17,7 +17,7 @@
 
 <p>Deel deze pagina via je netwerk: kantoren, MKB-collega's, ZZP'ers, VvE-bestuur of buurorganisaties in {{ $deal->city }}. Particulieren met een archief zijn ook welkom. Het groepsdoel staat op <strong>{{ $goalText }}</strong>; bezoekers zien een voortgangsbalk die meegroeit zodra er deelnemers bijkomen. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
 
-<p>Als organisator vernietigen wij je eerste doos kosteloos, tenzij je in de Noord-pilot (postcode 1020 t/m 1039) zit; daar geldt al een 20% korting die de organisator-perk vervangt.</p>
+<p>Als organisator vernietigen wij je eerste doos kosteloos.</p>
 
 <p>Vragen? Reply op deze email.</p>
 
