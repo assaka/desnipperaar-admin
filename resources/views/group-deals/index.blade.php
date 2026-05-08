@@ -17,6 +17,8 @@
                 <th>Stad</th>
                 <th>Ophaaldag</th>
                 <th>Deelnemers</th>
+                <th>Dozen</th>
+                <th>Containers</th>
                 <th>Status</th>
                 <th>Organisator</th>
                 <th>Aangemaakt</th>
@@ -33,18 +35,22 @@
                         'cancelled' => 'bg-red-200 text-red-900',
                         'rejected'  => 'bg-red-200 text-red-900',
                     ][$deal->status] ?? 'bg-gray-200';
+                    $boxSum       = (int) ($deal->participants_box_sum ?? 0);
+                    $containerSum = (int) ($deal->participants_container_sum ?? 0);
                 @endphp
                 <tr class="border-b hover:bg-yellow-50 cursor-pointer" data-href="{{ route('group-deals.show', $deal) }}">
                     <td class="py-2 font-mono"><a href="{{ route('group-deals.show', $deal) }}">{{ $deal->id }}</a></td>
                     <td>{{ $deal->city }}</td>
                     <td>{{ $deal->pickup_date->format('Y-m-d') }}</td>
                     <td>{{ $deal->participants_count }} / {{ config('desnipperaar.group_deal.max_joiners') }}</td>
+                    <td class="font-mono">{{ $boxSum }} / {{ $deal->target_box_count }}</td>
+                    <td class="font-mono">{{ $containerSum }} / {{ $deal->target_container_count }}</td>
                     <td><span class="inline-block px-2 py-1 text-xs font-bold uppercase {{ $statusColor }}">{{ $deal->status }}</span></td>
                     <td>{{ $deal->organizerParticipant?->customer_name }}</td>
                     <td>{{ $deal->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="py-6 text-center text-gray-500">Nog geen groepsdeals.</td></tr>
+                <tr><td colspan="9" class="py-6 text-center text-gray-500">Nog geen groepsdeals.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -15,6 +15,8 @@ class GroupDealController extends Controller
     {
         $deals = GroupDeal::with('organizerParticipant')
             ->withCount('participants')
+            ->withSum('participants as participants_box_sum', 'box_count')
+            ->withSum('participants as participants_container_sum', 'container_count')
             ->orderByDesc('id')
             ->paginate(25);
         return view('group-deals.index', compact('deals'));
