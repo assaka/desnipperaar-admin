@@ -19,6 +19,13 @@
 
 <p>Als organisator vernietigen wij je eerste doos kosteloos.</p>
 
+@if ($deal->organizerParticipant)
+<p style="margin-top:20px;">
+  <a href="{{ $deal->organizerParticipant->manageUrl() }}" style="background:#F5C518;color:#0A0A0A;padding:10px 18px;text-decoration:none;font-weight:700;display:inline-block;">Beheer je groepsdeal</a>
+</p>
+<p style="font-size:12px;color:#777;margin-top:6px;">Op deze pagina zie je de actuele deelnemerslijst, kun je je eigen gegevens bijwerken en, als het nodig is, je inschrijving annuleren.</p>
+@endif
+
 <p>Vragen? Reply op deze email.</p>
 
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>

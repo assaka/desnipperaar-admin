@@ -16,16 +16,20 @@ Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'st
 Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityController::class, 'kennismaking'])
     ->middleware('throttle:60,1');
 
-// Group deals — public listing, single deal, create draft, join, cancel join.
+// Group deals — public listing, single deal, create draft, join, manage.
 Route::get('/group-deals', [\App\Http\Controllers\Api\GroupDealController::class, 'index'])
     ->middleware('throttle:120,1');
+Route::get('/group-deals/manage/{token}', [\App\Http\Controllers\Api\GroupDealController::class, 'manageShow'])
+    ->middleware('throttle:120,1');
+Route::patch('/group-deals/manage/{token}', [\App\Http\Controllers\Api\GroupDealController::class, 'manageUpdate'])
+    ->middleware('throttle:30,1');
+Route::delete('/group-deals/manage/{token}', [\App\Http\Controllers\Api\GroupDealController::class, 'manageDelete'])
+    ->middleware('throttle:30,1');
 Route::get('/group-deals/{slug}', [\App\Http\Controllers\Api\GroupDealController::class, 'show'])
     ->middleware('throttle:120,1');
 Route::post('/group-deals', [\App\Http\Controllers\Api\GroupDealController::class, 'store'])
     ->middleware('throttle:10,1');
 Route::post('/group-deals/{slug}/join', [\App\Http\Controllers\Api\GroupDealController::class, 'join'])
-    ->middleware('throttle:10,1');
-Route::delete('/group-deals/{slug}/participants/{participant}', [\App\Http\Controllers\Api\GroupDealController::class, 'cancel'])
     ->middleware('throttle:10,1');
 
 // GitHub push-webhook / manual deploy trigger. Auth via DEPLOY_HOOK_SECRET.

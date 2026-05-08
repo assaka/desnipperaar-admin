@@ -216,8 +216,10 @@ class GroupDealController extends Controller
         return response()->json([
             'ok'          => true,
             'participant' => [
-                'id'    => $participant->id,
-                'price' => [
+                'id'           => $participant->id,
+                'manage_token' => $participant->manage_token,
+                'manage_url'   => $participant->manageUrl(),
+                'price'        => [
                     'subtotal' => $snapshot['subtotal'],
                     'vat'      => $snapshot['vat'],
                     'total'    => $snapshot['total'],
@@ -227,19 +229,154 @@ class GroupDealController extends Controller
         ], 201);
     }
 
-    /** DELETE /api/group-deals/{slug}/participants/{participant} — cancel own join (email-gated). */
-    public function cancel(Request $request, string $slug, int $participant): JsonResponse
+    /** GET /api/group-deals/manage/{token} — token-gated participant view. */
+    public function manageShow(string $token): JsonResponse
     {
-        $deal = GroupDeal::where('slug', $slug)->firstOrFail();
-        $p = $deal->participants()->where('id', $participant)->firstOrFail();
+        $p = GroupDealParticipant::where('manage_token', $token)->firstOrFail();
+        $deal = $p->groupDeal()->withCount('participants')->firstOrFail();
 
-        $email = strtolower(trim($request->query('email', $request->input('email', ''))));
-        if ($email === '' || $email !== $p->customer_email) {
-            return response()->json(['ok' => false, 'error' => 'Onbekend e-mailadres.'], 403);
+        $isOrganizer = $p->id === $deal->organizer_participant_id;
+
+        $participant = [
+            'id'                => $p->id,
+            'manage_token'      => $p->manage_token,
+            'is_organizer'      => $isOrganizer,
+            'customer_name'     => $p->customer_name,
+            'customer_email'    => $p->customer_email,
+            'customer_phone'    => $p->customer_phone,
+            'customer_postcode' => $p->customer_postcode,
+            'customer_address'  => $p->customer_address,
+            'box_count'         => $p->box_count,
+            'container_count'   => $p->container_count,
+            'notes'             => $p->notes,
+            'price_snapshot'    => $p->price_snapshot,
+            'order_id'          => $p->order_id,
+        ];
+
+        $payload = [
+            'deal'        => $this->summarize($deal, detailed: true),
+            'participant' => $participant,
+        ];
+
+        // Organizer-only roster: hide soft-deleted, default privacy-safe fields.
+        if ($isOrganizer) {
+            $payload['roster'] = $deal->participants()
+                ->orderBy('created_at')
+                ->get()
+                ->map(function (GroupDealParticipant $row) use ($deal) {
+                    $first = preg_split('/\s+/', trim($row->customer_name))[0] ?? $row->customer_name;
+                    return [
+                        'id'              => $row->id,
+                        'first_name'      => $first,
+                        'postcode'        => $row->customer_postcode,
+                        'box_count'       => $row->box_count,
+                        'container_count' => $row->container_count,
+                        'total'           => $row->price_snapshot['total'] ?? null,
+                        'joined_at'       => $row->created_at?->toIso8601String(),
+                        'is_organizer'    => $row->id === $deal->organizer_participant_id,
+                    ];
+                })->all();
         }
 
-        // If the canceller was the organizer, hand off to the oldest remaining
-        // non-cancelled participant; if none, cancel the deal.
+        return response()->json($payload);
+    }
+
+    /** PATCH /api/group-deals/manage/{token} — update own participant fields, recompute snapshot. */
+    public function manageUpdate(Request $request, string $token): JsonResponse
+    {
+        $p = GroupDealParticipant::where('manage_token', $token)->firstOrFail();
+        $deal = $p->groupDeal;
+
+        // Block edits once the deal has closed (orders materialized) or the join cutoff has passed.
+        if (!in_array($deal->status, [GroupDeal::STATUS_DRAFT, GroupDeal::STATUS_OPEN], true)) {
+            return response()->json(['ok' => false, 'error' => 'Deze groepsdeal accepteert geen wijzigingen meer.'], 422);
+        }
+        if (now() >= $deal->joinCutoffAt()) {
+            return response()->json(['ok' => false, 'error' => 'De wijzigtermijn is verstreken.'], 422);
+        }
+
+        $data = $request->validate([
+            'customer_name'     => ['required', 'string', 'max:180'],
+            'customer_email'    => ['required', 'email', 'max:180'],
+            'customer_phone'    => ['nullable', 'string', 'max:40'],
+            'customer_postcode' => ['required', 'string', 'max:10'],
+            'customer_address'  => ['required', 'string', 'max:255'],
+            'box_count'         => ['required', 'integer', 'min:0', 'max:200'],
+            'container_count'   => ['nullable', 'integer', 'min:0', 'max:50'],
+            'notes'             => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $isOrganizer = $p->id === $deal->organizer_participant_id;
+
+        // Organizer's own contribution is capped by the group target.
+        if ($isOrganizer) {
+            if ((int) $data['box_count'] > (int) $deal->target_box_count) {
+                return response()->json([
+                    'ok'    => false,
+                    'error' => 'Je eigen aantal dozen kan niet groter zijn dan het groepsdoel.',
+                ], 422);
+            }
+            if ((int) ($data['container_count'] ?? 0) > (int) $deal->target_container_count) {
+                return response()->json([
+                    'ok'    => false,
+                    'error' => 'Je eigen aantal rolcontainers kan niet groter zijn dan het groepsdoel.',
+                ], 422);
+            }
+        }
+
+        $isPilot   = Pricing::isPilotPostcode($data['customer_postcode']);
+        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
+        $applyPerk = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
+
+        $snapshot = Pricing::snapshot(
+            (int) $data['box_count'],
+            (int) ($data['container_count'] ?? 0),
+            $p->media_items,
+            $isPilot,
+            $applyPerk,
+        );
+
+        $p->update([
+            'customer_name'     => $data['customer_name'],
+            'customer_email'    => strtolower(trim($data['customer_email'])),
+            'customer_phone'    => $data['customer_phone'] ?? null,
+            'customer_postcode' => $data['customer_postcode'],
+            'customer_address'  => $data['customer_address'],
+            'box_count'         => (int) $data['box_count'],
+            'container_count'   => (int) ($data['container_count'] ?? 0),
+            'notes'             => $data['notes'] ?? null,
+            'price_snapshot'    => $snapshot,
+        ]);
+
+        return response()->json([
+            'ok'          => true,
+            'participant' => [
+                'id'    => $p->id,
+                'price' => [
+                    'subtotal' => $snapshot['subtotal'],
+                    'vat'      => $snapshot['vat'],
+                    'total'    => $snapshot['total'],
+                ],
+            ],
+        ]);
+    }
+
+    /** DELETE /api/group-deals/manage/{token} — cancel own join (token-gated). */
+    public function manageDelete(string $token): JsonResponse
+    {
+        $p = GroupDealParticipant::where('manage_token', $token)->firstOrFail();
+        $deal = $p->groupDeal;
+
+        $this->cancelParticipant($deal, $p);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Soft-delete a participant; if they were the organizer, hand off to the next-oldest
+     *  remaining participant (or cancel the deal if none). Recomputes the new organizer's
+     *  snapshot so the perk is applied. Used by the manage-token DELETE endpoint. */
+    private function cancelParticipant(GroupDeal $deal, GroupDealParticipant $p): void
+    {
         DB::transaction(function () use ($deal, $p) {
             $isOrganizer = $p->id === $deal->organizer_participant_id;
             $p->delete();
@@ -283,8 +420,6 @@ class GroupDealController extends Controller
             $next->update(['price_snapshot' => $snapshot]);
             $deal->update(['organizer_participant_id' => $next->id]);
         });
-
-        return response()->json(['ok' => true]);
     }
 
     private function validateDealAndOrganizer(Request $request): array

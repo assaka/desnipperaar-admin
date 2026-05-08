@@ -71,6 +71,11 @@
 
 <p style="margin-top:20px;">Twee dagen voor de ophaaldag sluit de inschrijving en ontvang je een orderbevestiging met de definitieve planning.</p>
 
+<p style="margin-top:20px;">
+  <a href="{{ $participant->manageUrl() }}" style="background:#F5C518;color:#0A0A0A;padding:10px 18px;text-decoration:none;font-weight:700;display:inline-block;">Bekijk of wijzig je inschrijving</a>
+</p>
+<p style="font-size:12px;color:#777;margin-top:6px;">Of bewaar deze link: <a href="{{ $participant->manageUrl() }}" style="color:#777;">{{ $participant->manageUrl() }}</a></p>
+
 <p>Vragen? Reply op deze email.</p>
 
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>

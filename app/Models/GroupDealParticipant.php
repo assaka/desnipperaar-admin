@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class GroupDealParticipant extends Model
 {
@@ -24,7 +25,22 @@ class GroupDealParticipant extends Model
         'notes',
         'price_snapshot',
         'order_id',
+        'manage_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $p) {
+            if (empty($p->manage_token)) {
+                $p->manage_token = Str::random(32);
+            }
+        });
+    }
+
+    public function manageUrl(): string
+    {
+        return 'https://desnipperaar.nl/groepsdeals/manage/' . $this->manage_token;
+    }
 
     protected $casts = [
         'media_items'    => 'array',
