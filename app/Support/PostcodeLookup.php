@@ -88,9 +88,11 @@ class PostcodeLookup
             $s = \Normalizer::normalize($s, \Normalizer::FORM_D);
             $s = preg_replace('/\p{Mn}+/u', '', $s);
         }
-        // Common Dutch place-name noise: leading "'s-", "den", trailing parenthetical
-        // disambiguators ("(gld)" etc.), hyphens collapsed to spaces.
-        $s = preg_replace("/^['s]-/u", '', $s);
+        // Common Dutch place-name noise: leading "'s-" or "s-" prefix (the
+        // archaic genitive in 's-Gravenhage / 's-Hertogenbosch), trailing
+        // parenthetical disambiguators ("(gld)" etc.), hyphens collapsed
+        // to spaces, "den"/"de" prefix words stripped.
+        $s = preg_replace("/^(?:'s-|s-)/u", '', $s);
         $s = preg_replace('/^den\s+/u', '', $s);
         $s = preg_replace('/\s*\([^)]*\)\s*/u', '', $s);
         $s = str_replace('-', ' ', $s);
