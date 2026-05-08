@@ -20,16 +20,53 @@
   <tr><td style="color:#666;">Dozen / containers:</td><td>{{ $participant->box_count }} / {{ $participant->container_count }}</td></tr>
 </table>
 
-<h2 style="font-size:16px;margin:24px 0 8px;">Vastgezette prijs</h2>
-<p>Deze prijs blijft staan ongeacht wijzigingen in onze tarieven tussen nu en de ophaaldag.</p>
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Vastgezette prijs</h2>
 
-<table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;width:100%;max-width:420px;">
-  <tr><td style="color:#666;">Subtotaal (excl. btw):</td><td align="right">€ {{ number_format($snapshot['subtotal'], 2, ',', '.') }}</td></tr>
-  @if (($snapshot['discount'] ?? 0) > 0)
-    <tr><td style="color:#666;">Waarvan korting:</td><td align="right" style="color:#0A8A4F;">- € {{ number_format($snapshot['discount'], 2, ',', '.') }}</td></tr>
-  @endif
-  <tr><td style="color:#666;">BTW 21%:</td><td align="right">€ {{ number_format($snapshot['vat'], 2, ',', '.') }}</td></tr>
-  <tr><td style="color:#0A0A0A;font-weight:700;border-top:1px solid #DDD;padding-top:8px;">Totaal incl. btw:</td><td align="right" style="font-weight:700;border-top:1px solid #DDD;padding-top:8px;">€ {{ number_format($snapshot['total'], 2, ',', '.') }}</td></tr>
+<p style="font-size:13px;color:#555;margin:0 0 12px;">Deze prijs blijft staan ongeacht wijzigingen in onze tarieven tussen nu en de ophaaldag.</p>
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
+    @foreach (($snapshot['lines'] ?? []) as $line)
+        <tr>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $line['label'] }}</td>
+            <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;">
+                {{ $line['qty'] }} &times; € {{ number_format($line['unit'], 2, ',', '.') }}
+            </td>
+            <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
+                € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+            </td>
+        </tr>
+    @endforeach
+
+    @foreach (($snapshot['media_lines'] ?? []) as $line)
+        <tr>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $line['label'] }}</td>
+            <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;">
+                {{ $line['qty'] }} &times; € {{ number_format($line['unit'], 2, ',', '.') }}
+            </td>
+            <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
+                € {{ number_format($line['subtotal'], 2, ',', '.') }}
+            </td>
+        </tr>
+    @endforeach
+
+    <tr>
+        <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">Subtotaal (excl. btw)</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($snapshot['subtotal_regular'] ?? $snapshot['subtotal'], 2, ',', '.') }}</td>
+    </tr>
+    @if (!empty($snapshot['discount']) && $snapshot['discount'] > 0)
+        <tr>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Waarvan korting</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">&minus; € {{ number_format($snapshot['discount'], 2, ',', '.') }}</td>
+        </tr>
+    @endif
+    <tr>
+        <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">BTW 21%</td>
+        <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($snapshot['vat'], 2, ',', '.') }}</td>
+    </tr>
+    <tr>
+        <td style="padding:10px 0 4px;font-weight:900;font-size:15px;border-top:2px solid #0A0A0A;" colspan="2">Totaal incl. btw</td>
+        <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;">€ {{ number_format($snapshot['total'], 2, ',', '.') }}</td>
+    </tr>
 </table>
 
 <p style="margin-top:20px;">Twee dagen voor de ophaaldag sluit de inschrijving en ontvang je een orderbevestiging met de definitieve planning.</p>
