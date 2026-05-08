@@ -20,7 +20,7 @@
   <tr><td style="color:#666;">Dozen / containers:</td><td>{{ $participant->box_count }} / {{ $participant->container_count }}</td></tr>
 </table>
 
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Vastgezette prijs</h2>
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Vaste prijs</h2>
 
 <p style="font-size:13px;color:#555;margin:0 0 12px;">Deze prijs blijft staan ongeacht wijzigingen in onze tarieven tussen nu en de ophaaldag.</p>
 
