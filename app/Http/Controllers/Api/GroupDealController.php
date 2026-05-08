@@ -713,6 +713,10 @@ class GroupDealController extends Controller
             ->selectRaw('COALESCE(SUM(box_count), 0) AS boxes, COALESCE(SUM(container_count), 0) AS containers')
             ->first();
 
+        $groupTotal = $deal->participants()
+            ->get(['price_snapshot'])
+            ->reduce(fn ($acc, $p) => $acc + (float) ($p->price_snapshot['total'] ?? 0), 0.0);
+
         return array_filter([
             'slug'                   => $deal->slug,
             'city'                   => $deal->city,
@@ -727,6 +731,7 @@ class GroupDealController extends Controller
             'target_container_count' => (int) $deal->target_container_count,
             'filled_box_count'       => (int) ($progress->boxes ?? 0),
             'filled_container_count' => (int) ($progress->containers ?? 0),
+            'group_total_locked'     => round($groupTotal, 2),
         ], fn ($v) => $v !== null);
     }
 }
