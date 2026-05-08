@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\GroupDealCancelled;
 use App\Mail\GroupDealJoined;
 use App\Mail\GroupDealParticipantJoined;
+use App\Mail\GroupDealParticipantLeft;
+use App\Mail\GroupDealParticipantUpdated;
 use App\Mail\GroupDealReceived;
 use App\Mail\GroupDealSubmitted;
 use App\Models\GroupDeal;
@@ -387,6 +389,9 @@ class GroupDealController extends Controller
             $applyPerk,
         );
 
+        $oldBoxCount       = (int) $p->box_count;
+        $oldContainerCount = (int) $p->container_count;
+
         $p->update([
             'customer_name'     => $data['customer_name'],
             'customer_email'    => strtolower(trim($data['customer_email'])),
@@ -398,6 +403,24 @@ class GroupDealController extends Controller
             'notes'             => $data['notes'] ?? null,
             'price_snapshot'    => $snapshot,
         ]);
+
+        // Notify the organizer if a non-organizer joiner adjusted their volume.
+        // Other field changes (phone, address typo) don't change group stats so
+        // they don't warrant an email.
+        $volumeChanged = $oldBoxCount !== (int) $p->box_count
+            || $oldContainerCount !== (int) $p->container_count;
+        if (!$isOrganizer && $volumeChanged) {
+            $organizer = $deal->organizerParticipant;
+            if ($organizer) {
+                try {
+                    Mail::send(new GroupDealParticipantUpdated(
+                        $deal, $p, $organizer, $oldBoxCount, $oldContainerCount,
+                    ));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
 
         return response()->json([
             'ok'          => true,
@@ -514,6 +537,15 @@ class GroupDealController extends Controller
             $p->delete();
 
             if (!$isOrganizer) {
+                // Non-organizer left: notify the organizer with updated stats.
+                $organizer = $deal->organizerParticipant;
+                if ($organizer) {
+                    try {
+                        Mail::send(new GroupDealParticipantLeft($deal, $p, $organizer));
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
                 return;
             }
 
