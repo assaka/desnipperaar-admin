@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\GroupDealCancelled;
 use App\Mail\GroupDealJoined;
+use App\Mail\GroupDealParticipantJoined;
 use App\Mail\GroupDealReceived;
 use App\Mail\GroupDealSubmitted;
 use App\Models\GroupDeal;
@@ -234,6 +235,20 @@ class GroupDealController extends Controller
             Mail::to($participant->customer_email)->send(new GroupDealJoined($deal, $participant));
         } catch (\Throwable $e) {
             report($e);
+        }
+
+        // Notify the organizer with updated stats. Skip if the joiner somehow IS
+        // the organizer (defensive — the join flow shouldn't allow this), or if
+        // they share the same email (avoid sending two near-identical mails).
+        $organizer = $deal->organizerParticipant;
+        if ($organizer
+            && $organizer->id !== $participant->id
+            && strcasecmp($organizer->customer_email, $participant->customer_email) !== 0) {
+            try {
+                Mail::send(new GroupDealParticipantJoined($deal, $participant, $organizer));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return response()->json([
