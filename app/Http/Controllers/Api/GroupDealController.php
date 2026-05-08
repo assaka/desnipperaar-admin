@@ -30,7 +30,7 @@ class GroupDealController extends Controller
         return response()->json(['deals' => $deals]);
     }
 
-    /** GET /api/group-deals/{slug} — single deal with participant count + organizer first name. */
+    /** GET /api/group-deals/{slug} — single deal with participant count + organizer first name + privacy-safe public roster. */
     public function show(string $slug): JsonResponse
     {
         $deal = GroupDeal::where('slug', $slug)->firstOrFail();
@@ -38,7 +38,30 @@ class GroupDealController extends Controller
             abort(404);
         }
         $deal->loadCount('participants');
-        return response()->json(['deal' => $this->summarize($deal, detailed: true)]);
+
+        // Privacy-conservative public roster: first name + 4-digit postcode prefix
+        // + box/container counts + joined-at. Locked totals, full postcode, full
+        // name, email and address are intentionally NOT exposed on the public page.
+        $publicRoster = $deal->participants()
+            ->orderBy('created_at')
+            ->get()
+            ->map(function (GroupDealParticipant $row) use ($deal) {
+                $first = preg_split('/\s+/', trim($row->customer_name))[0] ?? $row->customer_name;
+                $postcodePrefix = substr(preg_replace('/\s+/', '', (string) $row->customer_postcode), 0, 4);
+                return [
+                    'first_name'      => $first,
+                    'postcode_prefix' => $postcodePrefix,
+                    'box_count'       => (int) $row->box_count,
+                    'container_count' => (int) $row->container_count,
+                    'joined_at'       => $row->created_at?->toIso8601String(),
+                    'is_organizer'    => $row->id === $deal->organizer_participant_id,
+                ];
+            })->all();
+
+        return response()->json([
+            'deal'   => $this->summarize($deal, detailed: true),
+            'roster' => $publicRoster,
+        ]);
     }
 
     /** POST /api/group-deals — customer self-serves a draft deal. */
