@@ -5,7 +5,7 @@
 
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
   <tr><td style="color:#666;">Stad:</td><td><strong>{{ $deal->city }}</strong></td></tr>
-  <tr><td style="color:#666;">Ophaaldag:</td><td><strong>{{ $deal->pickup_date->format('l j F Y') }}</strong></td></tr>
+  <tr><td style="color:#666;">Ophaaldag:</td><td><strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong></td></tr>
   <tr><td style="color:#666;">Slug:</td><td><code>{{ $deal->slug }}</code></td></tr>
   @if ($deal->organizerParticipant)
     <tr><td style="color:#666;">Organisator:</td><td>{{ $deal->organizerParticipant->customer_name }} &lt;{{ $deal->organizerParticipant->customer_email }}&gt;</td></tr>

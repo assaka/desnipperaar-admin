@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="flex justify-between items-baseline mb-4">
-        <h1 class="text-2xl font-black">{{ $deal->city }} — {{ $deal->pickup_date->format('l j F Y') }}</h1>
+        <h1 class="text-2xl font-black">{{ $deal->city }} — {{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</h1>
         <span class="inline-block px-2 py-1 text-xs font-bold uppercase bg-black text-yellow-400">{{ $deal->status }}</span>
     </div>
 

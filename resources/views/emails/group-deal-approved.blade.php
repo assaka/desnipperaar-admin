@@ -11,7 +11,7 @@
 <p>Beste {{ explode(' ', $deal->organizerParticipant->customer_name)[0] }},</p>
 @endif
 
-<p>Je groepsdeal voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong> is goedgekeurd en publiek zichtbaar op:</p>
+<p>Je groepsdeal voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong> is goedgekeurd en publiek zichtbaar op:</p>
 
 <p><a href="https://desnipperaar.nl/groepsdeals/{{ $deal->slug }}" style="color:#0A0A0A;text-decoration:underline;font-weight:700;">desnipperaar.nl/groepsdeals/{{ $deal->slug }}</a></p>
 

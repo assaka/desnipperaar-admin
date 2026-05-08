@@ -3,7 +3,7 @@
 
 <p>Beste {{ explode(' ', $newOrganizer->customer_name)[0] }},</p>
 
-<p>De oorspronkelijke organisator van de groepsdeal in <strong>{{ $deal->city }}</strong> ({{ $deal->pickup_date->format('l j F Y') }}) heeft zich teruggetrokken. Omdat jij de eerstvolgende deelnemer was, neem jij die rol over.</p>
+<p>De oorspronkelijke organisator van de groepsdeal in <strong>{{ $deal->city }}</strong> ({{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}) heeft zich teruggetrokken. Omdat jij de eerstvolgende deelnemer was, neem jij die rol over.</p>
 
 <p>Wat dat betekent: jouw eerste doos wordt gratis vernietigd (de organisator-perk). Je vaste prijs is bijgewerkt. Geen verdere actie nodig; je hoeft niets te doen.</p>
 

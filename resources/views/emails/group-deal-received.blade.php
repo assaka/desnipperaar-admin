@@ -5,11 +5,11 @@
 <p>Beste {{ explode(' ', $deal->organizerParticipant->customer_name)[0] }},</p>
 @endif
 
-<p>We hebben je groepsdeal-voorstel voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong> goed ontvangen.</p>
+<p>We hebben je groepsdeal-voorstel voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong> goed ontvangen.</p>
 
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
   <tr><td style="color:#666;">Stad:</td><td><strong>{{ $deal->city }}</strong></td></tr>
-  <tr><td style="color:#666;">Voorgestelde ophaaldag:</td><td><strong>{{ $deal->pickup_date->format('l j F Y') }}</strong></td></tr>
+  <tr><td style="color:#666;">Voorgestelde ophaaldag:</td><td><strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong></td></tr>
   <tr><td style="color:#666;">Doel dozen:</td><td><strong>{{ $deal->target_box_count }}</strong></td></tr>
   @if ($deal->target_container_count > 0)
     <tr><td style="color:#666;">Doel rolcontainers:</td><td><strong>{{ $deal->target_container_count }}</strong></td></tr>

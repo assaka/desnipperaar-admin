@@ -1,7 +1,7 @@
 @component('emails._layout', ['title' => 'Groepsdeal afgelast'])
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Groepsdeal afgelast</h1>
 
-<p>De groepsdeal voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong> gaat helaas niet door.</p>
+<p>De groepsdeal voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong> gaat helaas niet door.</p>
 
 @if ($deal->cancellation_reason)
 <p style="background:#F8F4E2;padding:12px 16px;border-left:3px solid #F5C518;">{{ $deal->cancellation_reason }}</p>
