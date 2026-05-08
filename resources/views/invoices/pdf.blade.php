@@ -116,7 +116,12 @@
     <table class="totals">
         <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
         @if ($discount > 0)
-            <tr><td class="k">Korting Noord-pilot</td><td class="v">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
+            @php
+                $discountLabel = $invoice->order->pilot
+                    ? 'Korting Noord-pilot'
+                    : ($invoice->order->first_box_free ? 'Korting kennismaking' : 'Korting');
+            @endphp
+            <tr><td class="k">{{ $discountLabel }}</td><td class="v">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
