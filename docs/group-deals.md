@@ -31,7 +31,7 @@ draft ↘ rejected
 | State       | Meaning                                                      | Set by                          |
 |-------------|--------------------------------------------------------------|---------------------------------|
 | `draft`     | Customer created the deal, awaiting admin approval.          | Self-serve form                 |
-| `open`      | Admin approved. Public on `/groepdeals/{slug}`. Joining on. | Admin                           |
+| `open`      | Admin approved. Public on `/groepsdeals/{slug}`. Joining on. | Admin                           |
 | `closed`    | Joining cutoff hit (T-2 days). Orders materialized.          | Cron / admin trigger            |
 | `completed` | Pickup happened.                                             | Pickup confirmation flow        |
 | `cancelled` | Organizer or admin cancelled before pickup.                  | Organizer (cancels own join) / Admin |
@@ -130,7 +130,7 @@ Transaction:
 4. Notify admin (`sales_email` BCC) — new draft awaiting approval.
 
 The organizer sees a "submitted, awaiting approval" page with the eventual
-`/groepdeals/{slug}` URL.
+`/groepsdeals/{slug}` URL.
 
 ### 2. Admin approves / rejects
 
@@ -141,7 +141,7 @@ organizer with the reason.
 
 ### 3. Joiner joins
 
-`/groepdeals/{slug}` shows: city, pickup date, joiners-so-far, max cap, organizer
+`/groepsdeals/{slug}` shows: city, pickup date, joiners-so-far, max cap, organizer
 perk note ("organizer gets first box free"), join CTA. Form is the normal order
 form, missing the pickup-date field (locked from the deal).
 
@@ -215,9 +215,9 @@ completion logic flips status to `completed`.
 
 ## Public surfaces
 
-- `GET /groepdeals` — index of `open` deals, sorted by pickup date. Shows city,
+- `GET /groepsdeals` — index of `open` deals, sorted by pickup date. Shows city,
   date, joiners-so-far / cap.
-- `GET /groepdeals/{slug}` — single deal with join CTA.
+- `GET /groepsdeals/{slug}` — single deal with join CTA.
 - `POST /api/group-deals` — create draft.
 - `POST /api/group-deals/{slug}/join` — join open deal.
 - `DELETE /api/group-deals/{slug}/participants/{participant_id}` — cancel own join
@@ -258,7 +258,7 @@ plumbing.
 
 ## Implementation choices (locked)
 
-- **URL path:** `/groepdeals` (no inter-fix `s`).
+- **URL path:** `/groepsdeals` (no inter-fix `s`).
 - **Slug format:** `{city-slug}-{yyyy-mm-dd}` — predictable, friendlier for
   word-of-mouth sharing than a random token.
 - **Cron timezone:** `Europe/Amsterdam` (CET / CEST as the season dictates).
@@ -267,10 +267,10 @@ plumbing.
   query scope excludes trashed; admin views use `withTrashed()` for audit.
 - **Public listing rendering:** SSR via `desnipperaar.nl/server.js`, same pattern
   as `/blog/` (already intercepts and renders `blog/posts.json` server-side).
-  `server.js` adds `/groepdeals` and `/groepdeals/{slug}` routes, fetches from
+  `server.js` adds `/groepsdeals` and `/groepsdeals/{slug}` routes, fetches from
   `https://admin.desnipperaar.nl/api/group-deals` (and `/api/group-deals/{slug}`)
   on each request, and renders against a static template shell living at
-  `groepdeals/index.html` and `groepdeals/_deal.html`. Crawlable, shareable, no
+  `groepsdeals/index.html` and `groepsdeals/_deal.html`. Crawlable, shareable, no
   separate hydration step. Cache the API response for 60s in-process to soften
   burst load if a deal goes viral; bypass cache when the request carries an
   `?nocache=1` query param so admin can preview changes immediately.

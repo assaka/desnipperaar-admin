@@ -7,7 +7,7 @@
 
 <p>Goed nieuws: je groepdeal voor <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong> is goedgekeurd en zichtbaar op:</p>
 
-<p><a href="https://desnipperaar.nl/groepdeals/{{ $deal->slug }}" style="color:#0A0A0A;text-decoration:underline;font-weight:700;">desnipperaar.nl/groepdeals/{{ $deal->slug }}</a></p>
+<p><a href="https://desnipperaar.nl/groepsdeals/{{ $deal->slug }}" style="color:#0A0A0A;text-decoration:underline;font-weight:700;">desnipperaar.nl/groepsdeals/{{ $deal->slug }}</a></p>
 
 <p>Deel deze pagina met buren en collega's. Hoe meer mensen meedoen, hoe rendabeler de rit. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
 

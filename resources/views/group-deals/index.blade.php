@@ -44,7 +44,7 @@
                     <td>{{ $deal->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="py-6 text-center text-gray-500">Nog geen groepdeals.</td></tr>
+                <tr><td colspan="7" class="py-6 text-center text-gray-500">Nog geen groepsdeals.</td></tr>
             @endforelse
         </tbody>
     </table>
