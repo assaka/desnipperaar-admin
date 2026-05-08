@@ -50,6 +50,24 @@ class GroupDealController extends Controller
 
         $data = $this->validateDealAndOrganizer($request);
 
+        // Cross-field rule: organizer's own contribution can't exceed the group target.
+        $orgBoxes      = (int) $data['organizer']['box_count'];
+        $orgContainers = (int) ($data['organizer']['container_count'] ?? 0);
+        $tgtBoxes      = (int) $data['target_box_count'];
+        $tgtContainers = (int) ($data['target_container_count'] ?? 0);
+        if ($orgBoxes > $tgtBoxes) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Je eigen aantal dozen kan niet groter zijn dan het groepsdoel.',
+            ], 422);
+        }
+        if ($orgContainers > $tgtContainers) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Je eigen aantal rolcontainers kan niet groter zijn dan het groepsdoel.',
+            ], 422);
+        }
+
         // One-deal-per-city-per-day rule.
         if (config('desnipperaar.group_deal.one_per_city_per_day')) {
             $clash = GroupDeal::where('city', $data['city'])

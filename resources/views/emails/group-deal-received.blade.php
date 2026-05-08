@@ -1,5 +1,5 @@
 @component('emails._layout', ['title' => 'Je groepsdeal-voorstel is ontvangen'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Bedankt &mdash; je voorstel staat in de wachtrij</h1>
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Bedankt, je voorstel staat in de wachtrij</h1>
 
 @if ($deal->organizerParticipant)
 <p>Beste {{ explode(' ', $deal->organizerParticipant->customer_name)[0] }},</p>
@@ -16,7 +16,7 @@
   @endif
 </table>
 
-<p style="margin-top:20px;">We bekijken je voorstel binnen één werkdag. Zodra het is goedgekeurd, sturen we je een aparte mail met de publieke link en kun je beginnen met buren en collega's te werven.</p>
+<p style="margin-top:20px;">We bekijken je voorstel binnen één werkdag. Zodra het is goedgekeurd, sturen we je een aparte mail met de publieke link. Vanaf dat moment kun je het delen via je netwerk: kantoren, MKB-collega's, ZZP'ers, VvE's en particulieren met een archief in {{ $deal->city }} kunnen aansluiten.</p>
 
 <p>Vragen? Reply op deze email.</p>
 

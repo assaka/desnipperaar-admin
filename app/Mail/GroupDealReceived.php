@@ -25,7 +25,7 @@ class GroupDealReceived extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         return new Envelope(
-            subject: "Je groepsdeal-voorstel is ontvangen — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
+            subject: "Je groepsdeal-voorstel is ontvangen · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: [new Address($salesEmail, 'DeSnipperaar')],
         );

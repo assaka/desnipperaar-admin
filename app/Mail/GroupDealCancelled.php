@@ -33,7 +33,7 @@ class GroupDealCancelled extends Mailable
         $bcc = ($adminEmail) ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
-            subject: "Groepsdeal afgelast — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
+            subject: "Groepsdeal afgelast · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             to: $recipients,
             bcc: $bcc,

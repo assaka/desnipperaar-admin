@@ -30,7 +30,7 @@ class GroupDealHandoff extends Mailable
         $bcc = $adminEmail ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
-            subject: "Groepsdeal — je bent nu de organisator ({$this->deal->city} {$this->deal->pickup_date->toDateString()})",
+            subject: "Groepsdeal: je bent nu de organisator · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             to: [new Address($this->newOrganizer->customer_email, $this->newOrganizer->customer_name)],
             bcc: $bcc,
