@@ -636,6 +636,21 @@ class GroupDealController extends Controller
             'organizer.media_items'         => ['nullable', 'array'],
             'organizer.notes'               => ['nullable', 'string', 'max:2000'],
             'website'                       => ['nullable'],
+        ], [
+            'city.required'                       => 'Vul de stad in.',
+            'pickup_date.required'                => 'Kies een ophaaldag.',
+            'pickup_date.after_or_equal'          => 'Ophaaldag moet minimaal :date zijn.',
+            'pickup_date.before_or_equal'         => 'Ophaaldag mag uiterlijk :date zijn.',
+            'target_box_count.required'           => 'Vul een doel voor de groep in.',
+            'target_box_count.min'                => 'Doel dozen moet minimaal :min zijn.',
+            'target_box_count.max'                => 'Doel dozen mag maximaal :max zijn.',
+            'target_container_count.min'          => 'Doel rolcontainers moet minimaal :min zijn.',
+            'organizer.customer_name.required'    => 'Vul je naam in.',
+            'organizer.customer_email.required'   => 'Vul je e-mailadres in.',
+            'organizer.customer_email.email'      => 'Vul een geldig e-mailadres in.',
+            'organizer.customer_postcode.required'=> 'Vul je postcode in.',
+            'organizer.customer_address.required' => 'Vul je adres in.',
+            'organizer.box_count.required'        => 'Vul je eigen aantal dozen in.',
         ]);
     }
 
