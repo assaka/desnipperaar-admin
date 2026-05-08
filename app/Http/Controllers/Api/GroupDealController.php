@@ -12,6 +12,7 @@ use App\Mail\GroupDealReceived;
 use App\Mail\GroupDealSubmitted;
 use App\Models\GroupDeal;
 use App\Models\GroupDealParticipant;
+use App\Support\PostcodeLookup;
 use App\Support\Pricing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,6 +76,12 @@ class GroupDealController extends Controller
         }
 
         $data = $this->validateDealAndOrganizer($request);
+
+        // Postcode/city sanity check — organizer's address must match the deal's city.
+        if ($err = $this->postcodeMismatchResponse(
+            $data['organizer']['customer_postcode'] ?? null,
+            $data['city'] ?? null,
+        )) return $err;
 
         // Cross-field rule: organizer's own contribution can't exceed the group target.
         $orgBoxes      = (int) $data['organizer']['box_count'];
@@ -207,6 +214,9 @@ class GroupDealController extends Controller
                 'error' => 'Je hebt je al ingeschreven voor deze groepsdeal.',
             ], 422);
         }
+
+        // Joiner's postcode must match the deal's city — different city = different route.
+        if ($err = $this->postcodeMismatchResponse($data['customer_postcode'] ?? null, $deal->city)) return $err;
 
         $isPilot = Pricing::isPilotPostcode($data['customer_postcode']);
         // Joiners never get the organizer perk.
@@ -360,6 +370,9 @@ class GroupDealController extends Controller
             if ($err) return $err;
             $deal->refresh();
         }
+
+        // Participant postcode must still match the deal's (possibly updated) city.
+        if ($err = $this->postcodeMismatchResponse($data['customer_postcode'] ?? null, $deal->city)) return $err;
 
         // Organizer's own contribution is capped by the group target.
         if ($isOrganizer) {
@@ -624,6 +637,19 @@ class GroupDealController extends Controller
             'organizer.notes'               => ['nullable', 'string', 'max:2000'],
             'website'                       => ['nullable'],
         ]);
+    }
+
+    /** Returns a 422 JsonResponse when postcode/city are both known and disagree, null otherwise. */
+    private function postcodeMismatchResponse(?string $postcode, ?string $city): ?JsonResponse
+    {
+        if (PostcodeLookup::matches($postcode, $city)) return null;
+        $suggested = PostcodeLookup::suggestedCityFor($postcode);
+        return response()->json([
+            'ok'    => false,
+            'error' => $suggested
+                ? "Postcode {$postcode} hoort bij {$suggested}, niet bij {$city}. Controleer postcode of stad."
+                : "Postcode {$postcode} past niet bij {$city}.",
+        ], 422);
     }
 
     private function summarize(GroupDeal $deal, bool $detailed = false): array
