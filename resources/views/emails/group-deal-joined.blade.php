@@ -1,9 +1,9 @@
-@component('emails._layout', ['title' => 'Welkom in de groepdeal'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Je doet mee aan de groepdeal</h1>
+@component('emails._layout', ['title' => 'Welkom in de groepsdeal'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Je doet mee aan de groepsdeal</h1>
 
 <p>Beste {{ explode(' ', $participant->customer_name)[0] }},</p>
 
-<p>Je bent ingeschreven voor de groepdeal in <strong>{{ $deal->city }}</strong>, ophaaldag <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong>.</p>
+<p>Je bent ingeschreven voor de groepsdeal in <strong>{{ $deal->city }}</strong>, ophaaldag <strong>{{ $deal->pickup_date->format('l j F Y') }}</strong>.</p>
 
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
   <tr><td style="color:#666;">Deelnemers tot nu toe:</td><td><strong>{{ $deal->participants_count }}</strong></td></tr>

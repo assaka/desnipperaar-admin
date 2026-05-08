@@ -27,7 +27,7 @@ class GroupDealRejected extends Mailable
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
-            subject: "Groepdeal niet doorgegaan — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
+            subject: "Groepsdeal niet doorgegaan — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             bcc: $bcc,
         );

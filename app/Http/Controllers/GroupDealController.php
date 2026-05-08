@@ -39,7 +39,7 @@ class GroupDealController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
-        return back()->with('status', 'Groepdeal goedgekeurd en gepubliceerd.');
+        return back()->with('status', 'Groepsdeal goedgekeurd en gepubliceerd.');
     }
 
     public function reject(Request $request, GroupDeal $groupDeal)
@@ -60,7 +60,7 @@ class GroupDealController extends Controller
                 report($e);
             }
         }
-        return back()->with('status', 'Groepdeal afgewezen.');
+        return back()->with('status', 'Groepsdeal afgewezen.');
     }
 
     public function cancel(Request $request, GroupDeal $groupDeal)
@@ -79,7 +79,7 @@ class GroupDealController extends Controller
         } catch (\Throwable $e) {
             report($e);
         }
-        return back()->with('status', 'Groepdeal geannuleerd.');
+        return back()->with('status', 'Groepsdeal geannuleerd.');
     }
 
     public function manualClose(GroupDeal $groupDeal)

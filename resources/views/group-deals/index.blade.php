@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Groepdeals')
+@section('title', 'Groepsdeals')
 
 @section('content')
     <div class="flex justify-between items-baseline mb-4">
-        <h1 class="text-2xl font-black">Groepdeals</h1>
+        <h1 class="text-2xl font-black">Groepsdeals</h1>
     </div>
 
     @if (session('status'))

@@ -3,11 +3,11 @@
 
 <p>Beste {{ explode(' ', $newOrganizer->customer_name)[0] }},</p>
 
-<p>De oorspronkelijke organisator van de groepdeal in <strong>{{ $deal->city }}</strong> ({{ $deal->pickup_date->format('l j F Y') }}) heeft zich teruggetrokken. Omdat jij de eerstvolgende deelnemer was, neem jij die rol over.</p>
+<p>De oorspronkelijke organisator van de groepsdeal in <strong>{{ $deal->city }}</strong> ({{ $deal->pickup_date->format('l j F Y') }}) heeft zich teruggetrokken. Omdat jij de eerstvolgende deelnemer was, neem jij die rol over.</p>
 
 <p>Wat dat betekent: jouw eerste doos wordt gratis vernietigd (de organisator-perk). Je vastgezette prijs is bijgewerkt. Geen verdere actie nodig; je hoeft niets te doen.</p>
 
-<p>De groepdeal blijft gewoon doorlopen op dezelfde ophaaldag.</p>
+<p>De groepsdeal blijft gewoon doorlopen op dezelfde ophaaldag.</p>
 
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>
 @endcomponent

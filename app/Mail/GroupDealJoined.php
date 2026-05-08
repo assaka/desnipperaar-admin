@@ -28,7 +28,7 @@ class GroupDealJoined extends Mailable
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         return new Envelope(
-            subject: "Welkom in de groepdeal — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
+            subject: "Welkom in de groepsdeal — {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             bcc: $bcc,
         );

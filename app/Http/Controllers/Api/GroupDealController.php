@@ -58,7 +58,7 @@ class GroupDealController extends Controller
             if ($clash) {
                 return response()->json([
                     'ok' => false,
-                    'error' => 'Er bestaat al een groepdeal voor deze stad op deze datum.',
+                    'error' => 'Er bestaat al een groepsdeal voor deze stad op deze datum.',
                 ], 422);
             }
         }
@@ -126,7 +126,7 @@ class GroupDealController extends Controller
         if (!$deal->joiningOpen()) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Deze groepdeal accepteert geen nieuwe deelnemers meer.',
+                'error' => 'Deze groepsdeal accepteert geen nieuwe deelnemers meer.',
             ], 422);
         }
 
@@ -148,7 +148,7 @@ class GroupDealController extends Controller
         if ($exists) {
             return response()->json([
                 'ok' => false,
-                'error' => 'Je hebt je al ingeschreven voor deze groepdeal.',
+                'error' => 'Je hebt je al ingeschreven voor deze groepsdeal.',
             ], 422);
         }
 

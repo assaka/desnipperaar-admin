@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Groepdeal '.$deal->slug)
+@section('title', 'Groepsdeal '.$deal->slug)
 
 @section('content')
     <div class="flex justify-between items-baseline mb-4">

@@ -1,7 +1,7 @@
-@component('emails._layout', ['title' => 'Nieuwe groepdeal-aanvraag'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Nieuwe groepdeal-aanvraag</h1>
+@component('emails._layout', ['title' => 'Nieuwe groepsdeal-aanvraag'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Nieuwe groepsdeal-aanvraag</h1>
 
-<p>Een klant heeft een groepdeal voorgesteld. Beoordeel + keur goed of wijs af in de admin.</p>
+<p>Een klant heeft een groepsdeal voorgesteld. Beoordeel + keur goed of wijs af in de admin.</p>
 
 <table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;">
   <tr><td style="color:#666;">Stad:</td><td><strong>{{ $deal->city }}</strong></td></tr>
