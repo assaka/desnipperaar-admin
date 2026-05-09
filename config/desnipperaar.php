@@ -41,17 +41,13 @@ return [
         // perk types get added.
         'organizer_perk_type' => env('GROUP_DEAL_ORGANIZER_PERK', 'first_box_free'),
 
-        // Extra percentage discount the organizer gets on every line item, on
-        // top of the perk above. Incentivises organizers to bring more boxes
-        // themselves (the marginal cost of every additional doos drops) AND to
-        // recruit deelnemers (the per-joiner bonus pushes the rate up to the
-        // cap). Suppressed for organizers in the Noord-pilot postcode range —
-        // pilot still wins. The effective rate is:
-        //   min(cap_pct, base_pct + per_joiner_pct * non_organizer_count)
-        // Set base to 0 to disable the entire perk.
-        'organizer_extra_discount_pct'             => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PCT', 10),
-        'organizer_extra_discount_per_joiner_pct'  => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_PER_JOINER_PCT', 1),
-        'organizer_extra_discount_cap_pct'         => (int) env('GROUP_DEAL_ORGANIZER_EXTRA_DISCOUNT_CAP_PCT', 25),
+        // Organizer commission: a percentage of joiners' bills credited back
+        // against the organizer's own bill. Recruits → revenue from joiners
+        // (full price, no margin cut on their items) → organizer earns a
+        // proportional kickback that reduces what THEY owe. Capped at the
+        // organizer's own pre-credit bill (commission can never make their
+        // total go negative). Suppressed for pilot organizers — pilot wins.
+        'organizer_commission_pct' => (int) env('GROUP_DEAL_ORGANIZER_COMMISSION_PCT', 10),
 
         // Hard cap on participants per deal.
         'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),

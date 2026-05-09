@@ -35,16 +35,16 @@ class Pricing
     ];
 
     /**
-     * Tiered organizer-extra discount: base + per_joiner * joiners, capped.
-     * Caller is responsible for suppressing this in the pilot postcode range.
+     * Organizer commission, in euros: pct% of joiners' total subtotal.
+     * Caller passes in the joiners' summed subtotal_after_perks; this method
+     * just multiplies by the configured percentage. Pilot organizers should
+     * receive 0 (caller's responsibility — pilot replaces all perks).
      */
-    public static function organizerExtraDiscountPct(int $nonOrganizerCount): int
+    public static function organizerCommissionAmount(float $joinersSubtotal): float
     {
-        $base = (int) config('desnipperaar.group_deal.organizer_extra_discount_pct', 0);
-        $per  = (int) config('desnipperaar.group_deal.organizer_extra_discount_per_joiner_pct', 0);
-        $cap  = (int) config('desnipperaar.group_deal.organizer_extra_discount_cap_pct', 100);
-        $raw  = $base + ($per * max(0, $nonOrganizerCount));
-        return max(0, min($cap, $raw));
+        $pct = (int) config('desnipperaar.group_deal.organizer_commission_pct', 0);
+        if ($pct <= 0 || $joinersSubtotal <= 0) return 0.0;
+        return round($joinersSubtotal * $pct / 100, 2);
     }
 
     /**
@@ -146,13 +146,11 @@ class Pricing
         int $containers,
         ?array $mediaItems,
         bool $pilot,
-        bool $firstBoxFree,
-        int $organizerExtraDiscountPct = 0
+        bool $firstBoxFree
     ): array {
         if ($pilot) {
             // Pilot replaces all organizer perks per the pricing rule.
             $firstBoxFree = false;
-            $organizerExtraDiscountPct = 0;
         }
 
         $quote = self::quote($boxes, $containers, $pilot, $firstBoxFree);
@@ -173,51 +171,25 @@ class Pricing
             ];
         }
 
-        // Apply organizer extra discount (a flat % off every priced line, on top
-        // of any pilot/kennismaking line-level discount the quote already baked in).
-        // Lines at unit=0 (e.g. "Kennismaking — eerste doos" gratis row) are
-        // skipped so the discount doesn't accidentally turn into a negative number.
-        $lines = $quote['lines'];
-        if ($organizerExtraDiscountPct > 0) {
-            $factor = (100 - $organizerExtraDiscountPct) / 100;
-            self::applyExtraDiscount($lines, $factor);
-            self::applyExtraDiscount($mediaLines, $factor);
-        }
-
-        $linesSubtotal       = array_sum(array_column($lines, 'subtotal'));
-        $mediaSubtotal       = array_sum(array_column($mediaLines, 'subtotal'));
-        $linesRegular        = array_sum(array_map(fn ($l) => $l['was_subtotal'] ?? $l['subtotal'], $lines));
-        $mediaRegular        = array_sum(array_map(fn ($l) => $l['was_subtotal'] ?? $l['subtotal'], $mediaLines));
-        $subtotal            = round($linesSubtotal + $mediaSubtotal, 2);
-        $subtotalRegular     = round($linesRegular + $mediaRegular, 2);
-        $discount            = round($subtotalRegular - $subtotal, 2);
-        $vat                 = round($subtotal * self::VAT_RATE, 2);
-        $total               = round($subtotal + $vat, 2);
+        $mediaSubtotal   = array_sum(array_column($mediaLines, 'subtotal'));
+        $subtotal        = round($quote['subtotal'] + $mediaSubtotal, 2);
+        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotal, 2);
+        $discount        = round($subtotalRegular - $subtotal, 2);
+        $vat             = round($subtotal * self::VAT_RATE, 2);
+        $total           = round($subtotal + $vat, 2);
 
         return [
-            'lines'                       => $lines,
-            'media_lines'                 => $mediaLines,
-            'subtotal'                    => $subtotal,
-            'subtotal_regular'            => $subtotalRegular,
-            'discount'                    => $discount,
-            'vat'                         => $vat,
-            'total'                       => $total,
-            'pilot'                       => $pilot,
-            'first_box_free'              => $firstBoxFree,
-            'organizer_extra_discount_pct'=> $organizerExtraDiscountPct,
-            'pricing_version'             => 2,
-            'computed_at'                 => now()->toIso8601String(),
+            'lines'            => $quote['lines'],
+            'media_lines'      => $mediaLines,
+            'subtotal'         => $subtotal,
+            'subtotal_regular' => $subtotalRegular,
+            'discount'         => $discount,
+            'vat'              => $vat,
+            'total'            => $total,
+            'pilot'            => $pilot,
+            'first_box_free'   => $firstBoxFree,
+            'pricing_version'  => 1,
+            'computed_at'      => now()->toIso8601String(),
         ];
-    }
-
-    private static function applyExtraDiscount(array &$lines, float $factor): void
-    {
-        foreach ($lines as &$line) {
-            if (($line['unit'] ?? 0) <= 0) continue; // skip free rows
-            $line['was_unit']     = $line['was_unit']     ?? $line['unit'];
-            $line['was_subtotal'] = $line['was_subtotal'] ?? round($line['unit'] * $line['qty'], 2);
-            $line['unit']         = round($line['unit'] * $factor, 2);
-            $line['subtotal']     = round($line['unit'] * $line['qty'], 2);
-        }
     }
 }

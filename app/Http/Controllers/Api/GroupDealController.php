@@ -50,9 +50,7 @@ class GroupDealController extends Controller
             'min_horizon_days'                        => (int) ($cfg['min_horizon_days']      ?? 7),
             'max_horizon_days'                        => (int) ($cfg['max_horizon_days']      ?? 90),
             'max_joiners'                             => (int) ($cfg['max_joiners']           ?? 30),
-            'organizer_extra_discount_pct'            => (int) ($cfg['organizer_extra_discount_pct']            ?? 0),
-            'organizer_extra_discount_per_joiner_pct' => (int) ($cfg['organizer_extra_discount_per_joiner_pct'] ?? 0),
-            'organizer_extra_discount_cap_pct'        => (int) ($cfg['organizer_extra_discount_cap_pct']        ?? 100),
+            'organizer_commission_pct'                => (int) ($cfg['organizer_commission_pct']                ?? 0),
         ]);
     }
 
@@ -150,19 +148,15 @@ class GroupDealController extends Controller
             }
         }
 
-        $perkType   = config('desnipperaar.group_deal.organizer_perk_type');
-        $isPilot    = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
-        $applyPerk  = $perkType === 'first_box_free' && !$isPilot;
-        // Draft-create: organizer is the only participant, joiner count = 0 → base rate.
-        $applyExtra = $isPilot ? 0 : Pricing::organizerExtraDiscountPct(0);
-
+        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
+        $isPilot   = Pricing::isPilotPostcode($data['organizer']['customer_postcode']);
+        $applyPerk = $perkType === 'first_box_free' && !$isPilot;
         $snapshot = Pricing::snapshot(
             (int) $data['organizer']['box_count'],
             (int) $data['organizer']['container_count'],
             $data['organizer']['media_items'] ?? null,
             $isPilot,
             $applyPerk,
-            $applyExtra,
         );
 
         $deal = DB::transaction(function () use ($data, $snapshot) {
@@ -280,9 +274,6 @@ class GroupDealController extends Controller
             'notes'             => $data['notes'] ?? null,
             'price_snapshot'    => $snapshot,
         ]);
-
-        // New joiner pushes the organizer's tier up. Rebuild their snapshot.
-        $this->recomputeOrganizerSnapshot($deal);
 
         try {
             Mail::to($participant->customer_email)->send(new GroupDealJoined($deal, $participant));
@@ -435,15 +426,6 @@ class GroupDealController extends Controller
         $isPilot   = Pricing::isPilotPostcode($data['customer_postcode']);
         $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
         $applyPerk = $isOrganizer && $perkType === 'first_box_free' && !$isPilot;
-        // Tier rate uses the live joiner count (= participants minus the
-        // organizer themselves). Joiners' own snapshots don't get the perk;
-        // pass 0 in that branch.
-        $joinerCount = $deal->participants()
-            ->where('id', '!=', $deal->organizer_participant_id)
-            ->count();
-        $applyExtra = ($isOrganizer && !$isPilot)
-            ? Pricing::organizerExtraDiscountPct($joinerCount)
-            : 0;
 
         $snapshot = Pricing::snapshot(
             (int) $data['box_count'],
@@ -451,7 +433,6 @@ class GroupDealController extends Controller
             $p->media_items,
             $isPilot,
             $applyPerk,
-            $applyExtra,
         );
 
         $oldBoxCount       = (int) $p->box_count;
@@ -616,10 +597,9 @@ class GroupDealController extends Controller
             $p->delete();
 
             if (!$isOrganizer) {
-                // Joiner left: organizer's tier drops by one — recompute their
-                // snapshot before notifying so the email reflects the new total.
-                $this->recomputeOrganizerSnapshot($deal);
-
+                // Joiner left: notify the organizer with updated stats.
+                // Organizer's own bill is unchanged; the pending commission is
+                // re-derived from joiner snapshots whenever the API/page reads it.
                 $organizer = $deal->organizerParticipant;
                 if ($organizer) {
                     try {
@@ -650,11 +630,21 @@ class GroupDealController extends Controller
                 return;
             }
 
-            // Hand off: promote $next to organizer, then recompute their snapshot
-            // with the live joiner count (excluding $next themselves).
+            // Hand off: promote $next to organizer and rebuild their snapshot
+            // so the first_box_free perk applies to their own bill.
             $deal->update(['organizer_participant_id' => $next->id]);
-            $deal->refresh();
-            $this->recomputeOrganizerSnapshot($deal);
+            $nextIsPilot = Pricing::isPilotPostcode($next->customer_postcode);
+            $perkType    = config('desnipperaar.group_deal.organizer_perk_type');
+            $applyPerk   = $perkType === 'first_box_free' && !$nextIsPilot;
+            $next->update([
+                'price_snapshot' => Pricing::snapshot(
+                    (int) $next->box_count,
+                    (int) $next->container_count,
+                    $next->media_items,
+                    $nextIsPilot,
+                    $applyPerk,
+                ),
+            ]);
         });
     }
 
@@ -703,30 +693,24 @@ class GroupDealController extends Controller
         ]);
     }
 
-    /** Rebuild the organizer's price_snapshot using the current joiner count.
-     *  Call after any participant event (join, cancel, edit-volume) that
-     *  changes the count, so the tiered organizer-extra discount stays in
-     *  sync. No-op for pilot organizers (they get pilot pricing instead). */
-    private function recomputeOrganizerSnapshot(GroupDeal $deal): void
+    /** Compute the organizer's pending commission as a euro amount: configured
+     *  percentage × sum of joiners' subtotals. Used in API responses + the
+     *  manage page so the organizer sees what payout they'll receive once
+     *  joiners pay their bills. The commission is NOT applied to the
+     *  organizer's own invoice (would cut into our revenue) — it's a separate
+     *  payout to the organizer's bank account, processed manually after
+     *  joiners pay. Pilot organizers get 0. */
+    private function pendingCommissionFor(GroupDeal $deal): float
     {
-        $organizer = $deal->organizerParticipant()->first();
-        if (!$organizer) return;
+        $organizer = $deal->organizerParticipant;
+        if (!$organizer) return 0.0;
+        if (Pricing::isPilotPostcode($organizer->customer_postcode)) return 0.0;
 
-        $isPilot   = Pricing::isPilotPostcode($organizer->customer_postcode);
-        $perkType  = config('desnipperaar.group_deal.organizer_perk_type');
-        $applyPerk = $perkType === 'first_box_free' && !$isPilot;
-        $joiners   = $deal->participants()->where('id', '!=', $organizer->id)->count();
-        $applyExtra = $isPilot ? 0 : Pricing::organizerExtraDiscountPct($joiners);
-
-        $snapshot = Pricing::snapshot(
-            (int) $organizer->box_count,
-            (int) $organizer->container_count,
-            $organizer->media_items,
-            $isPilot,
-            $applyPerk,
-            $applyExtra,
-        );
-        $organizer->update(['price_snapshot' => $snapshot]);
+        $sum = $deal->participants()
+            ->where('id', '!=', $organizer->id)
+            ->get(['price_snapshot'])
+            ->reduce(fn ($acc, $p) => $acc + (float) ($p->price_snapshot['subtotal'] ?? 0), 0.0);
+        return Pricing::organizerCommissionAmount($sum);
     }
 
     /** Returns a 422 JsonResponse when postcode/city are both known and disagree, null otherwise. */
@@ -775,7 +759,9 @@ class GroupDealController extends Controller
             'target_container_count' => (int) $deal->target_container_count,
             'filled_box_count'       => (int) ($progress->boxes ?? 0),
             'filled_container_count' => (int) ($progress->containers ?? 0),
-            'group_total_locked'     => round($groupTotal, 2),
+            'group_total_locked'         => round($groupTotal, 2),
+            'organizer_commission_pct'   => (int) config('desnipperaar.group_deal.organizer_commission_pct', 0),
+            'organizer_pending_commission'=> round($this->pendingCommissionFor($deal), 2),
         ], fn ($v) => $v !== null);
     }
 }
