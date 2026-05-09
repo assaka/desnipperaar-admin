@@ -51,6 +51,7 @@ class GroupDealController extends Controller
             'max_horizon_days'                        => (int) ($cfg['max_horizon_days']      ?? 90),
             'max_joiners'                             => (int) ($cfg['max_joiners']           ?? 30),
             'organizer_commission_pct'                => (int) ($cfg['organizer_commission_pct']                ?? 0),
+            'organizer_bonus_enabled'                 => (bool) ($cfg['organizer_bonus_enabled']                ?? true),
         ]);
     }
 

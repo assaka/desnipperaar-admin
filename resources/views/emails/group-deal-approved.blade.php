@@ -17,7 +17,11 @@
 
 <p>Deel deze pagina via je netwerk: kantoren, MKB-collega's, ZZP'ers, VvE-bestuur of buurorganisaties in {{ $deal->city }}. Particulieren met een archief zijn ook welkom. Het groepsdoel staat op <strong>{{ $goalText }}</strong>; bezoekers zien een voortgangsbalk die meegroeit zodra er deelnemers bijkomen. Inschrijven sluit twee dagen voor de ophaaldag; daarna ontvangt iedereen een orderbevestiging en plannen we de route.</p>
 
+@if (config('desnipperaar.group_deal.organizer_bonus_enabled', true))
 <p>Als organisator vernietigen wij je eerste doos kosteloos. Daarnaast ontvang je een organisator-bonus van {{ config('desnipperaar.group_deal.organizer_commission_pct', 10) }}% over wat de overige deelnemers betalen, uitgekeerd op je rekening zodra wij hun betalingen hebben ontvangen. Hoe meer deelnemers en dozen jullie bundelen, hoe hoger je uitbetaling.</p>
+@else
+<p>Als organisator vernietigen wij je eerste doos kosteloos. Hoe meer deelnemers en dozen jullie bundelen, hoe rendabeler de gezamenlijke ophaaldag.</p>
+@endif
 
 @if ($deal->organizerParticipant)
 <p style="margin-top:20px;">
