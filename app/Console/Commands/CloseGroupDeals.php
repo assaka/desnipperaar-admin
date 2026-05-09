@@ -122,5 +122,39 @@ class CloseGroupDeals extends Command
 
         $this->info("→ closed deal #{$deal->id}, materialized "
             . $deal->participants()->whereNotNull('order_id')->count() . ' orders');
+
+        $this->dispatchOrganizerBonusEmail($deal->fresh());
+    }
+
+    /** Tell the organizer their commission is ready to be paid out and ask
+     *  them to reply with their IBAN. We deliberately don't store the IBAN —
+     *  admin reads it from the reply, fires the bank transfer manually, and
+     *  deletes the thread afterwards. */
+    private function dispatchOrganizerBonusEmail(\App\Models\GroupDeal $deal): void
+    {
+        $organizer = $deal->organizerParticipant;
+        if (!$organizer) return;
+        if (\App\Support\Pricing::isPilotPostcode($organizer->customer_postcode)) return;
+
+        $commissionPct = (int) config('desnipperaar.group_deal.organizer_commission_pct', 0);
+        if ($commissionPct <= 0) return;
+
+        $joinersSubtotal = $deal->participants()
+            ->where('id', '!=', $organizer->id)
+            ->get(['price_snapshot'])
+            ->reduce(fn ($acc, $p) => $acc + (float) ($p->price_snapshot['subtotal'] ?? 0), 0.0);
+
+        $bonus = \App\Support\Pricing::organizerCommissionAmount($joinersSubtotal);
+        if ($bonus <= 0) return;
+
+        try {
+            \Illuminate\Support\Facades\Mail::send(
+                new \App\Mail\GroupDealOrganizerBonus($deal, $organizer, $bonus, $commissionPct)
+            );
+            $this->info("  → organizer-bonus email dispatched (€ " . number_format($bonus, 2, ',', '.') . ")");
+        } catch (\Throwable $e) {
+            report($e);
+            $this->error('  → organizer-bonus email failed: ' . $e->getMessage());
+        }
     }
 }
