@@ -52,7 +52,7 @@ class GroupDealOrganizerBonus extends Mailable
     {
         // Joiner roster (excludes the organizer + soft-deleted participants).
         // First name only per privacy rule we use elsewhere on the site.
-        $deelnemers = $this->deal->participants()
+        $rows = $this->deal->participants()
             ->where('id', '!=', $this->organizer->id)
             ->orderBy('created_at')
             ->get(['customer_name', 'box_count', 'container_count', 'price_snapshot'])
@@ -64,7 +64,14 @@ class GroupDealOrganizerBonus extends Mailable
                     'container_count' => (int) $p->container_count,
                     'subtotal'        => (float) ($p->price_snapshot['subtotal'] ?? 0),
                 ];
-            })->all();
+            });
+
+        $totals = [
+            'count'           => $rows->count(),
+            'box_count'       => (int) $rows->sum('box_count'),
+            'container_count' => (int) $rows->sum('container_count'),
+            'subtotal'        => round((float) $rows->sum('subtotal'), 2),
+        ];
 
         return new Content(
             view: 'emails.group-deal-organizer-bonus',
@@ -73,7 +80,8 @@ class GroupDealOrganizerBonus extends Mailable
                 'organizer'      => $this->organizer,
                 'bonusAmount'    => $this->bonusAmount,
                 'commissionPct'  => $this->commissionPct,
-                'deelnemers'     => $deelnemers,
+                'deelnemers'     => $rows->all(),
+                'totals'         => $totals,
             ],
         );
     }

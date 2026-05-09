@@ -5,13 +5,6 @@
 
 <p>De groepsdeal in <strong>{{ $deal->city }}</strong> op <strong>{{ $deal->pickup_date->locale('nl')->translatedFormat('l j F Y') }}</strong> is afgesloten en de orders van alle deelnemers zijn aangemaakt. Bedankt voor het bundelen.</p>
 
-<table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;margin:16px 0 24px;">
-  <tr>
-    <td style="color:#666;">Jouw organisator-bonus ({{ $commissionPct }}% over wat deelnemers betalen):</td>
-    <td style="font-weight:900;font-size:18px;">€ {{ number_format($bonusAmount, 2, ',', '.') }}</td>
-  </tr>
-</table>
-
 @if (!empty($deelnemers))
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Deelnemers in jouw groepsdeal</h2>
 
@@ -20,7 +13,7 @@
         <th style="text-align:left;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Voornaam</th>
         <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Dozen</th>
         <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Containers</th>
-        <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Subtotaal</th>
+        <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Subtotaal (excl. btw)</th>
     </tr>
     @foreach ($deelnemers as $d)
         <tr>
@@ -30,8 +23,21 @@
             <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">€ {{ number_format($d['subtotal'], 2, ',', '.') }}</td>
         </tr>
     @endforeach
+    <tr>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;border-top:2px solid #0A0A0A;">Totaal · {{ $totals['count'] }} {{ $totals['count'] === 1 ? 'deelnemer' : 'deelnemers' }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">{{ $totals['box_count'] }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">{{ $totals['container_count'] }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">€ {{ number_format($totals['subtotal'], 2, ',', '.') }}</td>
+    </tr>
 </table>
 @endif
+
+<table cellpadding="6" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;margin:16px 0 24px;">
+  <tr>
+    <td style="color:#666;">Jouw organisator-bonus ({{ $commissionPct }}% over € {{ number_format($totals['subtotal'] ?? 0, 2, ',', '.') }} excl. btw):</td>
+    <td style="font-weight:900;font-size:18px;">€ {{ number_format($bonusAmount, 2, ',', '.') }}</td>
+  </tr>
+</table>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Hoe ontvang je de uitbetaling?</h2>
 
