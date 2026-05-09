@@ -31,18 +31,20 @@ class GroupDealOrganizerBonus extends Mailable
     public function envelope(): Envelope
     {
         $salesEmail = config('desnipperaar.notifications.sales_email');
-        $adminEmail = config('desnipperaar.notifications.admin_email');
 
-        $bcc = ($adminEmail
-                && strcasecmp($adminEmail, $this->organizer->customer_email) !== 0)
-            ? [new Address($adminEmail, 'DeSnipperaar')] : [];
+        // Sales is on the visible CC line (not BCC) so the organizer sees they
+        // can reply-all and DeSnipperaar will get the IBAN. Skip when sales@
+        // happens to be the same address as the organizer (avoids self-CC).
+        $cc = ($salesEmail
+                && strcasecmp($salesEmail, $this->organizer->customer_email) !== 0)
+            ? [new Address($salesEmail, 'DeSnipperaar Sales')] : [];
 
         return new Envelope(
             subject: "Je organisator-bonus klaar voor uitbetaling · {$this->deal->city} ({$this->deal->pickup_date->toDateString()})",
             from: new Address($salesEmail, 'DeSnipperaar'),
             to: [new Address($this->organizer->customer_email, $this->organizer->customer_name)],
+            cc: $cc,
             replyTo: [new Address($salesEmail, 'DeSnipperaar Sales')],
-            bcc: $bcc,
         );
     }
 
