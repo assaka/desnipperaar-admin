@@ -132,6 +132,11 @@ class CloseGroupDeals extends Command
      *  deletes the thread afterwards. */
     private function dispatchOrganizerBonusEmail(\App\Models\GroupDeal $deal): void
     {
+        if (!config('desnipperaar.group_deal.organizer_bonus_enabled', true)) {
+            $this->info('  → organizer-bonus email skipped (feature disabled via env)');
+            return;
+        }
+
         $organizer = $deal->organizerParticipant;
         if (!$organizer) return;
         if (\App\Support\Pricing::isPilotPostcode($organizer->customer_postcode)) return;

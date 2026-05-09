@@ -17,7 +17,7 @@
 <p>Reply op deze e-mail met je <strong>IBAN-rekeningnummer</strong> en de naam waarop de rekening staat. Wij maken het bedrag binnen vijf werkdagen na ontvangst van de betalingen door alle deelnemers naar je over.</p>
 
 <p style="background:#F8F4E2;padding:12px 16px;border-left:3px solid #F5C518;font-size:0.95rem;">
-  <strong>Privacy:</strong> wij slaan je IBAN niet op in onze systemen. We lezen het uit je reply, gebruiken het &eacute;&eacute;nmalig voor de uitbetaling, en verwijderen vervolgens de e-mail-thread na afronding.
+  <strong>Privacy:</strong> wij slaan je IBAN niet op in onze systemen. We gebruiken het &eacute;&eacute;nmalig voor de uitbetaling en verwijderen vervolgens de e-mail-thread na afronding.
 </p>
 
 <p style="margin-top:24px;">Vragen over de uitbetaling? Reply gewoon op deze e-mail.</p>

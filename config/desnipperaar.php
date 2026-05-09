@@ -49,6 +49,12 @@ return [
         // total go negative). Suppressed for pilot organizers — pilot wins.
         'organizer_commission_pct' => (int) env('GROUP_DEAL_ORGANIZER_COMMISSION_PCT', 10),
 
+        // Master switch for the organizer-bonus payout flow. When false, the
+        // close-deal command skips the bonus email + IBAN-request even if
+        // commission_pct > 0. Lets us ship the feature behind a flag and turn
+        // it on per environment.
+        'organizer_bonus_enabled'  => filter_var(env('GROUP_DEAL_ORGANIZER_BONUS_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+
         // Hard cap on participants per deal.
         'max_joiners'         => (int) env('GROUP_DEAL_MAX_JOINERS', 30),
 
