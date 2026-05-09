@@ -12,6 +12,27 @@
   </tr>
 </table>
 
+@if (!empty($deelnemers))
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Deelnemers in jouw groepsdeal</h2>
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
+    <tr>
+        <th style="text-align:left;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Voornaam</th>
+        <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Dozen</th>
+        <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Containers</th>
+        <th style="text-align:right;padding:6px 0;color:#666;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #DDD;">Subtotaal</th>
+    </tr>
+    @foreach ($deelnemers as $d)
+        <tr>
+            <td style="padding:6px 0;font-size:13px;border-bottom:1px dashed #DDD;">{{ $d['first_name'] }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">{{ $d['box_count'] }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">{{ $d['container_count'] }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">€ {{ number_format($d['subtotal'], 2, ',', '.') }}</td>
+        </tr>
+    @endforeach
+</table>
+@endif
+
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Hoe ontvang je de uitbetaling?</h2>
 
 <p>Reply op deze e-mail met je <strong>IBAN-rekeningnummer</strong> en de naam waarop de rekening staat. Wij maken het bedrag binnen vijf werkdagen na ontvangst van de betalingen door alle deelnemers naar je over.</p>
