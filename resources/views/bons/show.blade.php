@@ -194,9 +194,9 @@
                     <tr class="border-b">
                         <td class="py-1">{{ $line['label'] }}</td>
                         <td class="text-right font-mono">
-                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
-                            @if (!empty($line['was_subtotal']))
-                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</span>
+                            {{ $line['qty'] }} × € {{ number_format($line['unit'], 2, ',', '.') }}
+                            @if (!empty($line['was_unit']))
+                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
                             @endif
                         </td>
                         <td class="text-right font-bold font-mono">
