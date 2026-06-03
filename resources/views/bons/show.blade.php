@@ -327,12 +327,25 @@
         var cCanvas = document.getElementById('sig-customer');
         var dCanvas = document.getElementById('sig-driver');
         if (!cCanvas || !dCanvas) return;
+
+        function fitCanvas(canvas) {
+            var ratio = Math.max(window.devicePixelRatio || 1, 1);
+            var rect  = canvas.getBoundingClientRect();
+            canvas.width  = Math.round(rect.width  * ratio);
+            canvas.height = Math.round(rect.height * ratio);
+            canvas.getContext('2d').scale(ratio, ratio);
+        }
+        fitCanvas(cCanvas);
+        fitCanvas(dCanvas);
+
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
         window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
         [cCanvas, dCanvas].forEach(function (c) {
-            c.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
-            c.addEventListener('touchmove',  function (e) { e.preventDefault(); }, { passive: false });
+            c.addEventListener('pointerdown',   function () { document.body.style.overflow = 'hidden'; });
+            c.addEventListener('pointerup',     function () { document.body.style.overflow = '';       });
+            c.addEventListener('pointercancel', function () { document.body.style.overflow = '';       });
+            c.addEventListener('touchmove',     function (e) { e.preventDefault(); }, { passive: false });
         });
 
         var form = cCanvas.closest('form');
