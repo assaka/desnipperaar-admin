@@ -115,16 +115,15 @@
                             @endif
                         </td>
                         <td class="text-right font-bold font-mono">
-                            € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                            @if (!empty($line['was_subtotal']))
+                                <div class="line-through text-gray-400 text-xs">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</div>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                    <td class="text-right font-mono pt-2">€ {{ number_format($quote['subtotal_regular'] ?? $quote['subtotal'], 2, ',', '.') }}</td></tr>
-                @if (!empty($quote['discount']) && $quote['discount'] > 0)
-                    <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                        <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount'], 2, ',', '.') }}</td></tr>
-                @endif
+                    <td class="text-right font-mono pt-2">€ {{ number_format($quote['subtotal'], 2, ',', '.') }}</td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($quote['vat'], 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black">
@@ -151,16 +150,15 @@
                                 @endif
                             </td>
                             <td class="text-right font-bold font-mono">
-                                € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                                € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                                @if (!empty($line['was_subtotal']))
+                                    <div class="line-through text-gray-400 text-xs">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
                     <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                        <td class="text-right font-mono pt-2">€ {{ number_format($actualQuote['subtotal_regular'] ?? $actualQuote['subtotal'], 2, ',', '.') }}</td></tr>
-                    @if (!empty($actualQuote['discount']) && $actualQuote['discount'] > 0)
-                        <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                            <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount'], 2, ',', '.') }}</td></tr>
-                    @endif
+                        <td class="text-right font-mono pt-2">€ {{ number_format($actualQuote['subtotal'], 2, ',', '.') }}</td></tr>
                     <tr><td class="text-gray-600">BTW 21%</td><td></td>
                         <td class="text-right font-mono">€ {{ number_format($actualQuote['vat'], 2, ',', '.') }}</td></tr>
                     <tr class="border-t-2 border-black">

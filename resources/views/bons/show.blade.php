@@ -200,16 +200,12 @@
                             @endif
                         </td>
                         <td class="text-right font-bold font-mono">
-                            € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                            € {{ number_format($line['subtotal'], 2, ',', '.') }}
                         </td>
                     </tr>
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                    <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal_regular'] ?? $orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
-                @if (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0)
-                    <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                        <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount'], 2, ',', '.') }}</td></tr>
-                @endif
+                    <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($orderedQuote['vat'], 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black">
@@ -233,15 +229,12 @@
                             <span x-show="line.was_subtotal" class="line-through text-gray-400 ml-1" x-text="fmt(line.was_subtotal)"></span>
                         </td>
                         <td class="text-right font-bold font-mono">
-                            <span x-text="fmt(line.was_subtotal ?? line.subtotal)"></span>
+                            <span x-text="fmt(line.subtotal)"></span>
                         </td>
                     </tr>
                 </template>
                 <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
-                    <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotalRegular)"></td></tr>
-                <tr x-show="liveQuote.discount > 0">
-                    <td class="text-green-700">Korting Noord-pilot</td><td></td>
-                    <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discount)"></td></tr>
+                    <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotal)"></td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>
                 <tr class="border-t-2 border-black">

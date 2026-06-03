@@ -102,27 +102,18 @@
                         @endif
                     </td>
                     <td class="r">
-                        € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                        € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                        @if (!empty($line['was_subtotal']))
+                            <div style="text-decoration:line-through;color:#999;font-size:8pt;">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</div>
+                        @endif
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    @php
-        $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
-        $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
-    @endphp
     <table class="totals">
-        <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
-        @if ($discount > 0)
-            @php
-                $discountLabel = $invoice->order->pilot
-                    ? 'Korting Noord-pilot'
-                    : ($invoice->order->first_box_free ? 'Korting kennismaking' : 'Korting');
-            @endphp
-            <tr><td class="k">{{ $discountLabel }}</td><td class="v">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
-        @endif
+        <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($invoice->amount_excl_btw, 2, ',', '.') }}</td></tr>
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
     </table>

@@ -20,7 +20,10 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
                 @endif
             </td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
-                € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                @if (!empty($line['was_subtotal']))
+                    <div style="text-decoration:line-through;color:#999;font-size:0.85em;">€ {{ number_format($line['was_subtotal'], 2, ',', '.') }}</div>
+                @endif
             </td>
         </tr>
     @endforeach
@@ -39,19 +42,8 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
     <tr>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">Subtotaal (excl. btw)</td>
-        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotal, 2, ',', '.') }}</td>
     </tr>
-    @if (!empty($discount) && $discount > 0)
-        @php
-            $discountLabel = $order->pilot
-                ? 'Korting Noord-pilot'
-                : ($order->first_box_free ? 'Korting kennismaking' : 'Korting');
-        @endphp
-        <tr>
-            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">{{ $discountLabel }}</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discount, 2, ',', '.') }}</td>
-        </tr>
-    @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">BTW 21%</td>
         <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($vat, 2, ',', '.') }}</td>
@@ -65,11 +57,6 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 @if ($order->pilot)
     <p style="background:#F5C518;padding:6px 10px;display:inline-block;font-size:12px;font-weight:700;margin:0 0 16px;">
         ✓ Noord-pilot · 20% korting toegepast
-    </p>
-@endif
-@if ($order->first_box_free)
-    <p style="background:#0A0A0A;color:#F5C518;padding:6px 10px;display:inline-block;font-size:12px;font-weight:700;margin:0 0 16px;">
-        ✨ Kennismaking · eerste doos gratis
     </p>
 @endif
 
