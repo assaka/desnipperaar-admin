@@ -15,8 +15,8 @@
     .top td { vertical-align: top; }
     .top .leverancier { width: 55%; }
     .top .doc-info { width: 45%; text-align: right; }
-    .top h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
-    .top .name { font-weight: 900; font-size: 12pt; margin-bottom: 2mm; }
+    .top h3 { font-family: BebasNeue, Impact, sans-serif; font-size: 11pt; font-weight: 400; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.08em; }
+    .top .name { font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 14pt; margin-bottom: 2mm; letter-spacing: 0.04em; }
     h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 28pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
     .num { font-family: 'Courier New', monospace; font-size: 14pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; }
     .dates { margin-bottom: 6mm; font-size: 10pt; }
