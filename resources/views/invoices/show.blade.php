@@ -69,13 +69,15 @@
                     $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
                 @endphp
                 <tr><td colspan="3" class="pt-2 text-gray-600">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="text-right font-mono pt-2">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
-                @if ($discount > 0)
-                    @php
-                        $discountLabel = $invoice->order->pilot
-                            ? 'Korting Noord-pilot'
-                            : ($invoice->order->first_box_free ? 'Korting kennismaking' : 'Korting');
-                    @endphp
-                    <tr><td colspan="3" class="text-green-700">{{ $discountLabel }}</td><td class="text-right font-mono text-green-700">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
+                @php
+                    $discountKennismaking = collect($invoice->lines)->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
+                    $discountPilot = max(0, round($discount - $discountKennismaking, 2));
+                @endphp
+                @if ($discountKennismaking > 0)
+                    <tr><td colspan="3" class="text-green-700">Korting kennismaking</td><td class="text-right font-mono text-green-700">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
+                @endif
+                @if ($discountPilot > 0)
+                    <tr><td colspan="3" class="text-green-700">Korting Noord-pilot</td><td class="text-right font-mono text-green-700">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td colspan="3" class="text-gray-600">BTW {{ number_format($invoice->vat_rate*100, 0) }}%</td><td class="text-right font-mono">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black"><td colspan="3" class="pt-2 font-black">Totaal incl. btw</td><td class="pt-2 text-right font-bold text-lg font-mono">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>

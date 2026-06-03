@@ -113,12 +113,14 @@
                 const q = this.actMedia[k]|0;
                 if (q > 0) lines.push(mk(mLabels[k], q, mPrices[k], mPrices[k]));
             }
-            const subtotal        = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
-            const subtotalRegular = Math.round(lines.reduce((s,l)=>s+(l.was_subtotal ?? l.subtotal),0) * 100) / 100;
-            const discount        = Math.round((subtotalRegular - subtotal) * 100) / 100;
+            const subtotal             = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
+            const subtotalRegular      = Math.round(lines.reduce((s,l)=>s+(l.was_subtotal ?? l.subtotal),0) * 100) / 100;
+            const discount             = Math.round((subtotalRegular - subtotal) * 100) / 100;
+            const discountKennismaking = Math.round(lines.filter(l=>l.unit===0&&l.was_subtotal).reduce((s,l)=>s+l.was_subtotal,0) * 100) / 100;
+            const discountPilot        = Math.round((discount - discountKennismaking) * 100) / 100;
             const vat             = Math.round(subtotal * 0.21 * 100) / 100;
             const total           = Math.round((subtotal + vat) * 100) / 100;
-            return {lines, subtotal, subtotalRegular, discount, vat, total};
+            return {lines, subtotal, subtotalRegular, discount, discountKennismaking, discountPilot, vat, total};
         },
         fmt(n) { return '€ ' + Number(n).toFixed(2).replace('.', ','); },
     }">
@@ -206,9 +208,13 @@
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">{{ (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }}</td><td></td>
                     <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal_regular'] ?? $orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
-                @if (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0)
+                @if (!empty($orderedQuote['discount_kennismaking']) && $orderedQuote['discount_kennismaking'] > 0)
+                    <tr><td class="text-green-700">Korting kennismaking</td><td></td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
+                @endif
+                @if (!empty($orderedQuote['discount_pilot']) && $orderedQuote['discount_pilot'] > 0)
                     <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                        <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount'], 2, ',', '.') }}</td></tr>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount_pilot'], 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($orderedQuote['vat'], 2, ',', '.') }}</td></tr>
@@ -239,9 +245,12 @@
                 </template>
                 <tr><td class="pt-2 text-gray-600" x-text="liveQuote.discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal'"></td><td></td>
                     <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotalRegular)"></td></tr>
-                <tr x-show="liveQuote.discount > 0">
+                <tr x-show="liveQuote.discountKennismaking > 0">
+                    <td class="text-green-700">Korting kennismaking</td><td></td>
+                    <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discountKennismaking)"></td></tr>
+                <tr x-show="liveQuote.discountPilot > 0">
                     <td class="text-green-700">Korting Noord-pilot</td><td></td>
-                    <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discount)"></td></tr>
+                    <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discountPilot)"></td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>
                 <tr class="border-t-2 border-black">

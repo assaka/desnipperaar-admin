@@ -112,20 +112,24 @@ class Pricing
             }
         }
 
-        $subtotal        = array_sum(array_column($lines, 'subtotal'));
-        $subtotalRegular = array_sum(array_map(fn ($l) => $l['was_subtotal'] ?? $l['subtotal'], $lines));
-        $discount        = round($subtotalRegular - $subtotal, 2);
-        $vat             = round($subtotal * self::VAT_RATE, 2);
-        $total           = round($subtotal + $vat, 2);
+        $subtotal              = array_sum(array_column($lines, 'subtotal'));
+        $subtotalRegular       = array_sum(array_map(fn ($l) => $l['was_subtotal'] ?? $l['subtotal'], $lines));
+        $discount              = round($subtotalRegular - $subtotal, 2);
+        $discountKennismaking  = round(array_sum(array_map(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0, $lines)), 2);
+        $discountPilot         = round($discount - $discountKennismaking, 2);
+        $vat                   = round($subtotal * self::VAT_RATE, 2);
+        $total                 = round($subtotal + $vat, 2);
 
         return [
-            'lines'            => $lines,
-            'subtotal'         => round($subtotal, 2),
-            'subtotal_regular' => round($subtotalRegular, 2),
-            'discount'         => $discount,
-            'vat'              => $vat,
-            'total'            => $total,
-            'pilot'            => $pilot,
+            'lines'                 => $lines,
+            'subtotal'              => round($subtotal, 2),
+            'subtotal_regular'      => round($subtotalRegular, 2),
+            'discount'              => $discount,
+            'discount_kennismaking' => $discountKennismaking,
+            'discount_pilot'        => $discountPilot,
+            'vat'                   => $vat,
+            'total'                 => $total,
+            'pilot'                 => $pilot,
         ];
     }
 

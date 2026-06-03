@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>Factuur {{ $invoice->invoice_number }}</title>
 <style>
-    @font-face { font-family: Inter; src: url("{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
-    @font-face { font-family: Inter; src: url("{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
-    @font-face { font-family: BebasNeue; src: url("{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
+    @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
+    @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
+    @font-face { font-family: BebasNeue; src: url("file://{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @page { size: A4; margin: 0; }
     body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
     .brand { background: #F5C518; padding: 8mm 14mm; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 28pt; letter-spacing: 0.06em; }
@@ -118,13 +118,15 @@
     @endphp
     <table class="totals">
         <tr><td class="k">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
-        @if ($discount > 0)
-            @php
-                $discountLabel = $invoice->order->pilot
-                    ? 'Korting Noord-pilot'
-                    : ($invoice->order->first_box_free ? 'Korting kennismaking' : 'Korting');
-            @endphp
-            <tr><td class="k">{{ $discountLabel }}</td><td class="v">− € {{ number_format($discount, 2, ',', '.') }}</td></tr>
+        @php
+            $discountKennismaking = collect($invoice->lines)->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
+            $discountPilot = max(0, round($discount - $discountKennismaking, 2));
+        @endphp
+        @if ($discountKennismaking > 0)
+            <tr><td class="k">Korting kennismaking</td><td class="v">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
+        @endif
+        @if ($discountPilot > 0)
+            <tr><td class="k">Korting Noord-pilot</td><td class="v">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>

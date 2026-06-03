@@ -121,9 +121,13 @@
                 @endforeach
                 <tr><td class="pt-2 text-gray-600">{{ (!empty($quote['discount']) && $quote['discount'] > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }}</td><td></td>
                     <td class="text-right font-mono pt-2">€ {{ number_format($quote['subtotal_regular'] ?? $quote['subtotal'], 2, ',', '.') }}</td></tr>
-                @if (!empty($quote['discount']) && $quote['discount'] > 0)
+                @if (!empty($quote['discount_kennismaking']) && $quote['discount_kennismaking'] > 0)
+                    <tr><td class="text-green-700">Korting kennismaking</td><td></td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
+                @endif
+                @if (!empty($quote['discount_pilot']) && $quote['discount_pilot'] > 0)
                     <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                        <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount'], 2, ',', '.') }}</td></tr>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount_pilot'], 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($quote['vat'], 2, ',', '.') }}</td></tr>
@@ -157,9 +161,13 @@
                     @endforeach
                     <tr><td class="pt-2 text-gray-600">{{ (!empty($actualQuote['discount']) && $actualQuote['discount'] > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }}</td><td></td>
                         <td class="text-right font-mono pt-2">€ {{ number_format($actualQuote['subtotal_regular'] ?? $actualQuote['subtotal'], 2, ',', '.') }}</td></tr>
-                    @if (!empty($actualQuote['discount']) && $actualQuote['discount'] > 0)
+                    @if (!empty($actualQuote['discount_kennismaking']) && $actualQuote['discount_kennismaking'] > 0)
+                        <tr><td class="text-green-700">Korting kennismaking</td><td></td>
+                            <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
+                    @endif
+                    @if (!empty($actualQuote['discount_pilot']) && $actualQuote['discount_pilot'] > 0)
                         <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
-                            <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount'], 2, ',', '.') }}</td></tr>
+                            <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount_pilot'], 2, ',', '.') }}</td></tr>
                     @endif
                     <tr><td class="text-gray-600">BTW 21%</td><td></td>
                         <td class="text-right font-mono">€ {{ number_format($actualQuote['vat'], 2, ',', '.') }}</td></tr>

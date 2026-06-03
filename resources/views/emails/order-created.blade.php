@@ -41,15 +41,20 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (!empty($discount) && $discount > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} (excl. btw)</td>
         <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
     </tr>
-    @if (!empty($discount) && $discount > 0)
-        @php
-            $discountLabel = $order->pilot
-                ? 'Korting Noord-pilot'
-                : ($order->first_box_free ? 'Korting kennismaking' : 'Korting');
-        @endphp
+    @php
+        $discountKennismaking = collect($quote['lines'])->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
+        $discountPilot = max(0, round((float)($discount ?? 0) - $discountKennismaking, 2));
+    @endphp
+    @if ($discountKennismaking > 0)
         <tr>
-            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">{{ $discountLabel }}</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discount, 2, ',', '.') }}</td>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Korting kennismaking</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td>
+        </tr>
+    @endif
+    @if ($discountPilot > 0)
+        <tr>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Korting Noord-pilot</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountPilot, 2, ',', '.') }}</td>
         </tr>
     @endif
     <tr>
