@@ -170,8 +170,9 @@ class OrderController extends Controller
             $cntrs = $bonWithActuals->actual_containers ?? $order->container_count;
             $media = !empty($bonWithActuals->actual_media) ? $bonWithActuals->actual_media : ($order->media_items ?? []);
 
-            $orderedMediaInt = array_map('intval', (array) ($order->media_items ?? []));
-            $actualMediaInt  = array_map('intval', (array) $media);
+            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop'];
+            $orderedMediaInt = array_map('intval', array_merge(array_fill_keys($mediaKeys, 0), (array) ($order->media_items ?? [])));
+            $actualMediaInt  = array_map('intval', array_merge(array_fill_keys($mediaKeys, 0), (array) $media));
             ksort($orderedMediaInt); ksort($actualMediaInt);
 
             if ((int) $boxes !== (int) $order->box_count
