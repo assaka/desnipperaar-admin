@@ -341,11 +341,32 @@
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
         window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
-        var drawing = false;
+        var drawing = false, savedScrollY = 0;
+
+        function lockScroll() {
+            if (drawing) return;
+            drawing = true;
+            savedScrollY = window.scrollY || window.pageYOffset;
+            document.body.style.position = 'fixed';
+            document.body.style.top      = '-' + savedScrollY + 'px';
+            document.body.style.width    = '100%';
+        }
+        function unlockScroll() {
+            if (!drawing) return;
+            drawing = false;
+            document.body.style.position = '';
+            document.body.style.top      = '';
+            document.body.style.width    = '';
+            window.scrollTo(0, savedScrollY);
+        }
+
         [cCanvas, dCanvas].forEach(function (c) {
-            c.addEventListener('pointerdown',   function () { drawing = true;  });
-            c.addEventListener('pointerup',     function () { drawing = false; });
-            c.addEventListener('pointercancel', function () { drawing = false; });
+            c.addEventListener('touchstart',    function (e) { e.preventDefault(); lockScroll(); }, { passive: false });
+            c.addEventListener('touchend',      unlockScroll, { passive: false });
+            c.addEventListener('touchcancel',   unlockScroll, { passive: false });
+            c.addEventListener('pointerdown',   lockScroll);
+            c.addEventListener('pointerup',     unlockScroll);
+            c.addEventListener('pointercancel', unlockScroll);
         });
         document.addEventListener('touchmove', function (e) {
             if (drawing) e.preventDefault();
