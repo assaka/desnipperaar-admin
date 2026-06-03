@@ -19,14 +19,14 @@
             <a href="{{ route('orders.index') }}">DESNIPPERAAR ADMIN</a>
             @auth
                 <nav class="text-sm font-normal">
-                    <a href="{{ route('orders.index') }}" class="mr-4">Orders</a>
-                    <a href="{{ route('planning.index') }}" class="mr-4">Planning</a>
-                    <a href="{{ route('offertes.index') }}" class="mr-4">Offertes</a>
-                    <a href="{{ route('invoices.index') }}" class="mr-4">Facturen</a>
-                    <a href="{{ route('customers.index') }}" class="mr-4">Klanten</a>
-                    <a href="{{ route('group-deals.index') }}" class="mr-4">Groepsdeals</a>
-                    <a href="{{ route('drivers.index') }}" class="mr-4">Chauffeurs</a>
-                    <a href="{{ route('coupons.index') }}">Coupons</a>
+                    <a href="{{ route('orders.index') }}" class="mr-4 {{ request()->routeIs('orders.*') ? 'font-bold underline' : '' }}">Orders</a>
+                    <a href="{{ route('planning.index') }}" class="mr-4 {{ request()->routeIs('planning.*') ? 'font-bold underline' : '' }}">Planning</a>
+                    <a href="{{ route('offertes.index') }}" class="mr-4 {{ request()->routeIs('offertes.*') ? 'font-bold underline' : '' }}">Offertes</a>
+                    <a href="{{ route('invoices.index') }}" class="mr-4 {{ request()->routeIs('facturen.*|invoices.*') ? 'font-bold underline' : '' }}">Facturen</a>
+                    <a href="{{ route('customers.index') }}" class="mr-4 {{ request()->routeIs('customers.*') ? 'font-bold underline' : '' }}">Klanten</a>
+                    <a href="{{ route('group-deals.index') }}" class="mr-4 {{ request()->routeIs('group-deals.*') ? 'font-bold underline' : '' }}">Groepsdeals</a>
+                    <a href="{{ route('drivers.index') }}" class="mr-4 {{ request()->routeIs('drivers.*') ? 'font-bold underline' : '' }}">Chauffeurs</a>
+                    <a href="{{ route('coupons.index') }}" class="{{ request()->routeIs('coupons.*') ? 'font-bold underline' : '' }}">Coupons</a>
                 </nav>
             @endauth
         </div>
