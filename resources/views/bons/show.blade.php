@@ -341,12 +341,15 @@
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
         window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
+        var drawing = false;
         [cCanvas, dCanvas].forEach(function (c) {
-            c.addEventListener('pointerdown',   function () { document.body.style.overflow = 'hidden'; });
-            c.addEventListener('pointerup',     function () { document.body.style.overflow = '';       });
-            c.addEventListener('pointercancel', function () { document.body.style.overflow = '';       });
-            c.addEventListener('touchmove',     function (e) { e.preventDefault(); }, { passive: false });
+            c.addEventListener('pointerdown',   function () { drawing = true;  });
+            c.addEventListener('pointerup',     function () { drawing = false; });
+            c.addEventListener('pointercancel', function () { drawing = false; });
         });
+        document.addEventListener('touchmove', function (e) {
+            if (drawing) e.preventDefault();
+        }, { passive: false });
 
         var form = cCanvas.closest('form');
         form.addEventListener('submit', function () {
