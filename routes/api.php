@@ -16,6 +16,10 @@ Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'st
 Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityController::class, 'kennismaking'])
     ->middleware('throttle:60,1');
 
+// Coupon code validation (called from /order frontend).
+Route::get('/coupon', [\App\Http\Controllers\Api\CouponController::class, 'validate'])
+    ->middleware('throttle:120,1');
+
 // Group deals — public listing, single deal, create draft, join, manage.
 Route::get('/group-deals/config', [\App\Http\Controllers\Api\GroupDealController::class, 'config'])
     ->middleware('throttle:120,1');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderCreated;
 use App\Models\Bon;
 use App\Models\Customer;
+use App\Models\Coupon;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -40,6 +41,7 @@ class OrderController extends Controller
             'containers'     => 'nullable|integer|min:0|max:50',
             'media_json'     => 'nullable|string|max:2000',
             'first_box_free' => 'nullable|in:0,1,true,false',
+            'coupon_code'    => 'nullable|string|max:50',
         ]);
 
         // Postcode extraction — from "plaats" field which may contain city+postcode.
@@ -116,6 +118,14 @@ class OrderController extends Controller
             'pilot'              => $pilot,
             'first_box_free'     => $this->isKennismakingEligible($data),
         ]);
+
+        // Increment coupon usage if a valid code was submitted.
+        if (!empty($data['coupon_code'])) {
+            $coupon = Coupon::where('code', strtoupper(trim($data['coupon_code'])))->first();
+            if ($coupon && $coupon->isValid()) {
+                $coupon->incrementUsage();
+            }
+        }
 
         // Bon is intentionally NOT created here — it's only created once admin plans the pickup.
 
