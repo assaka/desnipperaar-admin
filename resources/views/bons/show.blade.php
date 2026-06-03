@@ -204,7 +204,7 @@
                         </td>
                     </tr>
                 @endforeach
-                <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
+                <tr><td class="pt-2 text-gray-600">{{ (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }}</td><td></td>
                     <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal_regular'] ?? $orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
                 @if (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0)
                     <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
@@ -237,7 +237,7 @@
                         </td>
                     </tr>
                 </template>
-                <tr><td class="pt-2 text-gray-600">Subtotaal</td><td></td>
+                <tr><td class="pt-2 text-gray-600" x-text="liveQuote.discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal'"></td><td></td>
                     <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotalRegular)"></td></tr>
                 <tr x-show="liveQuote.discount > 0">
                     <td class="text-green-700">Korting Noord-pilot</td><td></td>

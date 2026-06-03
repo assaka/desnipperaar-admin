@@ -38,7 +38,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
     @endforeach
 
     <tr>
-        <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">Subtotaal (excl. btw)</td>
+        <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (!empty($discount) && $discount > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} (excl. btw)</td>
         <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
     </tr>
     @if (!empty($discount) && $discount > 0)

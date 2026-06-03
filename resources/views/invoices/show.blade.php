@@ -68,7 +68,7 @@
                     $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
                     $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
                 @endphp
-                <tr><td colspan="3" class="pt-2 text-gray-600">Subtotaal excl. btw</td><td class="text-right font-mono pt-2">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
+                <tr><td colspan="3" class="pt-2 text-gray-600">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="text-right font-mono pt-2">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
                 @if ($discount > 0)
                     @php
                         $discountLabel = $invoice->order->pilot

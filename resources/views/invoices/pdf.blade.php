@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <title>Factuur {{ $invoice->invoice_number }}</title>
 <style>
+    @font-face { font-family: Inter; src: url("{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
+    @font-face { font-family: Inter; src: url("{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
+    @font-face { font-family: BebasNeue; src: url("{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @page { size: A4; margin: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
-    .brand { background: #F5C518; padding: 8mm 14mm; font-weight: 900; font-size: 20pt; letter-spacing: 0.04em; }
+    body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
+    .brand { background: #F5C518; padding: 8mm 14mm; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 28pt; letter-spacing: 0.06em; }
     .wrap { padding: 8mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
@@ -14,7 +17,7 @@
     .top .doc-info { width: 45%; text-align: right; }
     .top h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
     .top .name { font-weight: 900; font-size: 12pt; margin-bottom: 2mm; }
-    h1 { font-size: 24pt; font-weight: 900; margin: 6mm 0 2mm; }
+    h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 28pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
     .num { font-family: 'Courier New', monospace; font-size: 14pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; }
     .dates { margin-bottom: 6mm; font-size: 10pt; }
     .dates td { padding: 1mm 8mm 1mm 0; }
@@ -114,7 +117,7 @@
         $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
     @endphp
     <table class="totals">
-        <tr><td class="k">Subtotaal excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
+        <tr><td class="k">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
         @if ($discount > 0)
             @php
                 $discountLabel = $invoice->order->pilot
