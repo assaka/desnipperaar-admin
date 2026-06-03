@@ -284,7 +284,7 @@
                         <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-cust-wrap').style.display='block';this.style.display='none';">Opnieuw tekenen</button>
                     @endif
                     <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
-                        <canvas id="sig-customer" class="border border-black bg-white" width="400" height="220" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                        <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
                         <div class="flex gap-2 mt-1">
                             <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">Wissen</button>
                         </div>
@@ -301,7 +301,7 @@
                         <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-driv-wrap').style.display='block';this.style.display='none';">Opnieuw tekenen</button>
                     @endif
                     <div id="sig-driv-wrap" style="{{ $bon->driver_signature_path ? 'display:none;' : '' }}">
-                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="220" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
                         <div class="flex gap-2 mt-1">
                             <button type="button" class="text-xs underline" onclick="sigDriver.clear()">Wissen</button>
                         </div>
