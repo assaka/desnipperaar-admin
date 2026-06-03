@@ -330,6 +330,11 @@
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
         window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
+        [cCanvas, dCanvas].forEach(function (c) {
+            c.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });
+            c.addEventListener('touchmove',  function (e) { e.preventDefault(); }, { passive: false });
+        });
+
         var form = cCanvas.closest('form');
         form.addEventListener('submit', function () {
             if (!sigCustomer.isEmpty()) document.getElementById('sig-customer-data').value = sigCustomer.toDataURL('image/png');
