@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -47,5 +49,23 @@ class CertificateIssued extends Mailable
             view: $this->mailLocale === 'en' ? 'emails.en.certificate-issued' : 'emails.certificate-issued',
             with: ['certificate' => $this->certificate],
         );
+    }
+
+    public function attachments(): array
+    {
+        $this->certificate->loadMissing(['order.bons.seals', 'order.customer']);
+
+        $name = $this->mailLocale === 'en'
+            ? "certificate-of-destruction-{$this->certificate->certificate_number}.pdf"
+            : "vernietigingscertificaat-{$this->certificate->certificate_number}.pdf";
+
+        $pdf = Pdf::loadView('certificates.pdf-dompdf', [
+            'certificate' => $this->certificate,
+            'locale'      => $this->mailLocale,
+        ])->setPaper('a4');
+
+        return [
+            Attachment::fromData(fn () => $pdf->output(), $name)->withMime('application/pdf'),
+        ];
     }
 }

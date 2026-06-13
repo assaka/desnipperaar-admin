@@ -18,9 +18,7 @@
     @endif
 </table>
 
-<p><a href="{{ route('certificates.pdf', $certificate) }}"
-      style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:10px 18px;font-weight:700;text-decoration:none;">
-    View certificate (PDF)</a></p>
+<p style="background:#F7F7F4;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;">Your certificate of destruction is attached to this email as a <strong>PDF</strong>. Keep it in your records.</p>
 
 <p style="font-size:12px;color:#555;">This certificate serves as proof of destruction for GDPR, AML (Wwft),
 AFM and DNB supervision. Keep this email or the PDF in your records.</p>

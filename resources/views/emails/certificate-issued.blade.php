@@ -18,9 +18,7 @@
     @endif
 </table>
 
-<p><a href="{{ route('certificates.pdf', $certificate) }}"
-      style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:10px 18px;font-weight:700;text-decoration:none;">
-    Bekijk certificaat (PDF)</a></p>
+<p style="background:#F7F7F4;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;">Uw certificaat van vernietiging zit als <strong>PDF-bijlage</strong> bij deze e-mail. Bewaar het in uw dossier.</p>
 
 <p style="font-size:12px;color:#555;">Dit certificaat is geldig als bewijs van vernietiging voor AVG-, Wwft-,
 AFM- en DNB-toezicht. Bewaar deze mail of de PDF in uw dossier.</p>
