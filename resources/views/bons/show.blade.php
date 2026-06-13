@@ -213,7 +213,7 @@
                         <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
                 @endif
                 @if (!empty($orderedQuote['discount_pilot']) && $orderedQuote['discount_pilot'] > 0)
-                    <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
+                    <tr><td class="text-green-700">Korting Amsterdam-pilot</td><td></td>
                         <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount_pilot'], 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
@@ -249,7 +249,7 @@
                     <td class="text-green-700">Korting kennismaking</td><td></td>
                     <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discountKennismaking)"></td></tr>
                 <tr x-show="liveQuote.discountPilot > 0">
-                    <td class="text-green-700">Korting Noord-pilot</td><td></td>
+                    <td class="text-green-700">Korting Amsterdam-pilot</td><td></td>
                     <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discountPilot)"></td></tr>
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>

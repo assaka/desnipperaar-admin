@@ -10,7 +10,7 @@
             @endif
             <div class="text-sm text-gray-600">
                 Status: <span class="font-bold uppercase">{{ $order->state }}</span>
-                @if ($order->pilot) · <span class="bg-yellow-400 text-black px-1">Noord-pilot</span> @endif
+                @if ($order->pilot) · <span class="bg-yellow-400 text-black px-1">Amsterdam-pilot</span> @endif
                 @if ($order->first_box_free) · <span class="bg-yellow-400 text-black px-1">Kennismaking</span> @endif
                 @if ($order->createdBy)
                     · aangemaakt door <strong>{{ $order->createdBy->name }}</strong>
@@ -126,7 +126,7 @@
                         <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
                 @endif
                 @if (!empty($quote['discount_pilot']) && $quote['discount_pilot'] > 0)
-                    <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
+                    <tr><td class="text-green-700">Korting Amsterdam-pilot</td><td></td>
                         <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount_pilot'], 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
@@ -166,7 +166,7 @@
                             <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount_kennismaking'], 2, ',', '.') }}</td></tr>
                     @endif
                     @if (!empty($actualQuote['discount_pilot']) && $actualQuote['discount_pilot'] > 0)
-                        <tr><td class="text-green-700">Korting Noord-pilot</td><td></td>
+                        <tr><td class="text-green-700">Korting Amsterdam-pilot</td><td></td>
                             <td class="text-right font-mono text-green-700">− € {{ number_format($actualQuote['discount_pilot'], 2, ',', '.') }}</td></tr>
                     @endif
                     <tr><td class="text-gray-600">BTW 21%</td><td></td>

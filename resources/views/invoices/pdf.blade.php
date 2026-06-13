@@ -126,7 +126,7 @@
             <tr><td class="k">Korting kennismaking</td><td class="v">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
         @endif
         @if ($discountPilot > 0)
-            <tr><td class="k">Korting Noord-pilot</td><td class="v">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
+            <tr><td class="k">Korting Amsterdam-pilot</td><td class="v">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>

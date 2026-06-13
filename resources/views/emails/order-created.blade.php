@@ -53,7 +53,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
     @endif
     @if ($discountPilot > 0)
         <tr>
-            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Korting Noord-pilot</td>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Korting Amsterdam-pilot</td>
             <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountPilot, 2, ',', '.') }}</td>
         </tr>
     @endif
@@ -69,7 +69,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
 @if ($order->pilot)
     <p style="background:#F5C518;padding:6px 10px;display:inline-block;font-size:12px;font-weight:700;margin:0 0 16px;">
-        ✓ Noord-pilot · 20% korting toegepast
+        ✓ Amsterdam-pilot · 20% korting toegepast
     </p>
 @endif
 @if ($order->first_box_free)

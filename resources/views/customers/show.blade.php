@@ -25,7 +25,7 @@
             <div class="text-sm">
                 @if ($customer->branche) Branche: <strong>{{ $customer->branche }}</strong><br>@endif
                 @if ($customer->reference) Ref: <span class="font-mono">{{ $customer->reference }}</span><br>@endif
-                @if ($customer->isInPilot()) <span class="bg-yellow-400 text-black px-1">Noord-pilot</span> @endif
+                @if ($customer->isInPilot()) <span class="bg-yellow-400 text-black px-1">Amsterdam-pilot</span> @endif
             </div>
             @if ($customer->notes)
                 <p class="mt-3 text-sm italic">{{ $customer->notes }}</p>

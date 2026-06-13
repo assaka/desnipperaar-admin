@@ -146,7 +146,7 @@
         <section x-show="quote && quote.lines.length > 0" x-cloak class="bg-gray-50 border-l-4 border-yellow-400 p-4">
             <div class="flex justify-between items-baseline mb-3">
                 <h2 class="font-black">Prijsoverzicht</h2>
-                <span x-show="pilot" class="bg-yellow-400 text-black px-2 py-1 text-xs font-bold uppercase">Noord-pilot · 20% korting</span>
+                <span x-show="pilot" class="bg-yellow-400 text-black px-2 py-1 text-xs font-bold uppercase">Amsterdam-pilot · 20% korting</span>
             </div>
             <table class="w-full text-sm">
                 <template x-for="line in quote?.lines ?? []" :key="line.label">
@@ -167,7 +167,7 @@
                     <td class="text-right font-mono pt-2" x-text="'€ ' + (quote?.subtotal_regular ?? quote?.subtotal ?? 0).toFixed(2).replace('.',',')"></td>
                 </tr>
                 <tr x-show="(quote?.discount ?? 0) > 0">
-                    <td class="text-green-700">Korting Noord-pilot</td>
+                    <td class="text-green-700">Korting Amsterdam-pilot</td>
                     <td></td>
                     <td class="text-right font-mono text-green-700" x-text="'− € ' + (quote?.discount ?? 0).toFixed(2).replace('.',',')"></td>
                 </tr>

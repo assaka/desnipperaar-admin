@@ -10,7 +10,7 @@ class Pricing
     public const CONTAINER_FIRST       = 120.00;
     public const CONTAINER_NEXT        = 45.00;
 
-    // Noord-pilot rates (20% off)
+    // Amsterdam-pilot rates (20% off)
     public const BOX_FIRST_PILOT       = 24.00;
     public const BOX_NEXT_PILOT        = 20.00;
     public const CONTAINER_FIRST_PILOT = 96.00;
