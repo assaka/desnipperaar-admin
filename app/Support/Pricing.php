@@ -48,7 +48,8 @@ class Pricing
     }
 
     /**
-     * Postcode prefix range that gets the Noord-pilot 20% discount.
+     * Postcode prefix range that gets the Amsterdam-pilot 20% discount.
+     * Range comes from config (desnipperaar.pilot) so it stays in sync with OrderController.
      */
     public static function isPilotPostcode(?string $postcode): bool
     {
@@ -56,7 +57,8 @@ class Pricing
             return false;
         }
         $prefix = (int) substr(preg_replace('/\s+/', '', $postcode), 0, 4);
-        return $prefix >= 1020 && $prefix <= 1039;
+        return $prefix >= (int) config('desnipperaar.pilot.postcode_start')
+            && $prefix <= (int) config('desnipperaar.pilot.postcode_end');
     }
 
     /**

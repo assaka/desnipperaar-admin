@@ -17,8 +17,8 @@ return [
     ],
 
     'pilot' => [
-        'postcode_start' => 1020,
-        'postcode_end'   => 1039,
+        'postcode_start' => 1011,
+        'postcode_end'   => 1109,
         'discount_pct'   => 20,
     ],
 
