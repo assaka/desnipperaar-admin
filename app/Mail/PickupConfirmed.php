@@ -15,15 +15,22 @@ class PickupConfirmed extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
+        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Pickup confirmed — {$this->order->order_number}"
+            : "Ophaalmoment bevestigd — {$this->order->order_number}";
+
         return new Envelope(
-            subject: "Ophaalmoment bevestigd — {$this->order->order_number}",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -36,7 +43,7 @@ class PickupConfirmed extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.pickup-confirmed',
+            view: $this->mailLocale === 'en' ? 'emails.en.pickup-confirmed' : 'emails.pickup-confirmed',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

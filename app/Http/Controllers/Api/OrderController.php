@@ -42,7 +42,10 @@ class OrderController extends Controller
             'media_json'     => 'nullable|string|max:2000',
             'first_box_free' => 'nullable|in:0,1,true,false',
             'coupon_code'    => 'nullable|string|max:50',
+            'lang'           => 'nullable|in:nl,en',
         ]);
+
+        $locale = in_array($data['lang'] ?? null, ['nl', 'en'], true) ? $data['lang'] : 'nl';
 
         // Postcode extraction — from "plaats" field which may contain city+postcode.
         // Capture digits + letters separately so we keep the full NL format (e.g. 1034AB).
@@ -87,6 +90,7 @@ class OrderController extends Controller
                 'postcode' => $postcode,
                 'city'     => $data['stad']    ?? null,
                 'branche'  => $data['branche'] ?? null,
+                'locale'   => $locale,
             ]
         );
         // On subsequent orders, fill in any missing details we did not have before.
@@ -97,6 +101,7 @@ class OrderController extends Controller
             'postcode' => $customer->postcode ?: $postcode,
             'city'     => $customer->city     ?: ($data['stad'] ?? null),
             'branche'  => $customer->branche  ?: ($data['branche'] ?? null),
+            'locale'   => $locale,
         ]))->save();
 
         $order = Order::create([
@@ -108,6 +113,7 @@ class OrderController extends Controller
             'customer_address'   => $data['adres'] ?? null,
             'customer_postcode'  => $postcode,
             'customer_city'      => $data['stad']   ?? $data['plaats'] ?? null,
+            'locale'             => $locale,
             'customer_reference' => $customer->reference,
             'delivery_mode'      => $mode,
             'box_count'          => (int) ($data['boxes']      ?? 0),

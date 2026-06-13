@@ -17,15 +17,23 @@ class BonSigned extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Bon $bon, public ?User $sender = null)
     {
         $this->sender ??= $bon->order?->senderUser();
+        $orderLocale = $bon->order?->locale;
+        $this->mailLocale = in_array($orderLocale, ['nl', 'en'], true) ? $orderLocale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Signed pickup receipt {$this->bon->bon_number} — DeSnipperaar"
+            : "Getekende ophaalbon {$this->bon->bon_number} — DeSnipperaar";
+
         return new Envelope(
-            subject: "Getekende ophaalbon {$this->bon->bon_number} — DeSnipperaar",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -38,7 +46,7 @@ class BonSigned extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.bon-signed',
+            view: $this->mailLocale === 'en' ? 'emails.en.bon-signed' : 'emails.bon-signed',
             with: ['bon' => $this->bon, 'sender' => $this->sender],
         );
     }

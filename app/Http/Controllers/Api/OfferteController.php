@@ -19,6 +19,8 @@ class OfferteController extends Controller
 
         $data = $request->validated();
 
+        $locale = in_array($data['lang'] ?? null, ['nl', 'en'], true) ? $data['lang'] : 'nl';
+
         $postcode = null;
         if (preg_match('/\b(\d{4})\s?([A-Za-z]{0,2})\b/', $data['plaats'] ?? '', $m)) {
             $postcode = $m[1] . strtoupper($m[2] ?? '');
@@ -34,6 +36,7 @@ class OfferteController extends Controller
                 'postcode' => $postcode,
                 'city'     => $data['stad']     ?? null,
                 'branche'  => $data['branche']  ?? null,
+                'locale'   => $locale,
             ]
         );
 
@@ -70,6 +73,7 @@ class OfferteController extends Controller
             'delivery_mode'     => $deliveryMode,
             'notes'             => $notes,
             'state'             => Order::STATE_NIEUW,
+            'locale'            => $locale,
         ]);
 
         try {

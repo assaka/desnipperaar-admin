@@ -15,9 +15,12 @@ class OrderCreated extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
+        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
@@ -32,8 +35,12 @@ class OrderCreated extends Mailable
                 && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
+        $subject = $this->mailLocale === 'en'
+            ? "Order confirmation {$this->order->order_number} — DeSnipperaar"
+            : "Orderbevestiging {$this->order->order_number} — DeSnipperaar";
+
         return new Envelope(
-            subject: "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
+            subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
@@ -56,7 +63,7 @@ class OrderCreated extends Mailable
             );
 
         return new Content(
-            view: 'emails.order-created',
+            view: $this->mailLocale === 'en' ? 'emails.en.order-created' : 'emails.order-created',
             with: [
                 'order'           => $this->order,
                 'sender'          => $this->sender,

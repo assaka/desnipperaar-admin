@@ -31,6 +31,7 @@ class Order extends Model
         'customer_address',
         'customer_postcode',
         'customer_city',
+        'locale',
         'customer_reference',
         'delivery_mode',
         'box_count',

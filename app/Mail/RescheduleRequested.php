@@ -15,15 +15,22 @@ class RescheduleRequested extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
+        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Reschedule request {$this->order->order_number} received — DeSnipperaar"
+            : "Wijzigingsverzoek {$this->order->order_number} ontvangen — DeSnipperaar";
+
         return new Envelope(
-            subject: "Wijzigingsverzoek {$this->order->order_number} ontvangen — DeSnipperaar",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -36,7 +43,7 @@ class RescheduleRequested extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.reschedule-requested',
+            view: $this->mailLocale === 'en' ? 'emails.en.reschedule-requested' : 'emails.reschedule-requested',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

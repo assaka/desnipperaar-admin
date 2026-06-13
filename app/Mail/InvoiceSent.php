@@ -17,15 +17,23 @@ class InvoiceSent extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Invoice $invoice, public ?User $sender = null)
     {
         $this->sender ??= $invoice->order?->senderUser();
+        $orderLocale = $invoice->order?->locale;
+        $this->mailLocale = in_array($orderLocale, ['nl', 'en'], true) ? $orderLocale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Invoice {$this->invoice->invoice_number} — DeSnipperaar"
+            : "Factuur {$this->invoice->invoice_number} — DeSnipperaar";
+
         return new Envelope(
-            subject: "Factuur {$this->invoice->invoice_number} — DeSnipperaar",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -38,7 +46,7 @@ class InvoiceSent extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.invoice-sent',
+            view: $this->mailLocale === 'en' ? 'emails.en.invoice-sent' : 'emails.invoice-sent',
             with: ['invoice' => $this->invoice, 'sender' => $this->sender],
         );
     }

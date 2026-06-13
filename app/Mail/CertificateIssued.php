@@ -15,15 +15,23 @@ class CertificateIssued extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Certificate $certificate, public ?User $sender = null)
     {
         $this->sender ??= $certificate->order?->senderUser();
+        $orderLocale = $certificate->order?->locale;
+        $this->mailLocale = in_array($orderLocale, ['nl', 'en'], true) ? $orderLocale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Certificate of destruction {$this->certificate->certificate_number}"
+            : "Certificaat van vernietiging {$this->certificate->certificate_number}";
+
         return new Envelope(
-            subject: "Certificaat van vernietiging {$this->certificate->certificate_number}",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -36,7 +44,7 @@ class CertificateIssued extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.certificate-issued',
+            view: $this->mailLocale === 'en' ? 'emails.en.certificate-issued' : 'emails.certificate-issued',
             with: ['certificate' => $this->certificate],
         );
     }

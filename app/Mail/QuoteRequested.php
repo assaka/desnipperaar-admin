@@ -15,9 +15,12 @@ class QuoteRequested extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
+        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
@@ -32,8 +35,12 @@ class QuoteRequested extends Mailable
                 && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
+        $subject = $this->mailLocale === 'en'
+            ? "Quote request {$this->order->order_number} received — DeSnipperaar"
+            : "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar";
+
         return new Envelope(
-            subject: "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
+            subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
@@ -45,7 +52,7 @@ class QuoteRequested extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.quote-requested',
+            view: $this->mailLocale === 'en' ? 'emails.en.quote-requested' : 'emails.quote-requested',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

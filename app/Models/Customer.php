@@ -13,6 +13,7 @@ class Customer extends Model
         'name', 'company', 'email', 'phone',
         'address', 'postcode', 'city',
         'reference', 'branche', 'notes',
+        'locale',
     ];
 
     protected static function booted(): void

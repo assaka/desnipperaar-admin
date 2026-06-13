@@ -15,15 +15,22 @@ class QuoteSent extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $mailLocale;
+
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
+        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->mailLocale === 'en'
+            ? "Quote {$this->order->order_number} — review and accept"
+            : "Offerte {$this->order->order_number} — bekijk en accepteer";
+
         return new Envelope(
-            subject: "Offerte {$this->order->order_number} — bekijk en accepteer",
+            subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -36,7 +43,7 @@ class QuoteSent extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.quote-sent',
+            view: $this->mailLocale === 'en' ? 'emails.en.quote-sent' : 'emails.quote-sent',
             with: [
                 'order'      => $this->order,
                 'sender'     => $this->sender,
