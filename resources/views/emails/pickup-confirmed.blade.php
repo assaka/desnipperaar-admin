@@ -53,7 +53,7 @@
 <p style="font-size:13px;color:#555;margin-top:20px;">
     Lukt deze datum niet meer?
     @if ($order->public_token)
-        <a href="{{ route('reschedule.show', $order->public_token) }}" style="color:#0A0A0A;font-weight:700;">Wijzig online uw ophaalmoment</a>
+        <a href="{{ config('desnipperaar.public_url') }}/herplan/{{ $order->public_token }}" style="color:#0A0A0A;font-weight:700;">Wijzig online uw ophaalmoment</a>
         of bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — dan schuiven we het moment.
     @else
         Bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — dan schuiven we het moment.

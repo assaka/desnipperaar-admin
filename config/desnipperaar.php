@@ -2,6 +2,9 @@
 
 return [
 
+    // Public customer-facing site. The reschedule (herplan) page lives there.
+    'public_url' => env('PUBLIC_SITE_URL', 'https://desnipperaar.nl'),
+
     'order' => [
         'prefix'        => env('DESNIPPERAAR_ORDER_PREFIX', 'B'),  // bestelling
         'quote_prefix'  => env('DESNIPPERAAR_QUOTE_PREFIX', 'O'),  // offerte

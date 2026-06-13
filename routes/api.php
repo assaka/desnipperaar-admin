@@ -43,3 +43,9 @@ Route::post('/group-deals/{slug}/join', [\App\Http\Controllers\Api\GroupDealCont
 // GitHub push-webhook / manual deploy trigger. Auth via DEPLOY_HOOK_SECRET.
 Route::post('/deploy', [\App\Http\Controllers\DeployController::class, 'handle'])
     ->middleware('throttle:10,1');
+
+// Customer self-service reschedule (token-gated) — UI lives on desnipperaar.nl.
+Route::get('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleController::class, 'show'])
+    ->middleware('throttle:120,1');
+Route::post('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleController::class, 'store'])
+    ->middleware('throttle:20,1');
