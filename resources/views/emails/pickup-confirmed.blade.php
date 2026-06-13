@@ -11,13 +11,18 @@
         <td style="padding:16px 20px;">
             <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:6px;">Wij staan voor de deur op</div>
             <div style="font-weight:900;font-size:20pt;line-height:1.1;">{{ $order->pickup_date->locale('nl')->translatedFormat('l d F Y') }}</div>
-            <div style="margin-top:4px;font-size:14px;">Dagdeel: <strong>{{ ucfirst($order->pickup_window ?? 'flexibel') }}</strong>
-                @switch($order->pickup_window)
-                    @case('ochtend') <span style="color:#555;">(08:00 – 12:00)</span> @break
-                    @case('middag')  <span style="color:#555;">(12:00 – 17:00)</span> @break
-                    @case('avond')   <span style="color:#555;">(17:00 – 20:00)</span> @break
-                    @default         <span style="color:#555;">(wij bellen 30 min voor aankomst)</span>
-                @endswitch
+            <div style="margin-top:4px;font-size:14px;">
+                @if (preg_match('/^\d{2}:00-\d{2}:00$/', (string) $order->pickup_window))
+                    Tijdvak: <strong>{{ str_replace('-', ' – ', $order->pickup_window) }}</strong>
+                @else
+                    Dagdeel: <strong>{{ ucfirst($order->pickup_window ?? 'flexibel') }}</strong>
+                    @switch($order->pickup_window)
+                        @case('ochtend') <span style="color:#555;">(08:00 – 12:00)</span> @break
+                        @case('middag')  <span style="color:#555;">(12:00 – 17:00)</span> @break
+                        @case('avond')   <span style="color:#555;">(17:00 – 20:00)</span> @break
+                        @default         <span style="color:#555;">(wij bellen 30 min voor aankomst)</span>
+                    @endswitch
+                @endif
             </div>
         </td>
     </tr>
