@@ -60,7 +60,7 @@ class OrderController extends Controller
             'box_count'      => 'nullable|integer|min:0',
             'container_count'=> 'nullable|integer|min:0',
             'pickup_date'    => 'nullable|date|after_or_equal:today',
-            'pickup_window'  => 'nullable|in:ochtend,middag,avond,flexibel',
+            'pickup_window'  => ['nullable', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
             'first_box_free' => 'nullable|boolean',
             'notes'          => 'nullable|string|max:5000',
             'driver_id'      => 'nullable|exists:drivers,id',
@@ -190,7 +190,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'driver_id'        => 'required|exists:drivers,id',
             'pickup_date'      => 'required|date|after_or_equal:today',
-            'pickup_window'    => 'required|in:ochtend,middag,avond,flexibel',
+            'pickup_window'    => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
             'duration_minutes' => 'nullable|integer|min:5|max:480',
         ]);
 

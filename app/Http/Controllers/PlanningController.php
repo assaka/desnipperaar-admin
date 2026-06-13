@@ -69,7 +69,7 @@ class PlanningController extends Controller
         $data = $request->validate([
             'order_id'    => 'required|integer|exists:orders,id',
             'pickup_date' => 'required|date|after_or_equal:today',
-            'window'      => 'required|in:ochtend,middag,avond,flexibel',
+            'window'      => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
         ]);
 
         $order = Order::findOrFail($data['order_id']);
@@ -156,7 +156,13 @@ class PlanningController extends Controller
             $event['start'] = $date->toDateString();
             $event['end']   = $date->toDateString();
         } else {
-            [$from, $to] = self::WINDOW_HOURS[$window];
+            // Named day-parts come from WINDOW_HOURS; specific hourly blocks
+            // arrive as "HH:00-HH:00" and are split into their own bounds.
+            if (isset(self::WINDOW_HOURS[$window])) {
+                [$from, $to] = self::WINDOW_HOURS[$window];
+            } else {
+                [$from, $to] = explode('-', $window, 2);
+            }
             $startTs     = strtotime($date->toDateString() . ' ' . $from);
             $endTs       = min(strtotime($date->toDateString() . ' ' . $to), $startTs + $duration * 60);
             $event['start'] = date('Y-m-d H:i', $startTs);

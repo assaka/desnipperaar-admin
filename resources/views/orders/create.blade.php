@@ -123,6 +123,11 @@
                         <option value="ochtend">Ochtend</option>
                         <option value="middag">Middag</option>
                         <option value="avond">Avond</option>
+                        <optgroup label="Specifiek uur">
+                            @foreach (range(8, 19) as $hr)
+                                <option value="{{ sprintf('%02d:00-%02d:00', $hr, $hr + 1) }}">{{ sprintf('%02d:00 – %02d:00', $hr, $hr + 1) }}</option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
                 <div>

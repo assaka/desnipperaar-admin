@@ -260,6 +260,12 @@
                         <option value="ochtend"  @selected($prefillWindow==='ochtend')>Ochtend (08:00–12:00)</option>
                         <option value="middag"   @selected($prefillWindow==='middag')>Middag (12:00–17:00)</option>
                         <option value="avond"    @selected($prefillWindow==='avond')>Avond (17:00–20:00)</option>
+                        <optgroup label="Specifiek uur">
+                            @foreach (range(8, 19) as $hr)
+                                @php $slot = sprintf('%02d:00-%02d:00', $hr, $hr + 1); @endphp
+                                <option value="{{ $slot }}" @selected($prefillWindow===$slot)>{{ sprintf('%02d:00 – %02d:00', $hr, $hr + 1) }}</option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
             </div>
