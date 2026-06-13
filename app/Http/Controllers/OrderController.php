@@ -34,6 +34,16 @@ class OrderController extends Controller
         return view('offertes.index', compact('offertes'));
     }
 
+    // Open customer reschedule requests (cleared when a new pickup is confirmed).
+    public function reschedules()
+    {
+        $orders = Order::with('customer')
+            ->whereNotNull('reschedule_requested_at')
+            ->orderByDesc('reschedule_requested_at')
+            ->paginate(25);
+        return view('orders.reschedules', compact('orders'));
+    }
+
     public function create(Request $request)
     {
         $preselected = null;

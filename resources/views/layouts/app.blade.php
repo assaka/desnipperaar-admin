@@ -21,6 +21,8 @@
                 <nav class="text-sm font-normal">
                     <a href="{{ route('orders.index') }}" class="mr-4 {{ request()->routeIs('orders.*') ? 'font-bold underline' : '' }}">Orders</a>
                     <a href="{{ route('planning.index') }}" class="mr-4 {{ request()->routeIs('planning.*') ? 'font-bold underline' : '' }}">Planning</a>
+                    @php $reschedCount = \App\Models\Order::whereNotNull('reschedule_requested_at')->count(); @endphp
+                    <a href="{{ route('reschedules.index') }}" class="mr-4 {{ request()->routeIs('reschedules.*') ? 'font-bold underline' : '' }}">Herplanningen@if ($reschedCount)<span class="ml-1 bg-orange-500 text-white px-1.5 rounded-full text-xs font-bold">{{ $reschedCount }}</span>@endif</a>
                     <a href="{{ route('offertes.index') }}" class="mr-4 {{ request()->routeIs('offertes.*') ? 'font-bold underline' : '' }}">Offertes</a>
                     <a href="{{ route('invoices.index') }}" class="mr-4 {{ request()->routeIs('facturen.*|invoices.*') ? 'font-bold underline' : '' }}">Facturen</a>
                     <a href="{{ route('customers.index') }}" class="mr-4 {{ request()->routeIs('customers.*') ? 'font-bold underline' : '' }}">Klanten</a>

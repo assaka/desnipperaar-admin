@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/invoices/{invoice}/pdf',            [\App\Http\Controllers\InvoiceController::class, 'pdf'])->name('invoices.pdf');
     Route::post('/invoices/{invoice}/mail',          [\App\Http\Controllers\InvoiceController::class, 'mail'])->name('invoices.mail');
     Route::post('/invoices/{invoice}/mark-paid',     [\App\Http\Controllers\InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
+    Route::get('/herplanningen', [\App\Http\Controllers\OrderController::class, 'reschedules'])->name('reschedules.index');
     Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [\App\Http\Controllers\OrderController::class, 'store'])->name('orders.store');
