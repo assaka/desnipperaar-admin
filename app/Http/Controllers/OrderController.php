@@ -202,6 +202,7 @@ class OrderController extends Controller
             'pickup_date'      => 'required|date|after_or_equal:today',
             'pickup_window'    => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
             'duration_minutes' => 'nullable|integer|min:5|max:480',
+            'pickup_note'      => 'nullable|string|max:2000',
         ]);
 
         $driver = Driver::findOrFail($data['driver_id']);
@@ -230,6 +231,7 @@ class OrderController extends Controller
         $order->update([
             'pickup_date'      => $data['pickup_date'],
             'pickup_window'    => $data['pickup_window'],
+            'pickup_note'      => $data['pickup_note'] ?? null,
             'duration_minutes' => $data['duration_minutes'] ?? $order->duration_minutes,
             'state'            => Order::STATE_BEVESTIGD,
             'public_token'     => $order->public_token ?: Str::random(40),

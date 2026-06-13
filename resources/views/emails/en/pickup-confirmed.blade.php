@@ -32,6 +32,15 @@
     </tr>
 </table>
 
+@if (!empty($order->pickup_note))
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;background:#FFF8E1;border-left:4px solid #F5C518;">
+    <tr><td style="padding:14px 18px;font-size:14px;line-height:1.5;">
+        <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:6px;">A note from us</div>
+        {!! nl2br(e($order->pickup_note)) !!}
+    </td></tr>
+</table>
+@endif
+
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Address</h2>
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif

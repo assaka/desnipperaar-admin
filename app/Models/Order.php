@@ -42,6 +42,7 @@ class Order extends Model
         'pilot',
         'pickup_date',
         'pickup_window',
+        'pickup_note',
         'duration_minutes',
         'first_box_free',
         'quoted_amount_excl_btw',

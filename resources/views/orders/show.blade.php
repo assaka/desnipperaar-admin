@@ -277,6 +277,11 @@
                            class="w-full border p-2">
                 </div>
             </div>
+            <div class="mt-3">
+                <label class="block text-sm font-bold">Opmerking voor de klant <span class="text-xs font-normal text-gray-500">optioneel — komt in de bevestigingsmail, bijv. waarom de gevraagde dag niet kon</span></label>
+                <textarea name="pickup_note" rows="3" maxlength="2000" class="w-full border p-2"
+                          placeholder="Bijv. de gevraagde zondag was helaas niet beschikbaar, daarom hebben we maandag gepland.">{{ old('pickup_note', $order->pickup_note) }}</textarea>
+            </div>
             <button class="mt-3 bg-black text-yellow-400 px-4 py-2 font-bold uppercase">
                 {{ $order->state === 'nieuw' ? 'Plan & bevestig aan klant' : 'Planning bijwerken & klant mailen' }}
             </button>
