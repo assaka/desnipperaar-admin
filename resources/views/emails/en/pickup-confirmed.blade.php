@@ -24,7 +24,7 @@
                         @case('ochtend') <span style="color:#555;">(08:00 – 12:00)</span> @break
                         @case('middag')  <span style="color:#555;">(12:00 – 17:00)</span> @break
                         @case('avond')   <span style="color:#555;">(17:00 – 20:00)</span> @break
-                        @default         <span style="color:#555;">(we call 30 min before arrival)</span>
+                        @default
                     @endswitch
                 @endif
             </div>
