@@ -23,14 +23,17 @@ class CertificateIssued extends Mailable
     {
         $this->sender ??= $certificate->order?->senderUser();
         $orderLocale = $certificate->order?->locale;
-        $this->mailLocale = in_array($orderLocale, ['nl', 'en'], true) ? $orderLocale : 'nl';
+        $this->mailLocale = in_array($orderLocale, ['nl', 'en', 'fr', 'es'], true) ? $orderLocale : 'nl';
     }
 
     public function envelope(): Envelope
     {
-        $subject = $this->mailLocale === 'en'
-            ? "Certificate of destruction {$this->certificate->certificate_number}"
-            : "Certificaat van vernietiging {$this->certificate->certificate_number}";
+        $subject = match ($this->mailLocale) {
+            'en' => "Certificate of destruction {$this->certificate->certificate_number}",
+            'fr' => "Certificat de destruction {$this->certificate->certificate_number}",
+            'es' => "Certificado de destrucción {$this->certificate->certificate_number}",
+            default => "Certificaat van vernietiging {$this->certificate->certificate_number}",
+        };
 
         return new Envelope(
             subject: $subject,
@@ -46,7 +49,7 @@ class CertificateIssued extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: $this->mailLocale === 'en' ? 'emails.en.certificate-issued' : 'emails.certificate-issued',
+            view: $this->mailLocale === 'nl' ? 'emails.certificate-issued' : 'emails.'.$this->mailLocale.'.certificate-issued',
             with: ['certificate' => $this->certificate],
         );
     }

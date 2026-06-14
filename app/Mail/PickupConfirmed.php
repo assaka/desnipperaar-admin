@@ -20,14 +20,17 @@ class PickupConfirmed extends Mailable
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
-        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
+        $this->mailLocale = in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
     {
-        $subject = $this->mailLocale === 'en'
-            ? "Pickup confirmed — {$this->order->order_number}"
-            : "Ophaalmoment bevestigd — {$this->order->order_number}";
+        $subject = match ($this->mailLocale) {
+            'en' => "Pickup confirmed — {$this->order->order_number}",
+            'fr' => "Enlèvement confirmé — {$this->order->order_number}",
+            'es' => "Recogida confirmada — {$this->order->order_number}",
+            default => "Ophaalmoment bevestigd — {$this->order->order_number}",
+        };
 
         return new Envelope(
             subject: $subject,
@@ -43,7 +46,7 @@ class PickupConfirmed extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: $this->mailLocale === 'en' ? 'emails.en.pickup-confirmed' : 'emails.pickup-confirmed',
+            view: $this->mailLocale === 'nl' ? 'emails.pickup-confirmed' : 'emails.'.$this->mailLocale.'.pickup-confirmed',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

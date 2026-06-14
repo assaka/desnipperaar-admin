@@ -20,7 +20,7 @@ class QuoteRequested extends Mailable
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
-        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
+        $this->mailLocale = in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
@@ -35,9 +35,12 @@ class QuoteRequested extends Mailable
                 && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
-        $subject = $this->mailLocale === 'en'
-            ? "Quote request {$this->order->order_number} received — DeSnipperaar"
-            : "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar";
+        $subject = match ($this->mailLocale) {
+            'en' => "Quote request {$this->order->order_number} received — DeSnipperaar",
+            'fr' => "Demande de devis {$this->order->order_number} reçue — DeSnipperaar",
+            'es' => "Solicitud de presupuesto {$this->order->order_number} recibida — DeSnipperaar",
+            default => "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
+        };
 
         return new Envelope(
             subject: $subject,
@@ -52,7 +55,7 @@ class QuoteRequested extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: $this->mailLocale === 'en' ? 'emails.en.quote-requested' : 'emails.quote-requested',
+            view: $this->mailLocale === 'nl' ? 'emails.quote-requested' : 'emails.'.$this->mailLocale.'.quote-requested',
             with: ['order' => $this->order, 'sender' => $this->sender],
         );
     }

@@ -23,14 +23,17 @@ class BonSigned extends Mailable
     {
         $this->sender ??= $bon->order?->senderUser();
         $orderLocale = $bon->order?->locale;
-        $this->mailLocale = in_array($orderLocale, ['nl', 'en'], true) ? $orderLocale : 'nl';
+        $this->mailLocale = in_array($orderLocale, ['nl', 'en', 'fr', 'es'], true) ? $orderLocale : 'nl';
     }
 
     public function envelope(): Envelope
     {
-        $subject = $this->mailLocale === 'en'
-            ? "Signed pickup receipt {$this->bon->bon_number} — DeSnipperaar"
-            : "Getekende ophaalbon {$this->bon->bon_number} — DeSnipperaar";
+        $subject = match ($this->mailLocale) {
+            'en' => "Signed pickup receipt {$this->bon->bon_number} — DeSnipperaar",
+            'fr' => "Bon d'enlèvement signé {$this->bon->bon_number} — DeSnipperaar",
+            'es' => "Albarán de recogida firmado {$this->bon->bon_number} — DeSnipperaar",
+            default => "Getekende ophaalbon {$this->bon->bon_number} — DeSnipperaar",
+        };
 
         return new Envelope(
             subject: $subject,
@@ -46,7 +49,7 @@ class BonSigned extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: $this->mailLocale === 'en' ? 'emails.en.bon-signed' : 'emails.bon-signed',
+            view: $this->mailLocale === 'nl' ? 'emails.bon-signed' : 'emails.'.$this->mailLocale.'.bon-signed',
             with: ['bon' => $this->bon, 'sender' => $this->sender],
         );
     }

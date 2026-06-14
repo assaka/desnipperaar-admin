@@ -20,7 +20,7 @@ class OrderCreated extends Mailable
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
-        $this->mailLocale = in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl';
+        $this->mailLocale = in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
@@ -35,9 +35,12 @@ class OrderCreated extends Mailable
                 && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
             ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
-        $subject = $this->mailLocale === 'en'
-            ? "Order confirmation {$this->order->order_number} — DeSnipperaar"
-            : "Orderbevestiging {$this->order->order_number} — DeSnipperaar";
+        $subject = match ($this->mailLocale) {
+            'en' => "Order confirmation {$this->order->order_number} — DeSnipperaar",
+            'fr' => "Confirmation de commande {$this->order->order_number} — DeSnipperaar",
+            'es' => "Confirmación de pedido {$this->order->order_number} — DeSnipperaar",
+            default => "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
+        };
 
         return new Envelope(
             subject: $subject,
@@ -63,7 +66,7 @@ class OrderCreated extends Mailable
             );
 
         return new Content(
-            view: $this->mailLocale === 'en' ? 'emails.en.order-created' : 'emails.order-created',
+            view: $this->mailLocale === 'nl' ? 'emails.order-created' : 'emails.'.$this->mailLocale.'.order-created',
             with: [
                 'order'           => $this->order,
                 'sender'          => $this->sender,
