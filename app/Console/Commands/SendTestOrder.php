@@ -6,6 +6,9 @@ use App\Mail\BonSigned;
 use App\Mail\CertificateIssued;
 use App\Mail\InvoiceSent;
 use App\Mail\OrderCreated;
+use App\Mail\PickupConfirmed;
+use App\Mail\RescheduleRequested;
+use App\Mail\RescheduleRequestedAdmin;
 use App\Models\Bon;
 use App\Models\Certificate;
 use App\Models\Customer;
@@ -33,6 +36,7 @@ class SendTestOrder extends Command
         {email=info@itomoti.com : Recipient e-mail address}
         {--locale=nl : Customer locale (nl, en, fr, es)}
         {--full : Run the whole lifecycle: order, signed bon, certificate and invoice}
+        {--reschedule : Run the reschedule-delivery-day flow: confirm, request new day, confirm new day}
         {--boxes=4 : Number of boxes}
         {--containers=1 : Number of 240 L roll containers}';
 
@@ -43,6 +47,7 @@ class SendTestOrder extends Command
         $email  = (string) $this->argument('email');
         $locale = strtolower((string) $this->option('locale'));
         $full   = (bool) $this->option('full');
+        $reschedule = (bool) $this->option('reschedule');
         $boxes  = (int) $this->option('boxes');
         $cntrs  = (int) $this->option('containers');
 
@@ -154,6 +159,43 @@ class SendTestOrder extends Command
             $invoice->update(['invoice_number' => "TEST-F-{$token}"]);
             $order->update(['state' => Order::STATE_AFGESLOTEN]);
             $rows[] = ['Invoice', $invoice->invoice_number, $this->mail($email, fn () => new InvoiceSent($invoice, $sender))];
+        }
+
+        if ($reschedule) {
+            // 1. Confirm an initial pickup day so there is something to move.
+            $order->update([
+                'state'         => Order::STATE_BEVESTIGD,
+                'pickup_date'   => now()->addDays(3)->toDateString(),
+                'pickup_window' => 'ochtend',
+                'public_token'  => bin2hex(random_bytes(20)),
+            ]);
+            $rows[] = ['Pickup confirmed', $order->order_number, $this->mail($email, fn () => new PickupConfirmed($order->fresh()->load('customer'), $sender))];
+
+            // 2. Customer requests a new delivery day.
+            $order->update([
+                'reschedule_requested_at'     => now(),
+                'reschedule_requested_date'   => now()->addDays(7)->toDateString(),
+                'reschedule_requested_window' => 'middag',
+                'reschedule_notes'            => '[TEST] Liever later op de dag.',
+            ]);
+            $fresh = $order->fresh();
+            $rows[] = ['Reschedule requested', $order->order_number, $this->mail($email, fn () => new RescheduleRequested($fresh, $sender))];
+            // Admin notification (NL-only by design); sent to the test address here for visibility.
+            $rows[] = ['Reschedule (admin notif)', $order->order_number, $this->mail($email, fn () => new RescheduleRequestedAdmin($fresh))];
+
+            // 3. Admin confirms the requested new day.
+            $newDate   = $order->reschedule_requested_date;
+            $newWindow = $order->reschedule_requested_window;
+            $order->update([
+                'pickup_date'                 => $newDate,
+                'pickup_window'               => $newWindow,
+                'state'                       => Order::STATE_BEVESTIGD,
+                'reschedule_requested_at'     => null,
+                'reschedule_requested_date'   => null,
+                'reschedule_requested_window' => null,
+                'reschedule_notes'            => null,
+            ]);
+            $rows[] = ['New day confirmed', $order->order_number, $this->mail($email, fn () => new PickupConfirmed($order->fresh()->load('customer'), $sender))];
         }
 
         $this->newLine();
