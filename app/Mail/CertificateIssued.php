@@ -58,9 +58,12 @@ class CertificateIssued extends Mailable
     {
         $this->certificate->loadMissing(['order.bons.seals', 'order.customer']);
 
-        $name = $this->mailLocale === 'en'
-            ? "certificate-of-destruction-{$this->certificate->certificate_number}.pdf"
-            : "vernietigingscertificaat-{$this->certificate->certificate_number}.pdf";
+        $name = match ($this->mailLocale) {
+            'en' => "certificate-of-destruction-{$this->certificate->certificate_number}.pdf",
+            'fr' => "certificat-de-destruction-{$this->certificate->certificate_number}.pdf",
+            'es' => "certificado-de-destruccion-{$this->certificate->certificate_number}.pdf",
+            default => "vernietigingscertificaat-{$this->certificate->certificate_number}.pdf",
+        };
 
         $pdf = Pdf::loadView('certificates.pdf-dompdf', [
             'certificate' => $this->certificate,

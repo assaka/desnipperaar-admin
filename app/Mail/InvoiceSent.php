@@ -56,10 +56,18 @@ class InvoiceSent extends Mailable
 
     public function attachments(): array
     {
-        $view = $this->mailLocale === 'en' ? 'invoices.pdf-en' : 'invoices.pdf';
-        $name = $this->mailLocale === 'en'
-            ? "invoice-{$this->invoice->invoice_number}.pdf"
-            : "factuur-{$this->invoice->invoice_number}.pdf";
+        $view = match ($this->mailLocale) {
+            'en' => 'invoices.pdf-en',
+            'fr' => 'invoices.pdf-fr',
+            'es' => 'invoices.pdf-es',
+            default => 'invoices.pdf',
+        };
+        $name = match ($this->mailLocale) {
+            'en' => "invoice-{$this->invoice->invoice_number}.pdf",
+            'fr' => "facture-{$this->invoice->invoice_number}.pdf",
+            'es' => "factura-{$this->invoice->invoice_number}.pdf",
+            default => "factuur-{$this->invoice->invoice_number}.pdf",
+        };
         $pdf = Pdf::loadView($view, ['invoice' => $this->invoice])->setPaper('a4');
         return [
             Attachment::fromData(fn () => $pdf->output(), $name)->withMime('application/pdf'),

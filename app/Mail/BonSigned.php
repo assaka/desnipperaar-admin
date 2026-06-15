@@ -56,10 +56,18 @@ class BonSigned extends Mailable
 
     public function attachments(): array
     {
-        $view = $this->mailLocale === 'en' ? 'bons.pdf-dompdf-en' : 'bons.pdf-dompdf';
-        $name = $this->mailLocale === 'en'
-            ? "pickup-receipt-{$this->bon->bon_number}.pdf"
-            : "ophaalbon-{$this->bon->bon_number}.pdf";
+        $view = match ($this->mailLocale) {
+            'en' => 'bons.pdf-dompdf-en',
+            'fr' => 'bons.pdf-dompdf-fr',
+            'es' => 'bons.pdf-dompdf-es',
+            default => 'bons.pdf-dompdf',
+        };
+        $name = match ($this->mailLocale) {
+            'en' => "pickup-receipt-{$this->bon->bon_number}.pdf",
+            'fr' => "bon-enlevement-{$this->bon->bon_number}.pdf",
+            'es' => "albaran-recogida-{$this->bon->bon_number}.pdf",
+            default => "ophaalbon-{$this->bon->bon_number}.pdf",
+        };
         $pdf = Pdf::loadView($view, ['bon' => $this->bon])->setPaper('a4');
 
         return [
