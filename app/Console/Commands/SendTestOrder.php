@@ -62,6 +62,11 @@ class SendTestOrder extends Command
         $pilot    = $numeric >= config('desnipperaar.pilot.postcode_start')
                  && $numeric <= config('desnipperaar.pilot.postcode_end');
 
+        // Fake, clearly-marked numbers that do NOT match the real "PREFIX-YEAR-%"
+        // pattern, so production order/bon/certificate/invoice sequences are never
+        // advanced by a test run.
+        $token = now()->format('ymd-His') . '-' . strtoupper(bin2hex(random_bytes(2)));
+
         $customer = Customer::updateOrCreate(
             ['email' => $email],
             [
@@ -78,7 +83,7 @@ class SendTestOrder extends Command
         );
 
         $order = Order::create([
-            'order_number'       => Order::generateOrderNumber(),
+            'order_number'       => "TEST-O-{$token}",
             'type'               => Order::TYPE_DIRECT,
             'customer_id'        => $customer->id,
             'created_by_user_id' => $sender?->id,
@@ -107,7 +112,7 @@ class SendTestOrder extends Command
 
         if ($full) {
             $bon = Bon::create([
-                'bon_number'           => Bon::generateBonNumber(),
+                'bon_number'           => "TEST-P-{$token}",
                 'order_id'             => $order->id,
                 'driver_name_snapshot' => 'Test Chauffeur',
                 'driver_license_last4' => '1234',
@@ -120,7 +125,7 @@ class SendTestOrder extends Command
                 'notes'                => '[TEST] Automated pickup',
             ]);
 
-            foreach ([['SEAL-TEST-001', 'rolcontainer_240'], ['SEAL-TEST-002', 'doos']] as [$sn, $type]) {
+            foreach ([["TEST-SEAL-{$token}-1", 'rolcontainer_240'], ["TEST-SEAL-{$token}-2", 'doos']] as [$sn, $type]) {
                 Seal::create([
                     'bon_id'         => $bon->id,
                     'seal_number'    => $sn,
@@ -132,7 +137,7 @@ class SendTestOrder extends Command
             $rows[] = ['Bon (pickup)', $bon->bon_number, $this->mail($email, fn () => new BonSigned($bon, $sender))];
 
             $certificate = Certificate::create([
-                'certificate_number'  => Certificate::generateCertificateNumber(),
+                'certificate_number'  => "TEST-C-{$token}",
                 'order_id'            => $order->id,
                 'destroyed_at'        => now(),
                 'weight_kg_final'     => 47.5,
@@ -142,7 +147,11 @@ class SendTestOrder extends Command
             $order->update(['state' => Order::STATE_VERNIETIGD]);
             $rows[] = ['Certificate', $certificate->certificate_number, $this->mail($email, fn () => new CertificateIssued($certificate, $sender))];
 
+            // fromBon() assigns a real F-number internally; overwrite it with a fake
+            // one so the real invoice sequence is not consumed. Done before the e-mail
+            // so the PDF shows the fake number.
             $invoice = Invoice::fromBon($bon);
+            $invoice->update(['invoice_number' => "TEST-F-{$token}"]);
             $order->update(['state' => Order::STATE_AFGESLOTEN]);
             $rows[] = ['Invoice', $invoice->invoice_number, $this->mail($email, fn () => new InvoiceSent($invoice, $sender))];
         }
