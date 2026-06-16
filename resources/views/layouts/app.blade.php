@@ -33,7 +33,8 @@
                     <a href="{{ route('customers.index') }}" class="mr-4 {{ request()->routeIs('customers.*') ? 'font-bold underline' : '' }}">Klanten</a>
                     <a href="{{ route('group-deals.index') }}" class="mr-4 {{ request()->routeIs('group-deals.*') ? 'font-bold underline' : '' }}">Groepsdeals</a>
                     <a href="{{ route('drivers.index') }}" class="mr-4 {{ request()->routeIs('drivers.*') ? 'font-bold underline' : '' }}">Chauffeurs</a>
-                    <a href="{{ route('coupons.index') }}" class="{{ request()->routeIs('coupons.*') ? 'font-bold underline' : '' }}">Coupons</a>
+                    <a href="{{ route('coupons.index') }}" class="mr-4 {{ request()->routeIs('coupons.*') ? 'font-bold underline' : '' }}">Coupons</a>
+                    <a href="{{ route('subscribers.index') }}" class="{{ request()->routeIs('subscribers.*') ? 'font-bold underline' : '' }}">Dag</a>
                 </nav>
             @endauth
         </div>

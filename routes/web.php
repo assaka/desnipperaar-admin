@@ -71,6 +71,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/drivers/{driver}/edit', [\App\Http\Controllers\DriverController::class, 'edit'])->name('drivers.edit');
     Route::patch('/drivers/{driver}', [\App\Http\Controllers\DriverController::class, 'update'])->name('drivers.update');
     Route::resource('coupons', \App\Http\Controllers\CouponAdminController::class)->except(['show']);
+    Route::get('/subscribers',        [\App\Http\Controllers\SubscriberAdminController::class, 'index'])->name('subscribers.index');
+    Route::get('/subscribers/export', [\App\Http\Controllers\SubscriberAdminController::class, 'export'])->name('subscribers.export');
     Route::get('/drivers/{driver}/signature', [\App\Http\Controllers\DriverController::class, 'signature'])->name('drivers.signature');
 });
 

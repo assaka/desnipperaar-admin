@@ -20,6 +20,10 @@ Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityCo
 Route::get('/coupon', [\App\Http\Controllers\Api\CouponController::class, 'validate'])
     ->middleware('throttle:120,1');
 
+// DeSnipperaar Dag e-mail signup (exit popup + homepage inline section).
+Route::post('/subscribe', [\App\Http\Controllers\Api\SubscribeController::class, 'store'])
+    ->middleware('throttle:20,1');
+
 // Group deals — public listing, single deal, create draft, join, manage.
 Route::get('/group-deals/config', [\App\Http\Controllers\Api\GroupDealController::class, 'config'])
     ->middleware('throttle:120,1');
