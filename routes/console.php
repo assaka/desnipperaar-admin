@@ -14,3 +14,10 @@ Schedule::command('group-deals:close')
     ->dailyAt('02:00')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
+
+// Daily 08:00 Europe/Amsterdam: on this week's random discount weekday, activate
+// DSDAG35 and e-mail subscribers; on other days it self-skips. Idempotent.
+Schedule::command('desnipperaar:dag-announce')
+    ->dailyAt('08:00')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
