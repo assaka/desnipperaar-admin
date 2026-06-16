@@ -68,10 +68,12 @@ class SendDagAnnouncement extends Command
         // Activate the code for today only.
         $coupon->update(['is_active' => true, 'expires_at' => $today->copy()->endOfDay()]);
 
+        // Sent synchronously (like OrderController): this host has no live queue
+        // worker for the app, so a queued mail would never be delivered.
         $sent = 0;
         foreach ($recipients as $sub) {
             try {
-                Mail::to($sub->email)->queue(new DesnipperaarDagAnnouncement($sub, $coupon->code, $pct));
+                Mail::to($sub->email)->send(new DesnipperaarDagAnnouncement($sub, $coupon->code, $pct));
                 $sent++;
             } catch (\Throwable $e) {
                 report($e);
