@@ -127,7 +127,7 @@ class OrderController extends Controller
 
         // Increment coupon usage if a valid code was submitted.
         if (!empty($data['coupon_code'])) {
-            $coupon = Coupon::where('code', strtoupper(trim($data['coupon_code'])))->first();
+            $coupon = Coupon::findByCode($data['coupon_code']);
             if ($coupon && $coupon->isValid()) {
                 $coupon->incrementUsage();
             }

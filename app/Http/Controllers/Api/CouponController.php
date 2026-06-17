@@ -18,7 +18,7 @@ class CouponController extends Controller
             return response()->json(['valid' => false, 'error' => 'Code is verplicht.'], 400);
         }
 
-        $coupon = Coupon::where('code', $code)->first();
+        $coupon = Coupon::findByCode($code);
 
         if (! $coupon) {
             return response()->json(['valid' => false, 'error' => 'Ongeldige kortingscode.']);

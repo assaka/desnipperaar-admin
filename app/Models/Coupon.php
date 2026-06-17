@@ -18,6 +18,13 @@ class Coupon extends Model
         'is_active'        => 'boolean',
     ];
 
+    /** Look up a coupon by code, case-insensitively (codes are not case-sensitive). */
+    public static function findByCode(?string $code): ?self
+    {
+        $code = strtoupper(trim((string) $code));
+        return $code === '' ? null : static::whereRaw('UPPER(code) = ?', [$code])->first();
+    }
+
     public function isValid(float $subtotal = 0): bool
     {
         if (! $this->is_active) return false;
