@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\DesnipperaarDagWelcome;
 use App\Models\Subscriber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class SubscribeController extends Controller
 {
@@ -43,13 +45,27 @@ class SubscribeController extends Controller
             }
         }
 
-        if (! $subscriber->exists) {
+        $isNew = ! $subscriber->exists;
+        if ($isNew) {
             $subscriber->ip = $request->ip();
         }
 
         // A returning subscriber who had opted out is re-opted-in by signing up again.
+        $wasOptedOut = (bool) $subscriber->unsubscribed_at;
         $subscriber->unsubscribed_at = null;
         $subscriber->save();
+
+        // Confirm the signup with a welcome e-mail carrying the unsubscribe link.
+        // Only on a fresh or re-activated subscription, so resubmits don't re-mail.
+        // Sent synchronously (this host has no live queue worker) and never lets a
+        // mail failure break the signup response.
+        if ($isNew || $wasOptedOut) {
+            try {
+                Mail::to($subscriber->email)->send(new DesnipperaarDagWelcome($subscriber));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return response()->json(['ok' => true], 201);
     }
