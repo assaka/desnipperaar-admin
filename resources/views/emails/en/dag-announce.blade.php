@@ -1,5 +1,5 @@
-@component('emails.en._layout', ['title' => 'SnipperDag'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Today is SnipperDag.</h1>
+@component('emails.en._layout', ['title' => 'DestructionDay'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Today is the DestructionDay.</h1>
 
 <p>One random day each week we give {{ $pct }}% off. Today is that day. Today only, and only for you as a subscriber.</p>
 
@@ -19,12 +19,12 @@
     </td></tr>
 </table>
 
-<p style="font-size:13px;color:#555;margin-top:20px;">The code is active automatically today and expires at midnight. See you on the next SnipperDag.</p>
+<p style="font-size:13px;color:#555;margin-top:20px;">The code is active automatically today and expires at midnight. See you on the next DestructionDay.</p>
 
 <p>Team DeSnipperaar</p>
 
 <p style="font-size:11px;color:#999;margin-top:24px;border-top:1px solid #EEE;padding-top:12px;">
-    You receive this because you signed up for SnipperDag.
+    You receive this because you signed up for the DestructionDay.
     <a href="{{ $unsubscribeUrl }}" style="color:#999;">Unsubscribe</a>.
 </p>
 @endcomponent

@@ -1,9 +1,9 @@
 @php
     $copy = [
         'nl' => ['t' => 'Afgemeld', 'm' => 'U ontvangt geen SnipperDag e-mails meer. Jammer dat u gaat, u bent altijd welkom terug.', 'b' => 'Naar desnipperaar.nl'],
-        'en' => ['t' => 'Unsubscribed', 'm' => 'You will no longer receive SnipperDag e-mails. Sorry to see you go, you are always welcome back.', 'b' => 'Go to desnipperaar.nl'],
-        'fr' => ['t' => 'Désinscrit', 'm' => 'Vous ne recevrez plus d\'e-mails SnipperDag. Désolé de vous voir partir, vous êtes toujours le bienvenu.', 'b' => 'Aller sur desnipperaar.nl'],
-        'es' => ['t' => 'Dado de baja', 'm' => 'Ya no recibirá correos de SnipperDag. Lamentamos que se vaya, siempre es bienvenido de nuevo.', 'b' => 'Ir a desnipperaar.nl'],
+        'en' => ['t' => 'Unsubscribed', 'm' => 'You will no longer receive DestructionDay e-mails. Sorry to see you go, you are always welcome back.', 'b' => 'Go to desnipperaar.nl'],
+        'fr' => ['t' => 'Désinscrit', 'm' => 'Vous ne recevrez plus d\'e-mails JourDestruction. Désolé de vous voir partir, vous êtes toujours le bienvenu.', 'b' => 'Aller sur desnipperaar.nl'],
+        'es' => ['t' => 'Dado de baja', 'm' => 'Ya no recibirá correos de DíaDestrucción. Lamentamos que se vaya, siempre es bienvenido de nuevo.', 'b' => 'Ir a desnipperaar.nl'],
     ];
     $notFound = [
         'nl' => 'Deze afmeldlink is niet geldig.',

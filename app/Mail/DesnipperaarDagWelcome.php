@@ -31,10 +31,10 @@ class DesnipperaarDagWelcome extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         $subject = match ($this->mailLocale) {
-            'en' => 'Welcome to SnipperDag',
-            'fr' => 'Bienvenue au SnipperDag',
-            'es' => 'Bienvenido al SnipperDag',
-            default => 'Welkom bij SnipperDag',
+            'en' => 'Welcome to the DestructionDay',
+            'fr' => 'Bienvenue au JourDestruction',
+            'es' => 'Bienvenido al DíaDestrucción',
+            default => 'Welkom bij de SnipperDag',
         };
 
         return new Envelope(

@@ -1,5 +1,5 @@
-@component('emails.fr._layout', ['title' => 'SnipperDag'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Aujourd'hui, c'est le SnipperDag.</h1>
+@component('emails.fr._layout', ['title' => 'JourDestruction'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Aujourd'hui, c'est le JourDestruction.</h1>
 
 <p>Un jour au hasard chaque semaine, nous offrons {{ $pct }}% de réduction. C'est aujourd'hui. Aujourd'hui seulement, et uniquement pour vous en tant qu'abonné.</p>
 
@@ -19,12 +19,12 @@
     </td></tr>
 </table>
 
-<p style="font-size:13px;color:#555;margin-top:20px;">Le code est actif automatiquement aujourd'hui et expire à minuit. À bientôt pour le prochain SnipperDag.</p>
+<p style="font-size:13px;color:#555;margin-top:20px;">Le code est actif automatiquement aujourd'hui et expire à minuit. À bientôt pour le prochain JourDestruction.</p>
 
 <p>L'équipe DeSnipperaar</p>
 
 <p style="font-size:11px;color:#999;margin-top:24px;border-top:1px solid #EEE;padding-top:12px;">
-    Vous recevez ceci parce que vous vous êtes inscrit au SnipperDag.
+    Vous recevez ceci parce que vous vous êtes inscrit au JourDestruction.
     <a href="{{ $unsubscribeUrl }}" style="color:#999;">Se désinscrire</a>.
 </p>
 @endcomponent
