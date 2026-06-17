@@ -1,5 +1,5 @@
-@component('emails.es._layout', ['title' => 'DíaDestrucción'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Hoy es el DíaDestrucción.</h1>
+@component('emails.es._layout', ['title' => 'Día de Destrucción'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Hoy es el Día de Destrucción.</h1>
 
 <p>Un día al azar cada semana ofrecemos un {{ $pct }}% de descuento. Hoy es ese día. Solo hoy, y solo para usted como suscriptor.</p>
 
@@ -19,12 +19,12 @@
     </td></tr>
 </table>
 
-<p style="font-size:13px;color:#555;margin-top:20px;">El código se activa automáticamente hoy y caduca a medianoche. Hasta el próximo DíaDestrucción.</p>
+<p style="font-size:13px;color:#555;margin-top:20px;">El código se activa automáticamente hoy y caduca a medianoche. Hasta el próximo Día de Destrucción.</p>
 
 <p>Equipo DeSnipperaar</p>
 
 <p style="font-size:11px;color:#999;margin-top:24px;border-top:1px solid #EEE;padding-top:12px;">
-    Recibe esto porque se suscribió al DíaDestrucción.
+    Recibe esto porque se suscribió al Día de Destrucción.
     <a href="{{ $unsubscribeUrl }}" style="color:#999;">Darse de baja</a>.
 </p>
 @endcomponent

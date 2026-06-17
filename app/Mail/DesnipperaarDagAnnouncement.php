@@ -31,8 +31,8 @@ class DesnipperaarDagAnnouncement extends Mailable
 
         $subject = match ($this->mailLocale) {
             'en' => "It's the DestructionDay. {$this->pct}% off, today only.",
-            'fr' => "C'est le JourDestruction. {$this->pct}% aujourd'hui seulement.",
-            'es' => "Es el DíaDestrucción. {$this->pct}% solo hoy.",
+            'fr' => "C'est le Jour de Destruction. {$this->pct}% aujourd'hui seulement.",
+            'es' => "Es el Día de Destrucción. {$this->pct}% solo hoy.",
             default => "Het is de SnipperDag. Vandaag {$this->pct}% korting.",
         };
 

@@ -32,8 +32,8 @@ class DesnipperaarDagWelcome extends Mailable
 
         $subject = match ($this->mailLocale) {
             'en' => 'Welcome to the DestructionDay',
-            'fr' => 'Bienvenue au JourDestruction',
-            'es' => 'Bienvenido al DíaDestrucción',
+            'fr' => 'Bienvenue au Jour de Destruction',
+            'es' => 'Bienvenido al Día de Destrucción',
             default => 'Welkom bij de SnipperDag',
         };
 
