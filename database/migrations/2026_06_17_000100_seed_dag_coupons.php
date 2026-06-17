@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 return new class extends Migration
 {
     /**
-     * Seed the two DeSnipperaar Dag coupons the public site relies on:
+     * Seed the two SnipperDag coupons the public site relies on:
      *   WELKOM25 — instant 25% from the exit-intent popup (always active).
      *   DSDAG35  — the weekly 35% day; created inactive so the code only works
      *              once an admin toggles it active for that day in Coupons.
@@ -22,7 +22,7 @@ return new class extends Migration
         Coupon::updateOrCreate(
             ['code' => 'DSDAG35'],
             ['type' => 'percentage', 'value' => 35, 'is_active' => false,
-             'description' => 'DeSnipperaar Dag (activeer op de dag zelf)'],
+             'description' => 'SnipperDag (activeer op de dag zelf)'],
         );
     }
 

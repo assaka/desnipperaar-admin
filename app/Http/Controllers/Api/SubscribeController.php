@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 class SubscribeController extends Controller
 {
     /**
-     * Capture a DeSnipperaar Dag e-mail signup from the public site
+     * Capture a SnipperDag e-mail signup from the public site
      * (exit-intent popup or the homepage inline section).
      */
     public function store(Request $request): JsonResponse

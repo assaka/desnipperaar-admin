@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Sent immediately when someone signs up for DeSnipperaar Dag. Confirms the
+ * Sent immediately when someone signs up for SnipperDag. Confirms the
  * subscription, sets expectations, and carries the AVG unsubscribe link.
  */
 class DesnipperaarDagWelcome extends Mailable
@@ -31,10 +31,10 @@ class DesnipperaarDagWelcome extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         $subject = match ($this->mailLocale) {
-            'en' => 'Welcome to DeSnipperaar Day',
-            'fr' => 'Bienvenue au DeSnipperaar Day',
-            'es' => 'Bienvenido al DeSnipperaar Day',
-            default => 'Welkom bij DeSnipperaar Dag',
+            'en' => 'Welcome to SnipperDag',
+            'fr' => 'Bienvenue au SnipperDag',
+            'es' => 'Bienvenido al SnipperDag',
+            default => 'Welkom bij SnipperDag',
         };
 
         return new Envelope(

@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * DeSnipperaar Dag: one random weekday (Mon–Fri) each week is the discount day.
+ * SnipperDag: one random weekday (Mon–Fri) each week is the discount day.
  *
  * The chosen day is derived deterministically from the ISO week so a daily cron
  * always agrees on "is today the day" without storing a schedule, yet the day
@@ -28,7 +28,7 @@ class SendDagAnnouncement extends Command
         {--force : Treat today as the Dag and resend, ignoring the weekday pick and the already-sent guard}
         {--dry-run : Report what would happen without creating the coupon or sending mail}';
 
-    protected $description = 'Announce DeSnipperaar Dag to subscribers when today is this week\'s random discount day.';
+    protected $description = 'Announce SnipperDag to subscribers when today is this week\'s random discount day.';
 
     private const PREFIX = 'SNIPPERDAG';
     private const PCT    = 35;
@@ -39,7 +39,7 @@ class SendDagAnnouncement extends Command
         $chosen = $this->chosenWeekday($today);
         $isDay  = $today->dayOfWeekIso === $chosen || $this->option('force');
 
-        $this->line("This week's DeSnipperaar Dag falls on " . Carbon::now('Europe/Amsterdam')
+        $this->line("This week's SnipperDag falls on " . Carbon::now('Europe/Amsterdam')
             ->startOfWeek()->addDays($chosen - 1)->locale('nl')->translatedFormat('l') . '.');
 
         if (! $isDay) {
@@ -55,7 +55,7 @@ class SendDagAnnouncement extends Command
         }
 
         $recipients = Subscriber::active()->whereNotNull('unsubscribe_token')->get();
-        $this->info("DeSnipperaar Dag is today. {$recipients->count()} active subscriber(s), " . self::PCT . '%.');
+        $this->info("SnipperDag is today. {$recipients->count()} active subscriber(s), " . self::PCT . '%.');
 
         if ($this->option('dry-run')) {
             $this->warn('Dry run: no coupon minted, no mail sent.');
@@ -74,7 +74,7 @@ class SendDagAnnouncement extends Command
         $coupon->fill([
             'is_active'   => true,
             'expires_at'  => $today->copy()->endOfDay(),
-            'description' => 'DeSnipperaar Dag ' . $today->toDateString(),
+            'description' => 'SnipperDag ' . $today->toDateString(),
         ])->save();
 
         $pct = (int) round((float) $coupon->value);

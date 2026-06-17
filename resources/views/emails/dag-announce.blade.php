@@ -1,5 +1,5 @@
-@component('emails._layout', ['title' => 'DeSnipperaar Dag'])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Vandaag is het DeSnipperaar Dag.</h1>
+@component('emails._layout', ['title' => 'SnipperDag'])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Vandaag is het SnipperDag.</h1>
 
 <p>Eén willekeurige dag per week geven wij {{ $pct }}% korting. Vandaag is die dag. Alleen vandaag, alleen voor u als abonnee.</p>
 
@@ -19,12 +19,12 @@
     </td></tr>
 </table>
 
-<p style="font-size:13px;color:#555;margin-top:20px;">De code is vandaag automatisch actief en vervalt om middernacht. Tot de volgende DeSnipperaar Dag.</p>
+<p style="font-size:13px;color:#555;margin-top:20px;">De code is vandaag automatisch actief en vervalt om middernacht. Tot de volgende SnipperDag.</p>
 
 <p>Team DeSnipperaar</p>
 
 <p style="font-size:11px;color:#999;margin-top:24px;border-top:1px solid #EEE;padding-top:12px;">
-    U ontvangt dit omdat u zich aanmeldde voor DeSnipperaar Dag.
+    U ontvangt dit omdat u zich aanmeldde voor SnipperDag.
     <a href="{{ $unsubscribeUrl }}" style="color:#999;">Afmelden</a>.
 </p>
 @endcomponent

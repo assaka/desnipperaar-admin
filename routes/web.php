@@ -15,7 +15,7 @@ Route::get('/b/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'publicP
     ->middleware('signed')
     ->name('bons.public-pdf');
 
-// Public DeSnipperaar Dag unsubscribe (no auth) — token from the announcement e-mail.
+// Public SnipperDag unsubscribe (no auth) — token from the announcement e-mail.
 Route::get('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::class, 'show'])
     ->name('subscribers.unsubscribe');
 

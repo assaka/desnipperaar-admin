@@ -30,10 +30,10 @@ class DesnipperaarDagAnnouncement extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         $subject = match ($this->mailLocale) {
-            'en' => "It's DeSnipperaar Day. {$this->pct}% off, today only.",
-            'fr' => "C'est le DeSnipperaar Day. {$this->pct}% aujourd'hui seulement.",
-            'es' => "Es el DeSnipperaar Day. {$this->pct}% solo hoy.",
-            default => "Het is DeSnipperaar Dag. Vandaag {$this->pct}% korting.",
+            'en' => "It's SnipperDag. {$this->pct}% off, today only.",
+            'fr' => "C'est le SnipperDag. {$this->pct}% aujourd'hui seulement.",
+            'es' => "Es el SnipperDag. {$this->pct}% solo hoy.",
+            default => "Het is SnipperDag. Vandaag {$this->pct}% korting.",
         };
 
         return new Envelope(

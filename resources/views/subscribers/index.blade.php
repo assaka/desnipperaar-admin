@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'DeSnipperaar Dag aanmeldingen')
+@section('title', 'SnipperDag aanmeldingen')
 
 @section('content')
 <div class="flex justify-between items-baseline mb-4">
-    <h1 class="text-2xl font-black">DeSnipperaar Dag <span class="text-gray-400 font-normal text-lg">({{ $total }} actief)</span></h1>
+    <h1 class="text-2xl font-black">SnipperDag <span class="text-gray-400 font-normal text-lg">({{ $total }} actief)</span></h1>
     <a href="{{ route('subscribers.export') }}" class="bg-black text-yellow-400 px-3 py-1 font-bold text-sm uppercase">Exporteer CSV</a>
 </div>
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * One row per fired DeSnipperaar Dag. The unique date is the idempotency
+     * One row per fired SnipperDag. The unique date is the idempotency
      * guard that stops the daily command from announcing twice on the same day.
      */
     public function up(): void
