@@ -15,19 +15,23 @@ use Illuminate\Support\Facades\Mail;
  *
  * The chosen day is derived deterministically from the ISO week so a daily cron
  * always agrees on "is today the day" without storing a schedule, yet the day
- * differs from week to week. On that day the command activates the DSDAG35
- * coupon (expiring at midnight) and e-mails every active subscriber in their own
- * language. Idempotent: the unique dag_announcements row stops a double send.
+ * differs from week to week. On that day the command mints a fresh single-use-day
+ * coupon (random code prefixed "SnipperDag", 35%, expiring at midnight) and
+ * e-mails every active subscriber in their own language. A fresh code per event
+ * means a leaked code can't be reused on another day. Idempotent: the unique
+ * dag_announcements row (which also stores that day's code) stops a double send
+ * and a double mint.
  */
 class SendDagAnnouncement extends Command
 {
     protected $signature = 'desnipperaar:dag-announce
         {--force : Treat today as the Dag and resend, ignoring the weekday pick and the already-sent guard}
-        {--dry-run : Report what would happen without activating the coupon or sending mail}';
+        {--dry-run : Report what would happen without creating the coupon or sending mail}';
 
     protected $description = 'Announce DeSnipperaar Dag to subscribers when today is this week\'s random discount day.';
 
-    private const CODE = 'DSDAG35';
+    private const PREFIX = 'SnipperDag';
+    private const PCT    = 35;
 
     public function handle(): int
     {
@@ -39,17 +43,10 @@ class SendDagAnnouncement extends Command
             ->startOfWeek()->addDays($chosen - 1)->locale('nl')->translatedFormat('l') . '.');
 
         if (! $isDay) {
-            $this->deactivateIfExpired();
+            $this->deactivateExpired();
             $this->info('Today is not the Dag. Nothing to send.');
             return self::SUCCESS;
         }
-
-        $coupon = Coupon::where('code', self::CODE)->first();
-        if (! $coupon) {
-            $this->error('Coupon ' . self::CODE . ' does not exist. Run migrations / seed it first.');
-            return self::FAILURE;
-        }
-        $pct = (int) round((float) $coupon->value);
 
         $already = DagAnnouncement::whereDate('announced_on', $today->toDateString())->exists();
         if ($already && ! $this->option('force')) {
@@ -58,15 +55,30 @@ class SendDagAnnouncement extends Command
         }
 
         $recipients = Subscriber::active()->whereNotNull('unsubscribe_token')->get();
-        $this->info("DeSnipperaar Dag is today. {$recipients->count()} active subscriber(s), {$pct}% via {$coupon->code}.");
+        $this->info("DeSnipperaar Dag is today. {$recipients->count()} active subscriber(s), " . self::PCT . '%.');
 
         if ($this->option('dry-run')) {
-            $this->warn('Dry run: coupon not activated, no mail sent.');
+            $this->warn('Dry run: no coupon minted, no mail sent.');
             return self::SUCCESS;
         }
 
-        // Activate the code for today only.
-        $coupon->update(['is_active' => true, 'expires_at' => $today->copy()->endOfDay()]);
+        // Mint a fresh single-day coupon, or reuse today's on a --force re-run.
+        $record = DagAnnouncement::firstOrNew(['announced_on' => $today->toDateString()]);
+        $coupon = $record->code ? Coupon::where('code', $record->code)->first() : null;
+
+        if (! $coupon) {
+            $record->code = $this->freshCode();
+            $coupon = new Coupon(['code' => $record->code, 'type' => 'percentage', 'value' => self::PCT]);
+        }
+        // Valid for this one day only (created today, expires tonight).
+        $coupon->fill([
+            'is_active'   => true,
+            'expires_at'  => $today->copy()->endOfDay(),
+            'description' => 'DeSnipperaar Dag ' . $today->toDateString(),
+        ])->save();
+
+        $pct = (int) round((float) $coupon->value);
+        $this->info("Code for today: {$coupon->code} ({$pct}%, expires {$coupon->expires_at->format('Y-m-d H:i')}).");
 
         // Sent synchronously (like OrderController): this host has no live queue
         // worker for the app, so a queued mail would never be delivered.
@@ -81,12 +93,10 @@ class SendDagAnnouncement extends Command
             }
         }
 
-        DagAnnouncement::updateOrCreate(
-            ['announced_on' => $today->toDateString()],
-            ['recipients' => $sent],
-        );
+        $record->recipients = $sent;
+        $record->save();
 
-        $this->info("Queued {$sent} announcement(s).");
+        $this->info("Sent {$sent} announcement(s).");
         return self::SUCCESS;
     }
 
@@ -96,12 +106,28 @@ class SendDagAnnouncement extends Command
         return (crc32($date->format('o-W') . ':dsdag') % 5) + 1;
     }
 
-    /** Keep the admin Coupons list tidy: flip DSDAG35 back to inactive once its day has passed. */
-    private function deactivateIfExpired(): void
+    /** A unique SnipperDag<random> code. Alphabet skips easily-confused characters. */
+    private function freshCode(): string
     {
-        $coupon = Coupon::where('code', self::CODE)->first();
-        if ($coupon && $coupon->is_active && $coupon->expires_at && $coupon->expires_at->isPast()) {
-            $coupon->update(['is_active' => false]);
-        }
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        do {
+            $suffix = '';
+            for ($i = 0; $i < 5; $i++) {
+                $suffix .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+            $code = self::PREFIX . $suffix;
+        } while (Coupon::where('code', $code)->exists());
+
+        return $code;
+    }
+
+    /** Keep the admin Coupons list tidy: flip past SnipperDag codes back to inactive. */
+    private function deactivateExpired(): void
+    {
+        Coupon::where('code', 'like', self::PREFIX . '%')
+            ->where('is_active', true)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', now())
+            ->update(['is_active' => false]);
     }
 }
