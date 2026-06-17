@@ -54,7 +54,7 @@
             'notes' => 'Notities', 'signatures' => 'Handtekeningen', 'signed_check' => '✓ Getekend',
             'sign_again' => 'Opnieuw tekenen', 'clear' => 'Wissen', 'not_assigned' => 'nog niet toegewezen',
             'sign_note' => 'Zodra de klant tekent wordt de ophaaldatum automatisch vastgelegd en gaat de getekende bon als PDF naar de klant. De chauffeur-handtekening wordt automatisch ingevuld vanuit het chauffeur-profiel.',
-            'confirm_email' => 'Bevestig &amp; mailen', 'more_than' => ' meer dan besteld.', 'less_than' => ' minder dan besteld.',
+            'confirm_email' => 'Bevestig & mailen', 'more_than' => ' meer dan besteld.', 'less_than' => ' minder dan besteld.',
         ],
         'en' => [
             'signed' => 'signed', 'not_signed' => 'not signed yet', 'order_link' => '← order',
@@ -74,7 +74,7 @@
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signed',
             'sign_again' => 'Sign again', 'clear' => 'Clear', 'not_assigned' => 'not yet assigned',
             'sign_note' => 'Once the customer signs, the pickup date is recorded automatically and the signed bon is sent as a PDF to the customer. The driver signature is filled in automatically from the driver profile.',
-            'confirm_email' => 'Confirm &amp; email', 'more_than' => ' more than ordered.', 'less_than' => ' less than ordered.',
+            'confirm_email' => 'Confirm & email', 'more_than' => ' more than ordered.', 'less_than' => ' less than ordered.',
         ],
         'fr' => [
             'signed' => 'signé', 'not_signed' => 'pas encore signé', 'order_link' => '← commande',
@@ -94,7 +94,7 @@
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signé',
             'sign_again' => 'Signer à nouveau', 'clear' => 'Effacer', 'not_assigned' => 'pas encore attribué',
             'sign_note' => 'Dès que le client signe, la date d\'enlèvement est enregistrée automatiquement et le bon signé est envoyé en PDF au client. La signature du chauffeur est renseignée automatiquement depuis le profil du chauffeur.',
-            'confirm_email' => 'Confirmer &amp; envoyer', 'more_than' => ' de plus que commandé.', 'less_than' => ' de moins que commandé.',
+            'confirm_email' => 'Confirmer & envoyer', 'more_than' => ' de plus que commandé.', 'less_than' => ' de moins que commandé.',
         ],
         'es' => [
             'signed' => 'firmado', 'not_signed' => 'aún sin firmar', 'order_link' => '← pedido',
@@ -114,7 +114,7 @@
             'notes' => 'Notas', 'signatures' => 'Firmas', 'signed_check' => '✓ Firmado',
             'sign_again' => 'Firmar de nuevo', 'clear' => 'Borrar', 'not_assigned' => 'aún sin asignar',
             'sign_note' => 'En cuanto el cliente firma, la fecha de recogida se registra automáticamente y el bon firmado se envía en PDF al cliente. La firma del conductor se rellena automáticamente desde el perfil del conductor.',
-            'confirm_email' => 'Confirmar &amp; enviar', 'more_than' => ' más de lo pedido.', 'less_than' => ' menos de lo pedido.',
+            'confirm_email' => 'Confirmar & enviar', 'more_than' => ' más de lo pedido.', 'less_than' => ' menos de lo pedido.',
         ],
     ][$locale];
 
