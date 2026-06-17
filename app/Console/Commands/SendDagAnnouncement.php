@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
  * The chosen day is derived deterministically from the ISO week so a daily cron
  * always agrees on "is today the day" without storing a schedule, yet the day
  * differs from week to week. On that day the command mints a fresh single-use-day
- * coupon (random code prefixed "SnipperDag", 35%, expiring at midnight) and
+ * coupon (random code prefixed "SNIPPERDAG", 35%, expiring at midnight) and
  * e-mails every active subscriber in their own language. A fresh code per event
  * means a leaked code can't be reused on another day. Idempotent: the unique
  * dag_announcements row (which also stores that day's code) stops a double send
@@ -30,7 +30,7 @@ class SendDagAnnouncement extends Command
 
     protected $description = 'Announce DeSnipperaar Dag to subscribers when today is this week\'s random discount day.';
 
-    private const PREFIX = 'SnipperDag';
+    private const PREFIX = 'SNIPPERDAG';
     private const PCT    = 35;
 
     public function handle(): int
@@ -121,10 +121,10 @@ class SendDagAnnouncement extends Command
         return $code;
     }
 
-    /** Keep the admin Coupons list tidy: flip past SnipperDag codes back to inactive. */
+    /** Keep the admin Coupons list tidy: flip past SNIPPERDAG codes back to inactive. */
     private function deactivateExpired(): void
     {
-        Coupon::where('code', 'like', self::PREFIX . '%')
+        Coupon::whereRaw('UPPER(code) LIKE ?', [self::PREFIX . '%'])
             ->where('is_active', true)
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', now())
