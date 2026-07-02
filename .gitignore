@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# dompdf font cache — regenerated at runtime from the source .ttf files below
+/storage/fonts/*
+!/storage/fonts/Inter-Regular.ttf
+!/storage/fonts/Inter-Bold.ttf
+!/storage/fonts/BebasNeue-Regular.ttf
