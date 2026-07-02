@@ -32,14 +32,15 @@ class QuoteSent extends Mailable
             default => "Offerte {$this->order->order_number} — bekijk en accepteer",
         };
 
+        $salesEmail = config('desnipperaar.notifications.sales_email');
+
         return new Envelope(
             subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
-            replyTo: $this->sender
-                ? [new Address($this->sender->email, $this->sender->name)]
-                : [],
+            replyTo: [new Address($salesEmail, 'DeSnipperaar')],
+            bcc: $salesEmail ? [new Address($salesEmail, 'DeSnipperaar')] : [],
         );
     }
 
