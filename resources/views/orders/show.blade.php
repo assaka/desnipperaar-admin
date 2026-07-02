@@ -370,4 +370,23 @@
             @endif
         </section>
     @endif
+
+    <section class="mt-8">
+        <h2 class="font-black mb-2">Berichten</h2>
+        @forelse ($order->messages as $m)
+            <div class="border-l-4 pl-3 py-2 mb-2 {{ $m->direction === 'in' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50' }}">
+                <div class="text-xs text-gray-500 flex justify-between">
+                    <span class="font-bold uppercase">{{ $m->direction === 'in' ? '↓ Van klant' : '↑ Naar klant' }}</span>
+                    <span>{{ optional($m->occurred_at)->format('Y-m-d H:i') }}</span>
+                </div>
+                <div class="text-xs text-gray-500 break-all">{{ $m->from_email }} → {{ $m->to_email }}</div>
+                @if ($m->subject)
+                    <div class="text-sm font-bold mt-1">{{ $m->subject }}</div>
+                @endif
+                <div class="text-sm mt-1 whitespace-pre-line text-gray-700">{{ \Illuminate\Support\Str::limit($m->body_text ?: strip_tags($m->body_html ?? ''), 1500) }}</div>
+            </div>
+        @empty
+            <p class="text-sm text-gray-500">Nog geen berichten gelogd.</p>
+        @endforelse
+    </section>
 @endsection

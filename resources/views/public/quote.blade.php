@@ -25,17 +25,19 @@
     <h2>Scope en prijs</h2>
     <div class="quote-body">{{ $order->quote_body }}</div>
 
+    @if ($order->quoted_amount_excl_btw)
     <div class="meta">
         <div class="row"><span class="k">Bedrag excl. btw</span><span class="v">€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</span></div>
         <div class="row"><span class="k">BTW 21%</span><span class="v">€ {{ number_format($order->quoted_amount_excl_btw * 0.21, 2, ',', '.') }}</span></div>
         <div class="total">€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}<span class="small">incl. btw</span></div>
     </div>
+    @endif
 
     @if ($order->quote_valid_until)
         <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
     @endif
 
-    @if (!$order->quote_accepted_at && !$order->isQuoteExpired())
+    @if ($order->quoted_amount_excl_btw && !$order->quote_accepted_at && !$order->isQuoteExpired())
         <form method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:24px;">
             @csrf
             <button class="accept-btn">Akkoord — plaats opdracht</button>

@@ -5,6 +5,7 @@
 
 <p>Voici notre devis pour la commande <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
 
+@if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Montant hors TVA</td>
         <td style="padding:8px 0;text-align:right;font-weight:900;font-size:18px;font-family:monospace;">
@@ -21,9 +22,11 @@
             </td></tr>
     @endif
 </table>
+@endif
 
 <div style="white-space:pre-line;font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{{ $order->quote_body }}</div>
 
+@if ($order->quoted_amount_excl_btw)
 <p style="margin:24px 0;text-align:center;">
     <a href="{{ $acceptUrl }}"
        style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:14px 28px;font-weight:900;font-size:16px;text-decoration:none;text-transform:uppercase;letter-spacing:0.05em;">
@@ -34,6 +37,7 @@
 <p style="font-size:12px;color:#555;">Ce lien est personnel et propre à votre devis. En cliquant sur le bouton
 et en choisissant <strong>Accepter</strong> sur la page suivante, vous concluez un accord pour le montant indiqué ci-dessus.
 Si vous ne cliquez pas, vous n'êtes engagé à rien.</p>
+@endif
 
 <p>Cordialement,<br>L'équipe DeSnipperaar</p>
 @endcomponent

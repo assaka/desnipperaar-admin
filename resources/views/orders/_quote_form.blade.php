@@ -2,10 +2,11 @@
     @csrf
     <div class="grid grid-cols-2 gap-3">
         <div>
-            <label class="block text-sm font-bold">Bedrag excl. btw (€) *</label>
-            <input type="number" step="0.01" min="0" name="quoted_amount_excl_btw" required
+            <label class="block text-sm font-bold">Bedrag excl. btw (€)</label>
+            <input type="number" step="0.01" min="0" name="quoted_amount_excl_btw"
                    value="{{ old('quoted_amount_excl_btw', $order->quoted_amount_excl_btw) }}"
                    class="w-full border p-2 font-mono">
+            <p class="text-xs text-gray-500 mt-1">Laat leeg als je alleen aanvullende gegevens opvraagt.</p>
         </div>
         <div>
             <label class="block text-sm font-bold">Geldig t/m</label>

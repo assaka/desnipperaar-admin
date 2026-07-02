@@ -265,13 +265,13 @@ class OrderController extends Controller
         abort_unless($order->type === Order::TYPE_QUOTE, 422, 'Only quote-type orders can have a quote sent.');
 
         $data = $request->validate([
-            'quoted_amount_excl_btw' => 'required|numeric|min:0|max:999999.99',
+            'quoted_amount_excl_btw' => 'nullable|numeric|min:0|max:999999.99',
             'quote_body'             => 'required|string|max:10000',
             'quote_valid_until'      => 'nullable|date|after:today',
         ]);
 
         $order->update([
-            'quoted_amount_excl_btw' => $data['quoted_amount_excl_btw'],
+            'quoted_amount_excl_btw' => $data['quoted_amount_excl_btw'] ?? null,
             'quote_body'             => $data['quote_body'],
             'quote_valid_until'      => $data['quote_valid_until'] ?? now()->addDays(30)->toDateString(),
             'quote_token'            => $order->quote_token ?? Str::random(64),

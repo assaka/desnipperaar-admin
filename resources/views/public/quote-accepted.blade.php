@@ -7,8 +7,10 @@
     <p>Een orderbevestiging is per e-mail verstuurd naar <strong>{{ $order->customer_email }}</strong>.</p>
 
     <div class="meta">
+        @if ($order->quoted_amount_excl_btw)
         <div class="row"><span class="k">Bedrag incl. btw</span>
             <span class="v">€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}</span></div>
+        @endif
         <div class="row"><span class="k">Geaccepteerd op</span>
             <span class="v">{{ $order->quote_accepted_at->format('d-m-Y H:i') }}</span></div>
     </div>

@@ -108,6 +108,11 @@ class Order extends Model
         return $this->hasOne(Certificate::class);
     }
 
+    public function messages()
+    {
+        return $this->hasMany(OrderMessage::class)->orderBy('occurred_at');
+    }
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);

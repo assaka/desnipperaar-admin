@@ -21,3 +21,7 @@ Schedule::command('desnipperaar:dag-announce')
     ->dailyAt('08:00')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
+
+Schedule::command('mail:fetch-inbound')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
