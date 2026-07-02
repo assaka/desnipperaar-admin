@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OfferteRequest;
 use App\Mail\QuoteRequested;
+use App\Mail\SalesAlert;
 use App\Models\Customer;
 use App\Models\Order;
 use Illuminate\Support\Facades\Mail;
@@ -78,6 +79,12 @@ class OfferteController extends Controller
 
         try {
             Mail::to($order->customer_email)->send(new QuoteRequested($order));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            Mail::send(new SalesAlert($order, 'quote_request'));
         } catch (\Throwable $e) {
             report($e);
         }

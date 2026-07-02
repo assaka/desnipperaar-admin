@@ -26,14 +26,6 @@ class QuoteRequested extends Mailable
     public function envelope(): Envelope
     {
         $salesEmail = config('desnipperaar.notifications.sales_email');
-        $adminEmail = config('desnipperaar.notifications.admin_email');
-
-        // BCC admin so the team inbox gets a copy. Skip only if the customer is the same address
-        // (avoid duplicate). Sales@ is allowed even when it equals From, since Resend does not
-        // deliver outbound mail back to the From-mailbox.
-        $bcc = ($adminEmail
-                && strcasecmp($adminEmail, $this->order->customer_email) !== 0)
-            ? [new Address($adminEmail, 'DeSnipperaar')] : [];
 
         $subject = match ($this->mailLocale) {
             'en' => "Quote request {$this->order->order_number} received — DeSnipperaar",
@@ -48,7 +40,6 @@ class QuoteRequested extends Mailable
             replyTo: $this->sender
                 ? [new Address($this->sender->email, $this->sender->name)]
                 : [new Address($salesEmail, 'DeSnipperaar')],
-            bcc: $bcc,
         );
     }
 

@@ -40,7 +40,6 @@ class QuoteSent extends Mailable
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
             replyTo: [new Address($salesEmail, 'DeSnipperaar')],
-            bcc: $salesEmail ? [new Address($salesEmail, 'DeSnipperaar')] : [],
         );
     }
 

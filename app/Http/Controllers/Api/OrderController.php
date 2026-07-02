@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderCreated;
+use App\Mail\SalesAlert;
 use App\Models\Bon;
 use App\Models\Customer;
 use App\Models\Coupon;
@@ -137,6 +138,12 @@ class OrderController extends Controller
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            Mail::send(new SalesAlert($order, 'new_order'));
         } catch (\Throwable $e) {
             report($e);
         }

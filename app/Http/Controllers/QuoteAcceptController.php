@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
+use App\Mail\SalesAlert;
 use App\Models\Bon;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -40,6 +41,12 @@ class QuoteAcceptController extends Controller
 
         try {
             Mail::to($order->customer_email)->send(new OrderCreated($order));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        try {
+            Mail::send(new SalesAlert($order, 'new_order'));
         } catch (\Throwable $e) {
             report($e);
         }
