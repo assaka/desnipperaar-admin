@@ -264,26 +264,38 @@ class OrderController extends Controller
     {
         abort_unless($order->type === Order::TYPE_QUOTE, 422, 'Only quote-type orders can have a quote sent.');
 
+        // Two distinct intents share this endpoint:
+        //   offer   -> a binding quote with an amount + accept button
+        //   message -> just extra info / a question from our side, no amount, no accept
+        // Explicit intent (not "is the amount empty?") so a forgotten amount can't
+        // silently downgrade a real offer to a message.
         $data = $request->validate([
-            'quoted_amount_excl_btw' => 'nullable|numeric|min:0|max:999999.99',
+            'intent'                 => 'required|in:offer,message',
+            'quoted_amount_excl_btw' => 'required_if:intent,offer|nullable|numeric|min:0|max:999999.99',
             'quote_body'             => 'required|string|max:10000',
             'quote_valid_until'      => 'nullable|date|after:today',
         ]);
 
+        $isOffer = $data['intent'] === 'offer';
+
         $order->update([
-            'quoted_amount_excl_btw' => $data['quoted_amount_excl_btw'] ?? null,
+            'quoted_amount_excl_btw' => $isOffer ? $data['quoted_amount_excl_btw'] : null,
             'quote_body'             => $data['quote_body'],
-            'quote_valid_until'      => $data['quote_valid_until'] ?? now()->addDays(30)->toDateString(),
+            'quote_valid_until'      => $isOffer
+                ? ($data['quote_valid_until'] ?? now()->addDays(30)->toDateString())
+                : null,
             'quote_token'            => $order->quote_token ?? Str::random(64),
             'quote_sent_at'          => now(),
         ]);
 
         try {
             Mail::to($order->customer_email)->send(new QuoteSent($order));
-            return back()->with('status', "Offerte verzonden naar {$order->customer_email}.");
+            $noun = $isOffer ? 'Offerte' : 'Bericht';
+            return back()->with('status', "{$noun} verzonden naar {$order->customer_email}.");
         } catch (\Throwable $e) {
             report($e);
-            return back()->withErrors(['mail' => 'Kon offerte niet versturen: ' . $e->getMessage()]);
+            $noun = $isOffer ? 'offerte' : 'bericht';
+            return back()->withErrors(['mail' => "Kon {$noun} niet versturen: " . $e->getMessage()]);
         }
     }
 

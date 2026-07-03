@@ -25,20 +25,32 @@ class QuoteSent extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = match ($this->mailLocale) {
-            'en' => "Quote {$this->order->order_number} — review and accept",
-            'fr' => "Devis {$this->order->order_number} — vérifier et accepter",
-            'es' => "Presupuesto {$this->order->order_number} — revisar y aceptar",
-            default => "Offerte {$this->order->order_number} — bekijk en accepteer",
-        };
+        // No amount => this is just a message (extra info / a question from our side),
+        // not a finished quote. Frame the subject accordingly. Keep the order number
+        // in every subject so client replies link back via FetchInboundMail.
+        $isOffer = ! is_null($this->order->quoted_amount_excl_btw);
+
+        $subject = $isOffer
+            ? match ($this->mailLocale) {
+                'en' => "Quote {$this->order->order_number} — review and accept",
+                'fr' => "Devis {$this->order->order_number} — vérifier et accepter",
+                'es' => "Presupuesto {$this->order->order_number} — revisar y aceptar",
+                default => "Offerte {$this->order->order_number} — bekijk en accepteer",
+            }
+            : match ($this->mailLocale) {
+                'en' => "Message about your request {$this->order->order_number}",
+                'fr' => "Message concernant votre demande {$this->order->order_number}",
+                'es' => "Mensaje sobre su solicitud {$this->order->order_number}",
+                default => "Bericht over uw aanvraag {$this->order->order_number}",
+            };
 
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
+        // Customer-facing mail always comes from DeSnipperaar <sales@>, never from the
+        // individual admin who happens to have created the order.
         return new Envelope(
             subject: $subject,
-            from: $this->sender
-                ? new Address($this->sender->email, $this->sender->name)
-                : null,
+            from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: [new Address($salesEmail, 'DeSnipperaar')],
         );
     }
@@ -50,6 +62,7 @@ class QuoteSent extends Mailable
             with: [
                 'order'      => $this->order,
                 'sender'     => $this->sender,
+                'isOffer'    => ! is_null($this->order->quoted_amount_excl_btw),
                 'acceptUrl'  => route('quote.show', $this->order->quote_token),
             ],
         );

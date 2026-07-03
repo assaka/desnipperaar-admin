@@ -77,23 +77,22 @@
                     Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw
                     (€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }} incl.)
                 </div>
-            @elseif ($order->quote_sent_at)
-                <div class="text-sm mb-3">
-                    Offerte verzonden op {{ $order->quote_sent_at->format('d-m-Y H:i') }}.
-                    @if ($order->quote_valid_until)
-                        Geldig tot {{ $order->quote_valid_until->format('d-m-Y') }}
-                        @if ($order->isQuoteExpired()) <span class="text-red-700 font-bold">(VERLOPEN)</span> @endif.
-                    @endif
-                </div>
-                <div class="text-sm">
-                    Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw.
-                    <br>Publieke link: <a href="{{ route('quote.show', $order->quote_token) }}" target="_blank" class="underline font-mono text-xs">{{ route('quote.show', $order->quote_token) }}</a>
-                </div>
-                <details class="mt-3">
-                    <summary class="text-xs underline cursor-pointer">Offerte bijwerken en opnieuw versturen</summary>
-                    @include('orders._quote_form')
-                </details>
             @else
+                @if ($order->quote_sent_at)
+                    <div class="text-sm mb-3">
+                        Laatst verzonden op {{ $order->quote_sent_at->format('d-m-Y H:i') }}.
+                        @if ($order->quoted_amount_excl_btw !== null && $order->quote_valid_until)
+                            Geldig tot {{ $order->quote_valid_until->format('d-m-Y') }}
+                            @if ($order->isQuoteExpired()) <span class="text-red-700 font-bold">(VERLOPEN)</span> @endif.
+                        @endif
+                    </div>
+                    @if ($order->quoted_amount_excl_btw !== null)
+                        <div class="text-sm mb-3">
+                            Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw.
+                            <br>Publieke offertelink: <a href="{{ route('quote.show', $order->quote_token) }}" target="_blank" class="underline font-mono text-xs">{{ route('quote.show', $order->quote_token) }}</a>
+                        </div>
+                    @endif
+                @endif
                 @include('orders._quote_form')
             @endif
         </section>

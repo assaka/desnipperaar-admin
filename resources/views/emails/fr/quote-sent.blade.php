@@ -1,9 +1,18 @@
-@component('emails.fr._layout', ['title' => 'Devis '.$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
+@component('emails.fr._layout', ['title' => ($isOffer ? 'Devis ' : 'Message ').$order->order_number])
+@if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Votre devis est prêt.</h1>
+@else
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Un message concernant votre demande.</h1>
+@endif
 
 <p>Bonjour {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($isOffer)
 <p>Voici notre devis pour la commande <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+@else
+<p>Concernant votre demande <strong style="font-family:monospace;">{{ $order->order_number }}</strong>, voici ce que nous avons pour vous.</p>
+@endif
 
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
@@ -37,6 +46,8 @@
 <p style="font-size:12px;color:#555;">Ce lien est personnel et propre à votre devis. En cliquant sur le bouton
 et en choisissant <strong>Accepter</strong> sur la page suivante, vous concluez un accord pour le montant indiqué ci-dessus.
 Si vous ne cliquez pas, vous n'êtes engagé à rien.</p>
+@else
+<p style="font-size:12px;color:#555;">Vous pouvez simplement répondre à cet e-mail, votre message nous parviendra directement.</p>
 @endif
 
 <p>Cordialement,<br>L'équipe DeSnipperaar</p>

@@ -1,9 +1,18 @@
-@component('emails.en._layout', ['title' => 'Quote '.$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
+@component('emails.en._layout', ['title' => ($isOffer ? 'Quote ' : 'Message ').$order->order_number])
+@if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Your quote is ready.</h1>
+@else
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">A message about your request.</h1>
+@endif
 
 <p>Dear {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($isOffer)
 <p>Here is our quote for order <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+@else
+<p>Regarding your request <strong style="font-family:monospace;">{{ $order->order_number }}</strong>, here is what we have for you.</p>
+@endif
 
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
@@ -37,6 +46,8 @@
 <p style="font-size:12px;color:#555;">This link is personal and unique to your quote. By clicking the button
 and choosing <strong>Accept</strong> on the next page, you enter into an agreement for the amount stated above.
 If you do not click, you are under no obligation.</p>
+@else
+<p style="font-size:12px;color:#555;">You can simply reply to this email and your message will reach us directly.</p>
 @endif
 
 <p>Kind regards,<br>Team DeSnipperaar</p>

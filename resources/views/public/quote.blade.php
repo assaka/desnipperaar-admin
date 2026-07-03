@@ -38,15 +38,67 @@
     @endif
 
     @if ($order->quoted_amount_excl_btw && !$order->quote_accepted_at && !$order->isQuoteExpired())
-        <form method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:24px;">
+        @php $inclBtw = number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.'); @endphp
+        <form id="accept-form" method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:24px;">
             @csrf
-            <button class="accept-btn">Akkoord — plaats opdracht</button>
+            <button class="accept-btn" id="accept-btn">Akkoord — plaats opdracht</button>
             <p class="small" style="margin-top:10px;">
                 Door op <strong>Akkoord</strong> te klikken gaat u akkoord met het bedrag
-                van <strong>€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}</strong> incl. btw
+                van <strong>€ {{ $inclBtw }}</strong> incl. btw
                 en de <a href="https://desnipperaar.nl/voorwaarden" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
                 Uw IP-adres en tijdstip worden vastgelegd als bewijs.
             </p>
         </form>
+
+        <div id="accept-modal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
+                <h2 id="accept-modal-title" style="margin-top:0;">Offerte accepteren?</h2>
+                <p>U staat op het punt offerte <strong style="font-family:monospace;">{{ $order->order_number }}</strong> te accepteren.
+                   Dit is een bindende opdracht voor <strong>€ {{ $inclBtw }}</strong> incl. btw.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="accept-cancel">Annuleer</button>
+                    <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">Ja, accepteer</button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,10,10,0.55); z-index:50; }
+            .modal-overlay.open { display:flex; align-items:center; justify-content:center; padding:16px; }
+            .modal-box { background:#FFF; border:1px solid #DDD; max-width:460px; width:100%; padding:26px 24px; }
+            .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; flex-wrap:wrap; }
+            .btn-secondary { background:#FFF; color:var(--ink); border:2px solid var(--ink); padding:14px 22px; font-weight:900; font-size:16px; text-transform:uppercase; cursor:pointer; letter-spacing:0.05em; }
+            .btn-secondary:hover { background:var(--ink); color:#FFF; }
+        </style>
+
+        <script>
+            (function () {
+                var form    = document.getElementById('accept-form');
+                var overlay = document.getElementById('accept-modal');
+                var confirmed = false;
+
+                // Progressive enhancement: without JS the button submits directly.
+                form.addEventListener('submit', function (e) {
+                    if (confirmed) return;
+                    e.preventDefault();
+                    overlay.classList.add('open');
+                    overlay.setAttribute('aria-hidden', 'false');
+                });
+
+                function close() {
+                    overlay.classList.remove('open');
+                    overlay.setAttribute('aria-hidden', 'true');
+                }
+
+                document.getElementById('accept-cancel').addEventListener('click', close);
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) close();
+                });
+                document.getElementById('accept-confirm').addEventListener('click', function () {
+                    confirmed = true;
+                    form.submit();
+                });
+            })();
+        </script>
     @endif
 @endsection

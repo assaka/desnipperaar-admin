@@ -1,9 +1,18 @@
-@component('emails._layout', ['title' => 'Offerte '.$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
+@component('emails._layout', ['title' => ($isOffer ? 'Offerte ' : 'Bericht ').$order->order_number])
+@if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Uw offerte is klaar.</h1>
+@else
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Een bericht over uw aanvraag.</h1>
+@endif
 
 <p>Beste {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($isOffer)
 <p>Hierbij onze offerte voor order <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+@else
+<p>Naar aanleiding van uw aanvraag <strong style="font-family:monospace;">{{ $order->order_number }}</strong> hebben wij het volgende voor u.</p>
+@endif
 
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
@@ -37,6 +46,8 @@
 <p style="font-size:12px;color:#555;">Deze link is persoonlijk en uniek voor uw offerte. Door op de knop te klikken
 en op de vervolgpagina <strong>Akkoord</strong> te kiezen, komt een overeenkomst tot stand voor het hierboven genoemde bedrag.
 Klikt u niet, dan bent u nergens aan gebonden.</p>
+@else
+<p style="font-size:12px;color:#555;">U kunt gewoon op deze e-mail antwoorden, dan komt uw reactie direct bij ons binnen.</p>
 @endif
 
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>

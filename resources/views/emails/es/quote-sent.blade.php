@@ -1,9 +1,18 @@
-@component('emails.es._layout', ['title' => 'Presupuesto '.$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
+@component('emails.es._layout', ['title' => ($isOffer ? 'Presupuesto ' : 'Mensaje ').$order->order_number])
+@if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Su presupuesto está listo.</h1>
+@else
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Un mensaje sobre su solicitud.</h1>
+@endif
 
 <p>Hola {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($isOffer)
 <p>Aquí tiene nuestro presupuesto para el pedido <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+@else
+<p>En relación con su solicitud <strong style="font-family:monospace;">{{ $order->order_number }}</strong>, esto es lo que tenemos para usted.</p>
+@endif
 
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
@@ -37,6 +46,8 @@
 <p style="font-size:12px;color:#555;">Este enlace es personal y exclusivo de su presupuesto. Al hacer clic en el botón
 y elegir <strong>Aceptar</strong> en la página siguiente, formaliza un acuerdo por el importe indicado arriba.
 Si no hace clic, no tiene ninguna obligación.</p>
+@else
+<p style="font-size:12px;color:#555;">Puede responder directamente a este correo y su mensaje nos llegará al instante.</p>
 @endif
 
 <p>Un cordial saludo,<br>El equipo de DeSnipperaar</p>
