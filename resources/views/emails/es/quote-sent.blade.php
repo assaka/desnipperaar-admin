@@ -1,5 +1,5 @@
-@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
-@component('emails.es._layout', ['title' => ($isOffer ? 'Presupuesto ' : 'Mensaje ').$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); $ref = $order->quote_reference ?? $order->order_number; @endphp
+@component('emails.es._layout', ['title' => ($isOffer ? 'Presupuesto ' : 'Mensaje ').$ref])
 @if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Su presupuesto está listo.</h1>
 @else
@@ -9,9 +9,9 @@
 <p>Hola {{ explode(' ', $order->customer_name)[0] }},</p>
 
 @if ($isOffer)
-<p>Aquí tiene nuestro presupuesto para el pedido <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+<p>Aquí tiene nuestro presupuesto para la solicitud <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @else
-<p>En relación con su solicitud <strong style="font-family:monospace;">{{ $order->order_number }}</strong>, esto es lo que tenemos para usted.</p>
+<p>Tenemos un mensaje para usted sobre la solicitud <strong style="font-family:monospace;">{{ $ref }}</strong>. Puede leerlo a continuación.</p>
 @endif
 
 @if ($order->quoted_amount_excl_btw)

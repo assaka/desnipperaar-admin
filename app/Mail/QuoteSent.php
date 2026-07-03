@@ -30,18 +30,22 @@ class QuoteSent extends Mailable
         // in every subject so client replies link back via FetchInboundMail.
         $isOffer = ! is_null($this->order->quoted_amount_excl_btw);
 
+        // Use the immutable quote reference (O-…) so the reply always carries a token
+        // that still resolves after acceptance rewrites order_number to B-….
+        $ref = $this->order->quote_reference ?? $this->order->order_number;
+
         $subject = $isOffer
             ? match ($this->mailLocale) {
-                'en' => "Quote {$this->order->order_number} — review and accept",
-                'fr' => "Devis {$this->order->order_number} — vérifier et accepter",
-                'es' => "Presupuesto {$this->order->order_number} — revisar y aceptar",
-                default => "Offerte {$this->order->order_number} — bekijk en accepteer",
+                'en' => "Quote {$ref} — review and accept",
+                'fr' => "Devis {$ref} — vérifier et accepter",
+                'es' => "Presupuesto {$ref} — revisar y aceptar",
+                default => "Offerte {$ref} — bekijk en accepteer",
             }
             : match ($this->mailLocale) {
-                'en' => "Message about your request {$this->order->order_number}",
-                'fr' => "Message concernant votre demande {$this->order->order_number}",
-                'es' => "Mensaje sobre su solicitud {$this->order->order_number}",
-                default => "Bericht over uw aanvraag {$this->order->order_number}",
+                'en' => "Message about your request {$ref}",
+                'fr' => "Message concernant votre demande {$ref}",
+                'es' => "Mensaje sobre su solicitud {$ref}",
+                default => "Bericht over uw aanvraag {$ref}",
             };
 
         $salesEmail = config('desnipperaar.notifications.sales_email');

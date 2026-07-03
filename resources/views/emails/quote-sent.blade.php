@@ -1,5 +1,5 @@
-@php $isOffer = !is_null($order->quoted_amount_excl_btw); @endphp
-@component('emails._layout', ['title' => ($isOffer ? 'Offerte ' : 'Bericht ').$order->order_number])
+@php $isOffer = !is_null($order->quoted_amount_excl_btw); $ref = $order->quote_reference ?? $order->order_number; @endphp
+@component('emails._layout', ['title' => ($isOffer ? 'Offerte ' : 'Bericht ').$ref])
 @if ($isOffer)
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Uw offerte is klaar.</h1>
 @else
@@ -9,9 +9,9 @@
 <p>Beste {{ explode(' ', $order->customer_name)[0] }},</p>
 
 @if ($isOffer)
-<p>Hierbij onze offerte voor order <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.</p>
+<p>Hierbij onze offerte voor aanvraag <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @else
-<p>Naar aanleiding van uw aanvraag <strong style="font-family:monospace;">{{ $order->order_number }}</strong> hebben wij het volgende voor u.</p>
+<p>Wij hebben een bericht voor u over aanvraag <strong style="font-family:monospace;">{{ $ref }}</strong>. U leest het hieronder.</p>
 @endif
 
 @if ($order->quoted_amount_excl_btw)

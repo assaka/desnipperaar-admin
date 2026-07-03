@@ -82,9 +82,17 @@ class FetchInboundMail extends Command
 
     private function matchOrder(string $subject, ?string $body, ?string $fromEmail): ?Order
     {
-        if (preg_match('/\b([A-Z]{1,3}-\d{4}-\d{3,})\b/', $subject . ' ' . ($body ?? ''), $m)) {
-            if ($order = Order::where('order_number', $m[1])->first()) {
-                return $order;
+        // Prefer an explicit reference in the reply. Match against quote_reference
+        // (the immutable O- code that stays put after acceptance) as well as
+        // order_number, which is rewritten from O- to B- once a quote is accepted.
+        if (preg_match_all('/\b([A-Z]{1,3}-\d{4}-\d{3,})\b/', $subject . ' ' . ($body ?? ''), $m)) {
+            foreach (array_unique($m[1]) as $ref) {
+                $order = Order::where('quote_reference', $ref)
+                    ->orWhere('order_number', $ref)
+                    ->first();
+                if ($order) {
+                    return $order;
+                }
             }
         }
         if ($fromEmail) {
