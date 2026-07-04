@@ -48,20 +48,11 @@
         <p class="text-xs text-gray-500 mt-1">Vink <strong>Optie</strong> aan voor een regel die de klant zelf kan aan- of uitzetten op de offertepagina. Het basisbedrag telt alleen de niet-optionele regels.</p>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
-        <div>
-            <label class="block text-sm font-bold">Bedrag excl. btw (€) <span class="font-normal text-gray-500">(zonder regels)</span></label>
-            <input type="number" step="0.01" min="0" name="quoted_amount_excl_btw"
-                   value="{{ old('quoted_amount_excl_btw', $order->quote_lines ? null : $order->quoted_amount_excl_btw) }}"
-                   class="w-full border p-2 font-mono" id="manual-amount">
-            <p class="text-xs text-gray-500 mt-1">Gebruik dit alleen als je geen regels invult. Laat leeg bij een bericht.</p>
-        </div>
-        <div>
-            <label class="block text-sm font-bold">Geldig t/m <span class="font-normal text-gray-500">(alleen offerte)</span></label>
-            <input type="date" name="quote_valid_until"
-                   value="{{ old('quote_valid_until', $order->quote_valid_until?->format('Y-m-d') ?? now()->addDays(30)->format('Y-m-d')) }}"
-                   class="w-full border p-2">
-        </div>
+    <div>
+        <label class="block text-sm font-bold">Geldig t/m <span class="font-normal text-gray-500">(alleen offerte)</span></label>
+        <input type="date" name="quote_valid_until"
+               value="{{ old('quote_valid_until', $order->quote_valid_until?->format('Y-m-d') ?? now()->addDays(30)->format('Y-m-d')) }}"
+               class="w-full border p-2 max-w-xs">
     </div>
     <div>
         <label class="block text-sm font-bold">Bericht / scope / voorwaarden *</label>

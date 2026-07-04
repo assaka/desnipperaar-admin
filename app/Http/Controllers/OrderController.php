@@ -271,7 +271,6 @@ class OrderController extends Controller
         // silently downgrade a real offer to a message.
         $data = $request->validate([
             'intent'                 => 'required|in:offer,message',
-            'quoted_amount_excl_btw' => 'nullable|numeric|min:0|max:999999.99',
             'quote_body'             => 'required|string|max:10000',
             'quote_valid_until'      => 'nullable|date|after:today',
             'lines'                  => 'nullable|array',
@@ -299,24 +298,21 @@ class OrderController extends Controller
             ->all();
 
         // Base amount = mandatory (non-optional) rows only; optionals are added later
-        // when the customer selects them. Fall back to the manual amount without rows.
+        // when the customer selects them on the quote page.
         $baseAmount = round(array_sum(array_map(
             fn ($r) => $r['optional'] ? 0 : $r['subtotal'], $lines
         )), 2);
         $anyLineValue = round(array_sum(array_column($lines, 'subtotal')), 2);
 
-        $amount = ! empty($lines) ? $baseAmount : ($data['quoted_amount_excl_btw'] ?? null);
-
-        // An offer must carry value somewhere: a base amount, or at least one priced
-        // (optional) row, or a manual amount.
-        if ($isOffer && ($amount === null || ($amount <= 0 && $anyLineValue <= 0))) {
+        // An offer is built entirely from rows: it needs at least one priced row.
+        if ($isOffer && $anyLineValue <= 0) {
             return back()->withInput()->withErrors([
-                'quoted_amount_excl_btw' => 'Een offerte heeft een bedrag nodig. Vul offerteregels in of een bedrag excl. btw.',
+                'lines' => 'Een offerte heeft minimaal één offerteregel met een bedrag nodig.',
             ]);
         }
 
         $order->update([
-            'quoted_amount_excl_btw' => $isOffer ? $amount : null,
+            'quoted_amount_excl_btw' => $isOffer ? $baseAmount : null,
             'quote_body'             => $data['quote_body'],
             'quote_lines'            => $isOffer && ! empty($lines) ? $lines : null,
             'quote_valid_until'      => $isOffer
