@@ -52,5 +52,7 @@ If you do not click, you are under no obligation.</p>
 <p style="font-size:12px;color:#555;">You can simply reply to this email and your message will reach us directly.</p>
 @endif
 
+<p style="font-size:12px;color:#555;">Have a question or want to change something? Just reply to this email. <strong>Please keep the subject line unchanged</strong> so your message is automatically linked to your quote.</p>
+
 <p>Kind regards,<br>Team DeSnipperaar</p>
 @endcomponent

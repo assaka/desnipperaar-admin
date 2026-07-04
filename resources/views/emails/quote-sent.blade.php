@@ -52,5 +52,7 @@ Klikt u niet, dan bent u nergens aan gebonden.</p>
 <p style="font-size:12px;color:#555;">U kunt gewoon op deze e-mail antwoorden, dan komt uw reactie direct bij ons binnen.</p>
 @endif
 
+<p style="font-size:12px;color:#555;">Heeft u vragen of wilt u iets aanpassen? Beantwoord dan gewoon deze e-mail. <strong>Houd het onderwerp ongewijzigd</strong>, dan komt uw bericht automatisch bij uw offerte terecht.</p>
+
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>
 @endcomponent

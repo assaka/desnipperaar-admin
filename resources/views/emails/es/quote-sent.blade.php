@@ -52,5 +52,7 @@ Si no hace clic, no tiene ninguna obligación.</p>
 <p style="font-size:12px;color:#555;">Puede responder directamente a este correo y su mensaje nos llegará al instante.</p>
 @endif
 
+<p style="font-size:12px;color:#555;">¿Tiene alguna pregunta o desea cambiar algo? Basta con responder a este correo. <strong>No modifique el asunto</strong> para que su mensaje se vincule automáticamente con su presupuesto.</p>
+
 <p>Un cordial saludo,<br>El equipo de DeSnipperaar</p>
 @endcomponent

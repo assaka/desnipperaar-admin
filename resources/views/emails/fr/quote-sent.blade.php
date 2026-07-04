@@ -52,5 +52,7 @@ Si vous ne cliquez pas, vous n'êtes engagé à rien.</p>
 <p style="font-size:12px;color:#555;">Vous pouvez simplement répondre à cet e-mail, votre message nous parviendra directement.</p>
 @endif
 
+<p style="font-size:12px;color:#555;">Vous avez une question ou souhaitez modifier quelque chose? Répondez simplement à cet e-mail. <strong>Ne modifiez pas l'objet</strong> afin que votre message soit automatiquement associé à votre devis.</p>
+
 <p>Cordialement,<br>L'équipe DeSnipperaar</p>
 @endcomponent
