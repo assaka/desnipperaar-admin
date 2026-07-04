@@ -80,7 +80,10 @@ class QuoteAcceptController extends Controller
             'customer_postcode'    => $postcode,
             'customer_city'        => $data['stad'],
             'quote_accepted_at'    => now(),
-            'quote_acceptance_ip'  => $request->ip(),
+            // Public quote pages are proxied in from desnipperaar.nl; the Node proxy
+            // forwards the real client IP here (X-Forwarded-For is rewritten by the
+            // second Caddy hop). Fall back to the framework IP for direct hits.
+            'quote_acceptance_ip'  => $request->header('X-Quote-Client-Ip') ?: $request->ip(),
             'type'                 => Order::TYPE_DIRECT,
         ]);
 
