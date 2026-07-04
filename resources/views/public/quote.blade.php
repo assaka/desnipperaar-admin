@@ -50,21 +50,17 @@
     </table>
     @endif
 
-    @if ($order->quote_body)
-    <div class="quote-body">{{ $order->quote_body }}</div>
-    @endif
-
-    @if ($isOffer)
-    <div class="meta">
-        <div class="row"><span class="k">Bedrag excl. btw</span><span class="v" id="amt-excl">{{ $eur($baseExcl) }}</span></div>
-        <div class="row"><span class="k">BTW 21%</span><span class="v" id="amt-btw">{{ $eur($baseExcl * 0.21) }}</span></div>
-        <div class="total"><span id="amt-incl">{{ $eur($baseExcl * 1.21) }}</span><span class="small">incl. btw</span></div>
-    </div>
-    @endif
-
-    @if ($order->quote_valid_until)
-        <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
-    @endif
+    {{-- Totals block, reused for the active-offer form and the read-only states. --}}
+    @php
+        $totalsBlock = function () use ($isOffer, $eur, $baseExcl) {
+            if (! $isOffer) return '';
+            return '<div class="meta">'
+                .'<div class="row"><span class="k">Bedrag excl. btw</span><span class="v" id="amt-excl">'.$eur($baseExcl).'</span></div>'
+                .'<div class="row"><span class="k">BTW 21%</span><span class="v" id="amt-btw">'.$eur($baseExcl * 0.21).'</span></div>'
+                .'<div class="total"><span id="amt-incl">'.$eur($baseExcl * 1.21).'</span><span class="small">incl. btw</span></div>'
+                .'</div>';
+        };
+    @endphp
 
     @if ($active)
         @php $inclBtw = $eur($baseExcl * 1.21); @endphp
@@ -98,6 +94,16 @@
                     @endforeach
                 </tbody>
             </table>
+            @endif
+
+            @if ($order->quote_body)
+            <div class="quote-body">{{ $order->quote_body }}</div>
+            @endif
+
+            {!! $totalsBlock() !!}
+
+            @if ($order->quote_valid_until)
+                <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
             @endif
 
             <h2>Uw gegevens</h2>
@@ -236,5 +242,15 @@
                 });
             })();
         </script>
+    @else
+        @if ($order->quote_body)
+        <div class="quote-body">{{ $order->quote_body }}</div>
+        @endif
+
+        {!! $totalsBlock() !!}
+
+        @if ($order->quote_valid_until)
+            <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
+        @endif
     @endif
 @endsection
