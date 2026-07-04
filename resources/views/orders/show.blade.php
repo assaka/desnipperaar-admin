@@ -99,6 +99,13 @@
         </section>
     @endif
 
+    @if ($order->quote_body)
+        <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
+            <h2 class="font-black mb-2">Toelichting offerte</h2>
+            <div class="text-sm text-gray-700" style="white-space:pre-line;">{{ $order->quote_body }}</div>
+        </section>
+    @endif
+
     @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht

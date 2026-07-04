@@ -57,16 +57,38 @@ class OrderCreated extends Mailable
 
     public function content(): Content
     {
-        // Locked snapshot for group-deal materialized orders; live recompute otherwise.
-        $snap = ($this->order->quote_locked && $this->order->price_snapshot)
-            ? $this->order->price_snapshot
-            : \App\Support\Pricing::snapshot(
-                (int) $this->order->box_count,
-                (int) $this->order->container_count,
-                $this->order->media_items,
-                (bool) $this->order->pilot,
-                (bool) $this->order->first_box_free,
-            );
+        // Accepted custom quote: render the agreed itemised lines, not a box recompute.
+        if (! empty($this->order->quote_lines)) {
+            $lines = collect($this->order->quote_lines)->map(fn ($l) => [
+                'label'    => $l['label'] ?? '',
+                'qty'      => $l['qty'] ?? 1,
+                'unit'     => $l['unit'] ?? 0,
+                'subtotal' => $l['subtotal'] ?? 0,
+            ])->all();
+            $sub  = (float) ($this->order->quoted_amount_excl_btw ?? array_sum(array_column($lines, 'subtotal')));
+            $vat  = round($sub * 0.21, 2);
+            $snap = [
+                'lines'            => $lines,
+                'media_lines'      => [],
+                'subtotal'         => $sub,
+                'subtotal_regular' => $sub,
+                'discount'         => 0,
+                'vat'              => $vat,
+                'total'            => round($sub + $vat, 2),
+                'pilot'            => false,
+            ];
+        } else {
+            // Locked snapshot for group-deal materialized orders; live recompute otherwise.
+            $snap = ($this->order->quote_locked && $this->order->price_snapshot)
+                ? $this->order->price_snapshot
+                : \App\Support\Pricing::snapshot(
+                    (int) $this->order->box_count,
+                    (int) $this->order->container_count,
+                    $this->order->media_items,
+                    (bool) $this->order->pilot,
+                    (bool) $this->order->first_box_free,
+                );
+        }
 
         return new Content(
             view: $this->mailLocale === 'nl' ? 'emails.order-created' : 'emails.'.$this->mailLocale.'.order-created',

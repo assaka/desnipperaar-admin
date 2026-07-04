@@ -80,6 +80,10 @@ We will contact you within one business day to confirm the pickup.</p>
     </tr>
 </table>
 
+@if ($order->quote_body)
+<div style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{!! nl2br(e($order->quote_body)) !!}</div>
+@endif
+
 @if ($order->pilot)
     <p style="background:#F5C518;padding:6px 10px;display:inline-block;font-size:12px;font-weight:700;margin:0 0 16px;">
         ✓ Amsterdam pilot · 20% discount applied

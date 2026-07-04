@@ -168,6 +168,23 @@ class OrderController extends Controller
         };
 
         $quote = $buildQuote($order->box_count, $order->container_count, $order->media_items ?? []);
+
+        // Accepted custom quote: show the agreed itemised lines instead of a box recompute.
+        if (! empty($order->quote_lines)) {
+            $qlines = collect($order->quote_lines)->map(fn ($l) => [
+                'label'    => $l['label'] ?? '',
+                'qty'      => $l['qty'] ?? 1,
+                'unit'     => $l['unit'] ?? 0,
+                'subtotal' => $l['subtotal'] ?? 0,
+            ])->all();
+            $qsub  = (float) ($order->quoted_amount_excl_btw ?? array_sum(array_column($qlines, 'subtotal')));
+            $quote = [
+                'lines'    => $qlines,
+                'subtotal' => $qsub,
+                'vat'      => round($qsub * 0.21, 2),
+                'total'    => round($qsub * 1.21, 2),
+            ];
+        }
         $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
 
         // If a bon exists with actuals that differ from the order, also compute the actual quote.
