@@ -25,6 +25,12 @@
     .total .small { font-size: 12pt; color: #555; font-weight: normal; display: block; }
     .accept-btn { display:inline-block; background:#0A0A0A; color:#F5C518; padding:14px 28px; font-weight:900; font-size:16px; text-transform:uppercase; border:0; cursor:pointer; letter-spacing:0.05em; width: 100%; text-align: center; }
     .accept-btn:hover { background: var(--geel); color: var(--ink); }
+    .field { margin-bottom: 12px; }
+    .field label { display:block; font-size:12px; font-weight:700; color:#555; margin-bottom:4px; }
+    .field input { width:100%; padding:12px 14px; border:2px solid var(--ink); font-size:15px; font-family:inherit; background:#FFF; }
+    .field input:focus { outline:0; border-color:var(--geel); }
+    .field-row { display:flex; gap:12px; }
+    @media (max-width:520px) { .field-row { flex-direction:column; gap:0; } }
     .small { font-size: 12px; color: #555; }
     .trust { text-align: center; padding: 16px; font-family: 'Courier New', monospace; font-size: 9pt; letter-spacing: 0.1em; color: #888; }
     .banner { padding: 12px 14px; margin-bottom: 16px; font-size: 14px; }

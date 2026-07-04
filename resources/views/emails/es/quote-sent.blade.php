@@ -39,12 +39,12 @@
 <p style="margin:24px 0;text-align:center;">
     <a href="{{ $acceptUrl }}"
        style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:14px 28px;font-weight:900;font-size:16px;text-decoration:none;text-transform:uppercase;letter-spacing:0.05em;">
-        Revisar y aceptar el presupuesto →
+        Ver el presupuesto →
     </a>
 </p>
 
-<p style="font-size:12px;color:#555;">Este enlace es personal y exclusivo de su presupuesto. Al hacer clic en el botón
-y elegir <strong>Aceptar</strong> en la página siguiente, formaliza un acuerdo por el importe indicado arriba.
+<p style="font-size:12px;color:#555;">Este enlace es personal y exclusivo de su presupuesto. La página siguiente muestra todos los detalles.
+Rellena su dirección y hace clic en <strong>Realizar pedido</strong>. Solo entonces formaliza un acuerdo por el importe indicado arriba.
 Si no hace clic, no tiene ninguna obligación.</p>
 @else
 <p style="font-size:12px;color:#555;">Puede responder directamente a este correo y su mensaje nos llegará al instante.</p>

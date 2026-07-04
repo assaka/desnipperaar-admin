@@ -39,12 +39,12 @@
 <p style="margin:24px 0;text-align:center;">
     <a href="{{ $acceptUrl }}"
        style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:14px 28px;font-weight:900;font-size:16px;text-decoration:none;text-transform:uppercase;letter-spacing:0.05em;">
-        Bekijk en accepteer offerte →
+        Bekijk de offerte →
     </a>
 </p>
 
-<p style="font-size:12px;color:#555;">Deze link is persoonlijk en uniek voor uw offerte. Door op de knop te klikken
-en op de vervolgpagina <strong>Akkoord</strong> te kiezen, komt een overeenkomst tot stand voor het hierboven genoemde bedrag.
+<p style="font-size:12px;color:#555;">Deze link is persoonlijk en uniek voor uw offerte. Op de vervolgpagina ziet u alle details.
+U vult uw adresgegevens in en klikt op <strong>Plaats opdracht</strong>. Pas dan komt een overeenkomst tot stand voor het hierboven genoemde bedrag.
 Klikt u niet, dan bent u nergens aan gebonden.</p>
 @else
 <p style="font-size:12px;color:#555;">U kunt gewoon op deze e-mail antwoorden, dan komt uw reactie direct bij ons binnen.</p>

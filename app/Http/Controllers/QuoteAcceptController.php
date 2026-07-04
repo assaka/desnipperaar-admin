@@ -29,9 +29,34 @@ class QuoteAcceptController extends Controller
             return view('public.quote-expired', compact('order'));
         }
 
-        // On acceptance: mint a new B- order number, keep the O- reference as audit trail.
+        // The customer confirms the delivery address on the quote page before the
+        // quote becomes an order. Validation failure bounces back to the quote page
+        // (public.quote renders $errors + repopulates via old()).
+        $data = $request->validate([
+            'telefoon'   => 'required|string|max:50',
+            'straat'     => 'required|string|max:255',
+            'huisnummer' => 'required|string|max:20',
+            'postcode'   => ['required', 'string', 'max:10', 'regex:/^\d{4}\s?[A-Za-z]{2}$/'],
+            'stad'       => 'required|string|max:100',
+        ], [
+            'telefoon.required'   => 'Vul uw telefoonnummer in.',
+            'straat.required'     => 'Vul de straatnaam in.',
+            'huisnummer.required' => 'Vul het huisnummer in.',
+            'postcode.required'   => 'Vul uw postcode in.',
+            'postcode.regex'      => 'Vul een geldige postcode in, bijvoorbeeld 1034AB.',
+            'stad.required'       => 'Vul de stad in.',
+        ]);
+
+        $postcode = strtoupper(preg_replace('/\s+/', '', $data['postcode']));
+
+        // On acceptance: mint a new B- order number, keep the O- reference as audit
+        // trail, and persist the delivery address the customer just confirmed.
         $order->update([
             'order_number'         => Order::generateOrderNumber(),
+            'customer_phone'       => $data['telefoon'],
+            'customer_address'     => trim($data['straat'] . ' ' . $data['huisnummer']),
+            'customer_postcode'    => $postcode,
+            'customer_city'        => $data['stad'],
             'quote_accepted_at'    => now(),
             'quote_acceptance_ip'  => $request->ip(),
             'type'                 => Order::TYPE_DIRECT,

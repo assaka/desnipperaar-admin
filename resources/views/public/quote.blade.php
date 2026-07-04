@@ -39,11 +39,55 @@
 
     @if ($order->quoted_amount_excl_btw && !$order->quote_accepted_at && !$order->isQuoteExpired())
         @php $inclBtw = number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.'); @endphp
-        <form id="accept-form" method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:24px;">
+
+        <h2>Uw gegevens</h2>
+        <p class="small">Vul het adres in waar wij de opdracht uitvoeren. Daarna plaatst u de opdracht.</p>
+
+        @if ($errors->any())
+            <div class="banner bad">
+                @foreach ($errors->all() as $e)
+                    {{ $e }}<br>
+                @endforeach
+            </div>
+        @endif
+
+        <form id="accept-form" method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:16px;">
             @csrf
-            <button class="accept-btn" id="accept-btn">Akkoord — plaats opdracht</button>
+            <div class="field">
+                <label for="telefoon">Telefoon</label>
+                <input type="tel" id="telefoon" name="telefoon" required
+                       value="{{ old('telefoon', $order->customer_phone) }}" autocomplete="tel">
+            </div>
+            <div class="field-row">
+                <div class="field" style="flex:3;">
+                    <label for="straat">Straatnaam</label>
+                    <input type="text" id="straat" name="straat" required
+                           value="{{ old('straat') }}" autocomplete="street-address">
+                </div>
+                <div class="field" style="flex:1;">
+                    <label for="huisnummer">Huisnummer</label>
+                    <input type="text" id="huisnummer" name="huisnummer" required
+                           value="{{ old('huisnummer') }}" autocomplete="address-line2">
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field" style="flex:1;">
+                    <label for="postcode">Postcode</label>
+                    <input type="text" id="postcode" name="postcode" required
+                           value="{{ old('postcode', $order->customer_postcode) }}"
+                           pattern="\d{4}\s?[A-Za-z]{2}"
+                           style="font-family:monospace;text-transform:uppercase;" autocomplete="postal-code">
+                </div>
+                <div class="field" style="flex:1;">
+                    <label for="stad">Stad</label>
+                    <input type="text" id="stad" name="stad" required
+                           value="{{ old('stad', $order->customer_city) }}" autocomplete="address-level2">
+                </div>
+            </div>
+
+            <button class="accept-btn" id="accept-btn" style="margin-top:20px;">Plaats opdracht</button>
             <p class="small" style="margin-top:10px;">
-                Door op <strong>Akkoord</strong> te klikken gaat u akkoord met het bedrag
+                Door op <strong>Plaats opdracht</strong> te klikken gaat u akkoord met het bedrag
                 van <strong>€ {{ $inclBtw }}</strong> incl. btw
                 en de <a href="https://desnipperaar.nl/voorwaarden" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
                 Uw IP-adres en tijdstip worden vastgelegd als bewijs.
@@ -52,12 +96,12 @@
 
         <div id="accept-modal" class="modal-overlay" aria-hidden="true">
             <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
-                <h2 id="accept-modal-title" style="margin-top:0;">Offerte accepteren?</h2>
-                <p>U staat op het punt offerte <strong style="font-family:monospace;">{{ $order->order_number }}</strong> te accepteren.
+                <h2 id="accept-modal-title" style="margin-top:0;">Opdracht plaatsen?</h2>
+                <p>U plaatst nu een opdracht op basis van offerte <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.
                    Dit is een bindende opdracht voor <strong>€ {{ $inclBtw }}</strong> incl. btw.</p>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="accept-cancel">Annuleer</button>
-                    <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">Ja, accepteer</button>
+                    <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">Ja, plaats opdracht</button>
                 </div>
             </div>
         </div>

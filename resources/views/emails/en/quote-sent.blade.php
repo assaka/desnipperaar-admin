@@ -39,12 +39,12 @@
 <p style="margin:24px 0;text-align:center;">
     <a href="{{ $acceptUrl }}"
        style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:14px 28px;font-weight:900;font-size:16px;text-decoration:none;text-transform:uppercase;letter-spacing:0.05em;">
-        Review and accept quote →
+        View the quote →
     </a>
 </p>
 
-<p style="font-size:12px;color:#555;">This link is personal and unique to your quote. By clicking the button
-and choosing <strong>Accept</strong> on the next page, you enter into an agreement for the amount stated above.
+<p style="font-size:12px;color:#555;">This link is personal and unique to your quote. The next page shows every detail.
+You fill in your address and click <strong>Place order</strong>. Only then do you enter into an agreement for the amount stated above.
 If you do not click, you are under no obligation.</p>
 @else
 <p style="font-size:12px;color:#555;">You can simply reply to this email and your message will reach us directly.</p>
