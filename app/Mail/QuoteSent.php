@@ -48,6 +48,9 @@ class QuoteSent extends Mailable
                 default => "Bericht over uw aanvraag {$ref}",
             };
 
+        // Opaque reply reference so replies link back to this order's history.
+        $subject .= ' '.$this->order->replyTag();
+
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         // Customer-facing mail always comes from DeSnipperaar <sales@>, never from the

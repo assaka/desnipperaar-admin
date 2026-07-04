@@ -22,6 +22,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'quote_reference',
+        'reply_ref',
         'type',
         'customer_id',
         'created_by_user_id',
@@ -83,6 +84,42 @@ class Order extends Model
         'quote_locked' => 'boolean',
         'price_snapshot' => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order) {
+            if (empty($order->reply_ref)) {
+                $order->reply_ref = self::generateReplyRef();
+            }
+        });
+    }
+
+    /** Opaque, collision-checked reply reference (lowercase [a-z0-9], 10 chars). */
+    public static function generateReplyRef(): string
+    {
+        do {
+            $ref = \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(10));
+        } while (self::where('reply_ref', $ref)->exists());
+
+        return $ref;
+    }
+
+    /** Guarantee a reply reference exists (backfills legacy rows lazily) and return it. */
+    public function ensureReplyRef(): string
+    {
+        if (empty($this->reply_ref)) {
+            $this->reply_ref = self::generateReplyRef();
+            $this->saveQuietly();
+        }
+
+        return $this->reply_ref;
+    }
+
+    /** The subject tag replies must keep for the inbound matcher, e.g. "[ref:a1b2c3d4e5]". */
+    public function replyTag(): string
+    {
+        return '[ref:'.$this->ensureReplyRef().']';
+    }
 
     public function customer()
     {

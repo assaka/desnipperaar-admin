@@ -82,10 +82,21 @@ class FetchInboundMail extends Command
 
     private function matchOrder(string $subject, ?string $body, ?string $fromEmail): ?Order
     {
-        // Prefer an explicit reference in the reply. Match against quote_reference
+        $haystack = $subject . ' ' . ($body ?? '');
+
+        // Most specific: the opaque reply reference we stamp into every subject as
+        // [ref:xxxx]. Replies keep it verbatim, so it links straight to the order.
+        if (preg_match('/\bref:([a-z0-9]{6,16})\b/i', $haystack, $r)) {
+            $order = Order::where('reply_ref', strtolower($r[1]))->first();
+            if ($order) {
+                return $order;
+            }
+        }
+
+        // Fallback for legacy mail without a reply tag. Match against quote_reference
         // (the immutable O- code that stays put after acceptance) as well as
         // order_number, which is rewritten from O- to B- once a quote is accepted.
-        if (preg_match_all('/\b([A-Z]{1,3}-\d{4}-\d{3,})\b/', $subject . ' ' . ($body ?? ''), $m)) {
+        if (preg_match_all('/\b([A-Z]{1,3}-\d{4}-\d{3,})\b/', $haystack, $m)) {
             foreach (array_unique($m[1]) as $ref) {
                 $order = Order::where('quote_reference', $ref)
                     ->orWhere('order_number', $ref)

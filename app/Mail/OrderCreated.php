@@ -42,6 +42,9 @@ class OrderCreated extends Mailable
             default => "Orderbevestiging {$this->order->order_number} — DeSnipperaar",
         };
 
+        // Opaque reply reference so replies link back to this order's history.
+        $subject .= ' '.$this->order->replyTag();
+
         return new Envelope(
             subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),

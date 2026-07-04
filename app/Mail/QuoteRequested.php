@@ -34,6 +34,9 @@ class QuoteRequested extends Mailable
             default => "Offerte-aanvraag {$this->order->order_number} ontvangen — DeSnipperaar",
         };
 
+        // Opaque reply reference so replies link back to this order's history.
+        $subject .= ' '.$this->order->replyTag();
+
         return new Envelope(
             subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
