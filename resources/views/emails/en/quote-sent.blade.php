@@ -14,7 +14,7 @@
 <p>We have a message for you about request <strong style="font-family:monospace;">{{ $ref }}</strong>. You can read it below.</p>
 @endif
 
-@include('emails._quote_lines_table', ['labels' => ['desc' => 'Description', 'qty' => 'Qty', 'price' => 'Price', 'subtotal' => 'Subtotal']])
+@include('emails._quote_lines_table', ['labels' => ['desc' => 'Description', 'qty' => 'Qty', 'price' => 'Price', 'subtotal' => 'Subtotal', 'optional' => 'optional', 'optional_note' => 'Lines marked optional can be toggled on the quote page; the total updates accordingly.']])
 
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">

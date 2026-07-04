@@ -2,7 +2,9 @@
     @csrf
 
     {{-- Itemised quote rows. When any row has a description, the total below is
-         computed from the rows and the manual amount field is ignored. --}}
+         computed from the rows and the manual amount field is ignored. Rows marked
+         "Optioneel" are add-ons the customer can tick on the public quote page; they
+         are NOT part of the base amount. --}}
     <div>
         <label class="block text-sm font-bold mb-1">Offerteregels <span class="font-normal text-gray-500">(alleen offerte)</span></label>
         <table class="w-full text-sm" id="quote-lines">
@@ -11,6 +13,7 @@
                     <th class="pb-1">Omschrijving</th>
                     <th class="pb-1 w-20 text-right">Aantal</th>
                     <th class="pb-1 w-28 text-right">Prijs €</th>
+                    <th class="pb-1 w-16 text-center">Optie</th>
                     <th class="pb-1 w-28 text-right">Subtotaal</th>
                     <th class="pb-1 w-8"></th>
                 </tr>
@@ -22,6 +25,7 @@
                         <td class="pr-2 py-1"><input type="text" name="lines[{{ $i }}][label]" value="{{ $r['label'] ?? '' }}" class="w-full border p-1" placeholder="bv. Vernietiging 10 archiefdozen"></td>
                         <td class="pr-2 py-1"><input type="number" step="0.01" min="0" name="lines[{{ $i }}][qty]" value="{{ $r['qty'] ?? '' }}" class="w-full border p-1 text-right qty"></td>
                         <td class="pr-2 py-1"><input type="number" step="0.01" min="0" name="lines[{{ $i }}][unit]" value="{{ $r['unit'] ?? '' }}" class="w-full border p-1 text-right unit"></td>
+                        <td class="pr-2 py-1 text-center"><input type="checkbox" name="lines[{{ $i }}][optional]" value="1" class="opt" @checked(!empty($r['optional'])) title="Klant kan deze regel zelf kiezen"></td>
                         <td class="pr-2 py-1 text-right font-mono line-sub">€ 0,00</td>
                         <td class="py-1 text-center"><button type="button" class="text-red-600 font-bold remove-line" title="Regel verwijderen">×</button></td>
                     </tr>
@@ -29,13 +33,19 @@
             </tbody>
             <tfoot>
                 <tr class="border-t font-bold">
-                    <td colspan="3" class="pt-1 text-right">Totaal excl. btw</td>
+                    <td colspan="4" class="pt-1 text-right">Basisbedrag excl. btw</td>
                     <td class="pt-1 text-right font-mono" id="quote-lines-total">€ 0,00</td>
+                    <td></td>
+                </tr>
+                <tr class="text-gray-500">
+                    <td colspan="4" class="text-right">Optionele regels (klant kiest)</td>
+                    <td class="text-right font-mono" id="quote-lines-optional">€ 0,00</td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
         <button type="button" id="add-line" class="mt-1 text-sm border px-2 py-1 font-bold">+ regel</button>
+        <p class="text-xs text-gray-500 mt-1">Vink <strong>Optie</strong> aan voor een regel die de klant zelf kan aan- of uitzetten op de offertepagina. Het basisbedrag telt alleen de niet-optionele regels.</p>
     </div>
 
     <div class="grid grid-cols-2 gap-3">
@@ -84,15 +94,16 @@
     function euro(n) { return '€ ' + (n || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
     function recalc() {
-        var total = 0;
+        var base = 0, optional = 0;
         body.querySelectorAll('tr.quote-line').forEach(function (row) {
             var qty  = parseFloat(row.querySelector('.qty').value)  || 0;
             var unit = parseFloat(row.querySelector('.unit').value) || 0;
             var sub  = qty * unit;
-            total += sub;
+            if (row.querySelector('.opt').checked) { optional += sub; } else { base += sub; }
             row.querySelector('.line-sub').textContent = euro(sub);
         });
-        document.getElementById('quote-lines-total').textContent = euro(total);
+        document.getElementById('quote-lines-total').textContent = euro(base);
+        document.getElementById('quote-lines-optional').textContent = euro(optional);
     }
 
     function reindex() {
@@ -107,7 +118,9 @@
         var first = body.querySelector('tr.quote-line');
         var clone = first.cloneNode(true);
         clone.querySelectorAll('input').forEach(function (inp) {
-            if (inp.classList.contains('qty')) { inp.value = 1; } else { inp.value = ''; }
+            if (inp.type === 'checkbox') { inp.checked = false; }
+            else if (inp.classList.contains('qty')) { inp.value = 1; }
+            else { inp.value = ''; }
         });
         clone.querySelector('.line-sub').textContent = euro(0);
         body.appendChild(clone);
@@ -119,14 +132,19 @@
     body.addEventListener('input', function (e) {
         if (e.target.classList.contains('qty') || e.target.classList.contains('unit')) recalc();
     });
+    body.addEventListener('change', function (e) {
+        if (e.target.classList.contains('opt')) recalc();
+    });
 
     body.addEventListener('click', function (e) {
         if (!e.target.classList.contains('remove-line')) return;
         var rows = body.querySelectorAll('tr.quote-line');
         if (rows.length === 1) {
-            // keep one empty row rather than removing the last
             var row = rows[0];
-            row.querySelectorAll('input').forEach(function (inp) { inp.value = inp.classList.contains('qty') ? 1 : ''; });
+            row.querySelectorAll('input').forEach(function (inp) {
+                if (inp.type === 'checkbox') inp.checked = false;
+                else inp.value = inp.classList.contains('qty') ? 1 : '';
+            });
         } else {
             e.target.closest('tr').remove();
         }

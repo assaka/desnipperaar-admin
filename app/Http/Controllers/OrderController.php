@@ -278,29 +278,38 @@ class OrderController extends Controller
             'lines.*.label'          => 'nullable|string|max:255',
             'lines.*.qty'            => 'nullable|numeric|min:0|max:99999',
             'lines.*.unit'           => 'nullable|numeric|min:0|max:999999.99',
+            'lines.*.optional'       => 'nullable|boolean',
         ]);
 
         $isOffer = $data['intent'] === 'offer';
 
         // Build itemised rows: keep only rows that carry a label. subtotal = qty * unit.
-        // Same shape as invoices.lines so the PDF/email helpers stay interchangeable.
+        // Optional rows are add-ons the customer can tick on the quote page, so they
+        // are excluded from the base amount. Same shape as invoices.lines (+ optional).
         $lines = collect($data['lines'] ?? [])
             ->map(fn ($r) => [
                 'label'    => trim($r['label'] ?? ''),
                 'qty'      => (float) ($r['qty'] ?? 0),
                 'unit'     => (float) ($r['unit'] ?? 0),
                 'subtotal' => round((float) ($r['qty'] ?? 0) * (float) ($r['unit'] ?? 0), 2),
+                'optional' => ! empty($r['optional']),
             ])
             ->filter(fn ($r) => $r['label'] !== '')
             ->values()
             ->all();
 
-        // Amount priority: itemised total wins; fall back to the manual amount field.
-        $amount = ! empty($lines)
-            ? round(array_sum(array_column($lines, 'subtotal')), 2)
-            : ($data['quoted_amount_excl_btw'] ?? null);
+        // Base amount = mandatory (non-optional) rows only; optionals are added later
+        // when the customer selects them. Fall back to the manual amount without rows.
+        $baseAmount = round(array_sum(array_map(
+            fn ($r) => $r['optional'] ? 0 : $r['subtotal'], $lines
+        )), 2);
+        $anyLineValue = round(array_sum(array_column($lines, 'subtotal')), 2);
 
-        if ($isOffer && ($amount === null || $amount <= 0)) {
+        $amount = ! empty($lines) ? $baseAmount : ($data['quoted_amount_excl_btw'] ?? null);
+
+        // An offer must carry value somewhere: a base amount, or at least one priced
+        // (optional) row, or a manual amount.
+        if ($isOffer && ($amount === null || ($amount <= 0 && $anyLineValue <= 0))) {
             return back()->withInput()->withErrors([
                 'quoted_amount_excl_btw' => 'Een offerte heeft een bedrag nodig. Vul offerteregels in of een bedrag excl. btw.',
             ]);

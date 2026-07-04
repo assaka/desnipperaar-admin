@@ -1,6 +1,16 @@
 @extends('public._layout')
 @section('title', 'Offerte '.$order->order_number)
 
+@php
+    $isOffer  = !is_null($order->quoted_amount_excl_btw);
+    $active   = $isOffer && !$order->quote_accepted_at && !$order->isQuoteExpired();
+    $allLines = $order->quote_lines ?? [];
+    $hasOptional = collect($allLines)->contains(fn ($l) => !empty($l['optional']));
+    $baseExcl = (float) ($order->quoted_amount_excl_btw ?? 0);
+    $eur  = fn ($n) => '€ '.number_format((float) $n, 2, ',', '.');
+    $qtyf = fn ($q) => 0.0 == fmod((float) $q, 1) ? number_format($q, 0, ',', '.') : number_format($q, 2, ',', '.');
+@endphp
+
 @section('content')
     @if ($order->quote_accepted_at)
         <div class="banner ok">
@@ -20,19 +30,21 @@
 
     <h2>Scope en prijs</h2>
 
-    @if (!empty($order->quote_lines))
+    @if (collect($allLines)->contains(fn ($l) => empty($l['optional'])))
     <table class="lines">
         <thead>
             <tr><th>Omschrijving</th><th class="r">Aantal</th><th class="r">Prijs</th><th class="r">Subtotaal</th></tr>
         </thead>
         <tbody>
-            @foreach ($order->quote_lines as $line)
-            <tr>
-                <td>{{ $line['label'] }}</td>
-                <td class="r">{{ 0.0 == fmod((float) $line['qty'], 1) ? number_format($line['qty'], 0, ',', '.') : number_format($line['qty'], 2, ',', '.') }}</td>
-                <td class="r">€ {{ number_format($line['unit'], 2, ',', '.') }}</td>
-                <td class="r">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
-            </tr>
+            @foreach ($allLines as $line)
+                @if (empty($line['optional']))
+                <tr>
+                    <td>{{ $line['label'] }}</td>
+                    <td class="r">{{ $qtyf($line['qty']) }}</td>
+                    <td class="r">{{ $eur($line['unit']) }}</td>
+                    <td class="r">{{ $eur($line['subtotal']) }}</td>
+                </tr>
+                @endif
             @endforeach
         </tbody>
     </table>
@@ -42,11 +54,11 @@
     <div class="quote-body">{{ $order->quote_body }}</div>
     @endif
 
-    @if ($order->quoted_amount_excl_btw)
+    @if ($isOffer)
     <div class="meta">
-        <div class="row"><span class="k">Bedrag excl. btw</span><span class="v">€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</span></div>
-        <div class="row"><span class="k">BTW 21%</span><span class="v">€ {{ number_format($order->quoted_amount_excl_btw * 0.21, 2, ',', '.') }}</span></div>
-        <div class="total">€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}<span class="small">incl. btw</span></div>
+        <div class="row"><span class="k">Bedrag excl. btw</span><span class="v" id="amt-excl">{{ $eur($baseExcl) }}</span></div>
+        <div class="row"><span class="k">BTW 21%</span><span class="v" id="amt-btw">{{ $eur($baseExcl * 0.21) }}</span></div>
+        <div class="total"><span id="amt-incl">{{ $eur($baseExcl * 1.21) }}</span><span class="small">incl. btw</span></div>
     </div>
     @endif
 
@@ -54,11 +66,8 @@
         <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
     @endif
 
-    @if ($order->quoted_amount_excl_btw && !$order->quote_accepted_at && !$order->isQuoteExpired())
-        @php $inclBtw = number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.'); @endphp
-
-        <h2>Uw gegevens</h2>
-        <p class="small">Vul het adres in waar wij de opdracht uitvoeren. Daarna plaatst u de opdracht.</p>
+    @if ($active)
+        @php $inclBtw = $eur($baseExcl * 1.21); @endphp
 
         @if ($errors->any())
             <div class="banner bad">
@@ -70,6 +79,30 @@
 
         <form id="accept-form" method="POST" action="{{ rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$order->quote_token.'/accept' }}" style="margin-top:16px;">
             @csrf
+
+            @if ($hasOptional)
+            <h2>Extra opties</h2>
+            <p class="small">Vink aan wat u wilt toevoegen. Het totaal past zich direct aan.</p>
+            <table class="lines">
+                <tbody>
+                    @foreach ($allLines as $i => $line)
+                        @if (!empty($line['optional']))
+                        <tr>
+                            <td style="width:26px;"><input type="checkbox" class="opt-line" id="opt-{{ $i }}" name="optional_lines[]" value="{{ $i }}" data-subtotal="{{ number_format($line['subtotal'], 2, '.', '') }}"></td>
+                            <td><label for="opt-{{ $i }}">{{ $line['label'] }}</label></td>
+                            <td class="r">{{ $qtyf($line['qty']) }}</td>
+                            <td class="r">{{ $eur($line['unit']) }}</td>
+                            <td class="r">+ {{ $eur($line['subtotal']) }}</td>
+                        </tr>
+                        @endif
+                    @endforeach
+                </tbody>
+            </table>
+            @endif
+
+            <h2>Uw gegevens</h2>
+            <p class="small">Vul het adres in waar wij de opdracht uitvoeren. Daarna plaatst u de opdracht.</p>
+
             <div class="field">
                 <label for="naam">Naam</label>
                 <input type="text" id="naam" name="naam" required
@@ -122,7 +155,7 @@
             <button class="accept-btn" id="accept-btn" style="margin-top:20px;">Plaats opdracht</button>
             <p class="small" style="margin-top:10px;">
                 Door op <strong>Plaats opdracht</strong> te klikken gaat u akkoord met het bedrag
-                van <strong>€ {{ $inclBtw }}</strong> incl. btw
+                van <strong><span id="legal-incl">{{ $inclBtw }}</span></strong> incl. btw
                 en de <a href="https://desnipperaar.nl/voorwaarden" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
                 Uw IP-adres en tijdstip worden vastgelegd als bewijs.
             </p>
@@ -132,7 +165,7 @@
             <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
                 <h2 id="accept-modal-title" style="margin-top:0;">Opdracht plaatsen?</h2>
                 <p>U plaatst nu een opdracht op basis van offerte <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.
-                   Dit is een bindende opdracht voor <strong>€ {{ $inclBtw }}</strong> incl. btw.</p>
+                   Dit is een bindende opdracht voor <strong><span id="modal-incl">{{ $inclBtw }}</span></strong> incl. btw.</p>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="accept-cancel">Annuleer</button>
                     <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">Ja, plaats opdracht</button>
@@ -147,6 +180,7 @@
             .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; flex-wrap:wrap; }
             .btn-secondary { background:#FFF; color:var(--ink); border:2px solid var(--ink); padding:14px 22px; font-weight:900; font-size:16px; text-transform:uppercase; cursor:pointer; letter-spacing:0.05em; }
             .btn-secondary:hover { background:var(--ink); color:#FFF; }
+            table.lines .opt-line { width:18px; height:18px; }
         </style>
 
         <script>
@@ -154,6 +188,30 @@
                 var form    = document.getElementById('accept-form');
                 var overlay = document.getElementById('accept-modal');
                 var confirmed = false;
+                var base = {{ number_format($baseExcl, 2, '.', '') }};
+
+                function euro(n) {
+                    return '€ ' + n.toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+                function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+
+                function recalc() {
+                    var total = base;
+                    document.querySelectorAll('.opt-line:checked').forEach(function (cb) {
+                        total += parseFloat(cb.dataset.subtotal) || 0;
+                    });
+                    var incl = total * 1.21;
+                    setText('amt-excl', euro(total));
+                    setText('amt-btw',  euro(total * 0.21));
+                    setText('amt-incl', euro(incl));
+                    setText('legal-incl', euro(incl));
+                    setText('modal-incl', euro(incl));
+                }
+
+                document.querySelectorAll('.opt-line').forEach(function (cb) {
+                    cb.addEventListener('change', recalc);
+                });
+                recalc();
 
                 // Progressive enhancement: without JS the button submits directly.
                 form.addEventListener('submit', function (e) {

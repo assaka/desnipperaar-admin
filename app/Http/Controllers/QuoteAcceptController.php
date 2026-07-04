@@ -41,6 +41,8 @@ class QuoteAcceptController extends Controller
             'huisnummer' => 'required|string|max:20',
             'postcode'   => ['required', 'string', 'max:10', 'regex:/^\d{4}\s?[A-Za-z]{2}$/'],
             'stad'       => 'required|string|max:100',
+            'optional_lines'   => 'nullable|array',
+            'optional_lines.*' => 'integer',
         ], [
             'naam.required'       => 'Vul uw naam in.',
             'email.required'      => 'Vul uw e-mailadres in.',
@@ -55,6 +57,22 @@ class QuoteAcceptController extends Controller
 
         $postcode = strtoupper(preg_replace('/\s+/', '', $data['postcode']));
         $address  = trim($data['straat'] . ' ' . $data['huisnummer']);
+
+        // Resolve the final itemised lines. Mandatory lines are always included;
+        // optional lines only when the customer ticked them. Recompute the amount
+        // from the STORED subtotals (never trust a client-supplied price) so the
+        // agreed total matches what the page showed.
+        $finalLines = null;
+        $finalAmount = $order->quoted_amount_excl_btw;
+        if (! empty($order->quote_lines)) {
+            $selected = collect($request->input('optional_lines', []))->map(fn ($i) => (int) $i)->all();
+            $finalLines = collect($order->quote_lines)
+                ->filter(fn ($line, $i) => empty($line['optional']) || in_array($i, $selected, true))
+                ->map(fn ($line) => collect($line)->except('optional')->all())
+                ->values()
+                ->all();
+            $finalAmount = round(array_sum(array_column($finalLines, 'subtotal')), 2);
+        }
 
         // Keep the linked customer record in step with what the client just confirmed.
         if ($order->customer) {
@@ -79,6 +97,8 @@ class QuoteAcceptController extends Controller
             'customer_address'     => $address,
             'customer_postcode'    => $postcode,
             'customer_city'        => $data['stad'],
+            'quote_lines'          => $finalLines,
+            'quoted_amount_excl_btw' => $finalAmount,
             'quote_accepted_at'    => now(),
             // Public quote pages are proxied in from desnipperaar.nl; the Node proxy
             // forwards the real client IP here (X-Forwarded-For is rewritten by the
