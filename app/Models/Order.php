@@ -149,7 +149,7 @@ class Order extends Model
 
     public function messages()
     {
-        return $this->hasMany(OrderMessage::class)->orderBy('occurred_at');
+        return $this->hasMany(OrderMessage::class)->orderByRaw('occurred_at DESC NULLS LAST')->orderByDesc('id');
     }
 
     public function invoices()
