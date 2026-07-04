@@ -14,6 +14,8 @@
 <p>Tenemos un mensaje para usted sobre la solicitud <strong style="font-family:monospace;">{{ $ref }}</strong>. Puede leerlo a continuación.</p>
 @endif
 
+@include('emails._quote_lines_table', ['labels' => ['desc' => 'Descripción', 'qty' => 'Cant.', 'price' => 'Precio', 'subtotal' => 'Subtotal']])
+
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Importe sin IVA</td>

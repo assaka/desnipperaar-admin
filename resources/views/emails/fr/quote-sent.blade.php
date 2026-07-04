@@ -14,6 +14,8 @@
 <p>Nous avons un message pour vous concernant la demande <strong style="font-family:monospace;">{{ $ref }}</strong>. Vous le trouverez ci-dessous.</p>
 @endif
 
+@include('emails._quote_lines_table', ['labels' => ['desc' => 'Description', 'qty' => 'Qté', 'price' => 'Prix', 'subtotal' => 'Sous-total']])
+
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Montant hors TVA</td>

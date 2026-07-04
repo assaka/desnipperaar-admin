@@ -47,6 +47,7 @@ class Order extends Model
         'first_box_free',
         'quoted_amount_excl_btw',
         'quote_body',
+        'quote_lines',
         'quote_sent_at',
         'quote_valid_until',
         'quote_accepted_at',
@@ -65,6 +66,7 @@ class Order extends Model
 
     protected $casts = [
         'media_items' => 'array',
+        'quote_lines' => 'array',
         'pilot' => 'boolean',
         'first_box_free' => 'boolean',
         'pickup_date' => 'date',

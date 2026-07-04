@@ -31,6 +31,11 @@
     .field input:focus { outline:0; border-color:var(--geel); }
     .field-row { display:flex; gap:12px; }
     @media (max-width:520px) { .field-row { flex-direction:column; gap:0; } }
+    table.lines { width:100%; border-collapse:collapse; font-size:14px; margin:14px 0; }
+    table.lines th { text-align:left; border-bottom:2px solid var(--ink); padding:6px 8px 6px 0; font-size:12px; text-transform:uppercase; letter-spacing:0.03em; }
+    table.lines td { border-bottom:1px solid var(--rule); padding:8px 8px 8px 0; }
+    table.lines .r { text-align:right; font-family:monospace; white-space:nowrap; }
+    table.lines th.r { text-align:right; }
     .small { font-size: 12px; color: #555; }
     .trust { text-align: center; padding: 16px; font-family: 'Courier New', monospace; font-size: 9pt; letter-spacing: 0.1em; color: #888; }
     .banner { padding: 12px 14px; margin-bottom: 16px; font-size: 14px; }

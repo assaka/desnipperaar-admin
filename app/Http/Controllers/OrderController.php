@@ -271,16 +271,45 @@ class OrderController extends Controller
         // silently downgrade a real offer to a message.
         $data = $request->validate([
             'intent'                 => 'required|in:offer,message',
-            'quoted_amount_excl_btw' => 'required_if:intent,offer|nullable|numeric|min:0|max:999999.99',
+            'quoted_amount_excl_btw' => 'nullable|numeric|min:0|max:999999.99',
             'quote_body'             => 'required|string|max:10000',
             'quote_valid_until'      => 'nullable|date|after:today',
+            'lines'                  => 'nullable|array',
+            'lines.*.label'          => 'nullable|string|max:255',
+            'lines.*.qty'            => 'nullable|numeric|min:0|max:99999',
+            'lines.*.unit'           => 'nullable|numeric|min:0|max:999999.99',
         ]);
 
         $isOffer = $data['intent'] === 'offer';
 
+        // Build itemised rows: keep only rows that carry a label. subtotal = qty * unit.
+        // Same shape as invoices.lines so the PDF/email helpers stay interchangeable.
+        $lines = collect($data['lines'] ?? [])
+            ->map(fn ($r) => [
+                'label'    => trim($r['label'] ?? ''),
+                'qty'      => (float) ($r['qty'] ?? 0),
+                'unit'     => (float) ($r['unit'] ?? 0),
+                'subtotal' => round((float) ($r['qty'] ?? 0) * (float) ($r['unit'] ?? 0), 2),
+            ])
+            ->filter(fn ($r) => $r['label'] !== '')
+            ->values()
+            ->all();
+
+        // Amount priority: itemised total wins; fall back to the manual amount field.
+        $amount = ! empty($lines)
+            ? round(array_sum(array_column($lines, 'subtotal')), 2)
+            : ($data['quoted_amount_excl_btw'] ?? null);
+
+        if ($isOffer && ($amount === null || $amount <= 0)) {
+            return back()->withInput()->withErrors([
+                'quoted_amount_excl_btw' => 'Een offerte heeft een bedrag nodig. Vul offerteregels in of een bedrag excl. btw.',
+            ]);
+        }
+
         $order->update([
-            'quoted_amount_excl_btw' => $isOffer ? $data['quoted_amount_excl_btw'] : null,
+            'quoted_amount_excl_btw' => $isOffer ? $amount : null,
             'quote_body'             => $data['quote_body'],
+            'quote_lines'            => $isOffer && ! empty($lines) ? $lines : null,
             'quote_valid_until'      => $isOffer
                 ? ($data['quote_valid_until'] ?? now()->addDays(30)->toDateString())
                 : null,

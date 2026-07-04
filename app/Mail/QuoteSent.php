@@ -67,7 +67,8 @@ class QuoteSent extends Mailable
                 'order'      => $this->order,
                 'sender'     => $this->sender,
                 'isOffer'    => ! is_null($this->order->quoted_amount_excl_btw),
-                'acceptUrl'  => route('quote.show', $this->order->quote_token),
+                // Customer-facing quote lives on the public domain, not admin.*
+                'acceptUrl'  => rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$this->order->quote_token,
             ],
         );
     }

@@ -18,12 +18,29 @@
     <h1>Uw offerte op maat</h1>
     <div class="num">{{ $order->order_number }}</div>
 
-    <h2>Voor</h2>
-    <div class="row"><span class="k">Naam</span><span class="v" style="font-family:inherit;">{{ $order->customer_name }}</span></div>
-    <div class="row"><span class="k">E-mail</span><span class="v" style="font-family:inherit;">{{ $order->customer_email }}</span></div>
-
     <h2>Scope en prijs</h2>
+
+    @if (!empty($order->quote_lines))
+    <table class="lines">
+        <thead>
+            <tr><th>Omschrijving</th><th class="r">Aantal</th><th class="r">Prijs</th><th class="r">Subtotaal</th></tr>
+        </thead>
+        <tbody>
+            @foreach ($order->quote_lines as $line)
+            <tr>
+                <td>{{ $line['label'] }}</td>
+                <td class="r">{{ 0.0 == fmod((float) $line['qty'], 1) ? number_format($line['qty'], 0, ',', '.') : number_format($line['qty'], 2, ',', '.') }}</td>
+                <td class="r">€ {{ number_format($line['unit'], 2, ',', '.') }}</td>
+                <td class="r">€ {{ number_format($line['subtotal'], 2, ',', '.') }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    @if ($order->quote_body)
     <div class="quote-body">{{ $order->quote_body }}</div>
+    @endif
 
     @if ($order->quoted_amount_excl_btw)
     <div class="meta">
@@ -51,8 +68,25 @@
             </div>
         @endif
 
-        <form id="accept-form" method="POST" action="{{ route('quote.accept', $order->quote_token) }}" style="margin-top:16px;">
+        <form id="accept-form" method="POST" action="{{ rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$order->quote_token.'/accept' }}" style="margin-top:16px;">
             @csrf
+            <div class="field">
+                <label for="naam">Naam</label>
+                <input type="text" id="naam" name="naam" required
+                       value="{{ old('naam', $order->customer_name) }}" autocomplete="name">
+            </div>
+            <div class="field-row">
+                <div class="field" style="flex:1;">
+                    <label for="email">E-mailadres</label>
+                    <input type="email" id="email" name="email" required
+                           value="{{ old('email', $order->customer_email) }}" autocomplete="email">
+                </div>
+                <div class="field" style="flex:1;">
+                    <label for="bedrijf">Bedrijf <span style="font-weight:400;color:#999;">(optioneel)</span></label>
+                    <input type="text" id="bedrijf" name="bedrijf"
+                           value="{{ old('bedrijf', optional($order->customer)->company) }}" autocomplete="organization">
+                </div>
+            </div>
             <div class="field">
                 <label for="telefoon">Telefoon</label>
                 <input type="tel" id="telefoon" name="telefoon" required

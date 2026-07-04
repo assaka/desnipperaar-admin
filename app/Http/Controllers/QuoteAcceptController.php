@@ -33,12 +33,18 @@ class QuoteAcceptController extends Controller
         // quote becomes an order. Validation failure bounces back to the quote page
         // (public.quote renders $errors + repopulates via old()).
         $data = $request->validate([
+            'naam'       => 'required|string|max:255',
+            'email'      => 'required|email|max:255',
+            'bedrijf'    => 'nullable|string|max:255',
             'telefoon'   => 'required|string|max:50',
             'straat'     => 'required|string|max:255',
             'huisnummer' => 'required|string|max:20',
             'postcode'   => ['required', 'string', 'max:10', 'regex:/^\d{4}\s?[A-Za-z]{2}$/'],
             'stad'       => 'required|string|max:100',
         ], [
+            'naam.required'       => 'Vul uw naam in.',
+            'email.required'      => 'Vul uw e-mailadres in.',
+            'email.email'         => 'Vul een geldig e-mailadres in.',
             'telefoon.required'   => 'Vul uw telefoonnummer in.',
             'straat.required'     => 'Vul de straatnaam in.',
             'huisnummer.required' => 'Vul het huisnummer in.',
@@ -48,13 +54,29 @@ class QuoteAcceptController extends Controller
         ]);
 
         $postcode = strtoupper(preg_replace('/\s+/', '', $data['postcode']));
+        $address  = trim($data['straat'] . ' ' . $data['huisnummer']);
+
+        // Keep the linked customer record in step with what the client just confirmed.
+        if ($order->customer) {
+            $order->customer->fill([
+                'name'     => $data['naam'],
+                'email'    => $data['email'],
+                'company'  => $data['bedrijf'] ?: $order->customer->company,
+                'phone'    => $data['telefoon'],
+                'address'  => $address,
+                'postcode' => $postcode,
+                'city'     => $data['stad'],
+            ])->save();
+        }
 
         // On acceptance: mint a new B- order number, keep the O- reference as audit
-        // trail, and persist the delivery address the customer just confirmed.
+        // trail, and persist the contact + delivery details the customer confirmed.
         $order->update([
             'order_number'         => Order::generateOrderNumber(),
+            'customer_name'        => $data['naam'],
+            'customer_email'       => $data['email'],
             'customer_phone'       => $data['telefoon'],
-            'customer_address'     => trim($data['straat'] . ' ' . $data['huisnummer']),
+            'customer_address'     => $address,
             'customer_postcode'    => $postcode,
             'customer_city'        => $data['stad'],
             'quote_accepted_at'    => now(),
