@@ -35,7 +35,7 @@
 </table>
 @endif
 
-<div style="white-space:pre-line;font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{{ $order->quote_body }}</div>
+<div style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{!! nl2br(e($order->quote_body)) !!}</div>
 
 @if ($order->quoted_amount_excl_btw)
 <p style="margin:24px 0;text-align:center;">
