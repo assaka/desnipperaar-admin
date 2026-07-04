@@ -51,7 +51,7 @@
     <div>
         <label class="block text-sm font-bold">Geldig t/m <span class="font-normal text-gray-500">(alleen offerte)</span></label>
         <input type="date" name="quote_valid_until"
-               value="{{ old('quote_valid_until', $order->quote_valid_until?->format('Y-m-d') ?? now()->addDays(30)->format('Y-m-d')) }}"
+               value="{{ old('quote_valid_until', $order->quote_valid_until?->format('Y-m-d') ?? now()->addDays(14)->format('Y-m-d')) }}"
                class="w-full border p-2 max-w-xs">
     </div>
     <div>

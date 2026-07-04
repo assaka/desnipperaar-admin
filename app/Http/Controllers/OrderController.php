@@ -333,7 +333,7 @@ class OrderController extends Controller
             'quote_body'             => $data['quote_body'],
             'quote_lines'            => $isOffer && ! empty($lines) ? $lines : null,
             'quote_valid_until'      => $isOffer
-                ? ($data['quote_valid_until'] ?? now()->addDays(30)->toDateString())
+                ? ($data['quote_valid_until'] ?? now()->addDays(14)->toDateString())
                 : null,
             'quote_token'            => $order->quote_token ?? Str::random(64),
             'quote_sent_at'          => now(),
