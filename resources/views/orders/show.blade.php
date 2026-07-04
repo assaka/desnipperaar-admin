@@ -89,7 +89,8 @@
                     @if ($order->quoted_amount_excl_btw !== null)
                         <div class="text-sm mb-3">
                             Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw.
-                            <br>Publieke offertelink: <a href="{{ route('quote.show', $order->quote_token) }}" target="_blank" class="underline font-mono text-xs">{{ route('quote.show', $order->quote_token) }}</a>
+                            @php $publicQuoteUrl = rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$order->quote_token; @endphp
+                            <br>Publieke offertelink: <a href="{{ $publicQuoteUrl }}" target="_blank" class="underline font-mono text-xs">{{ $publicQuoteUrl }}</a>
                         </div>
                     @endif
                 @endif
