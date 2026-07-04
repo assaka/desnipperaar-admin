@@ -11,7 +11,7 @@
 @if ($isOffer)
 <p>Here is our quote for request <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @else
-<p>We have a message for you about request <strong style="font-family:monospace;">{{ $ref }}</strong>. You can read it below.</p>
+<p>We have a message for you about request <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @endif
 
 @include('emails._quote_lines_table', ['labels' => ['desc' => 'Description', 'qty' => 'Qty', 'price' => 'Price', 'subtotal' => 'Subtotal', 'optional' => 'optional', 'optional_note' => 'Lines marked optional can be toggled on the quote page; the total updates accordingly.']])

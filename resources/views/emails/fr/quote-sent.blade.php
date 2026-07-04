@@ -11,7 +11,7 @@
 @if ($isOffer)
 <p>Voici notre devis pour la demande <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @else
-<p>Nous avons un message pour vous concernant la demande <strong style="font-family:monospace;">{{ $ref }}</strong>. Vous le trouverez ci-dessous.</p>
+<p>Nous avons un message pour vous concernant la demande <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @endif
 
 @include('emails._quote_lines_table', ['labels' => ['desc' => 'Description', 'qty' => 'Qté', 'price' => 'Prix', 'subtotal' => 'Sous-total', 'optional' => 'optionnel', 'optional_note' => 'Les lignes optionnelles se cochent sur la page du devis. Le total s\'ajuste alors.']])

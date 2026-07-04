@@ -11,7 +11,7 @@
 @if ($isOffer)
 <p>Hierbij onze offerte voor aanvraag <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @else
-<p>Wij hebben een bericht voor u over aanvraag <strong style="font-family:monospace;">{{ $ref }}</strong>. U leest het hieronder.</p>
+<p>Wij hebben een bericht voor u over aanvraag <strong style="font-family:monospace;">{{ $ref }}</strong>.</p>
 @endif
 
 @include('emails._quote_lines_table', ['labels' => ['desc' => 'Omschrijving', 'qty' => 'Aantal', 'price' => 'Prijs', 'subtotal' => 'Subtotaal']])
