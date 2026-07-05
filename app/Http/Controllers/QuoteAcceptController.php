@@ -43,6 +43,8 @@ class QuoteAcceptController extends Controller
             'stad'       => 'required|string|max:100',
             'optional_lines'   => 'nullable|array',
             'optional_lines.*' => 'integer',
+            'qty'              => 'nullable|array',
+            'qty.*'            => 'nullable|numeric|min:0|max:99999',
         ], [
             'naam.required'       => 'Vul uw naam in.',
             'email.required'      => 'Vul uw e-mailadres in.',
@@ -66,9 +68,23 @@ class QuoteAcceptController extends Controller
         $finalAmount = $order->quoted_amount_excl_btw;
         if (! empty($order->quote_lines)) {
             $selected = collect($request->input('optional_lines', []))->map(fn ($i) => (int) $i)->all();
+            $qtyInput = (array) $request->input('qty', []);
             $finalLines = collect($order->quote_lines)
                 ->filter(fn ($line, $i) => empty($line['optional']) || in_array($i, $selected, true))
-                ->map(fn ($line) => collect($line)->except('optional')->all())
+                ->map(function ($line, $i) use ($qtyInput) {
+                    // Editable lines: take the customer-chosen quantity, but recompute the
+                    // subtotal from the STORED unit price so the client can never change it.
+                    $qty = (float) ($line['qty'] ?? 0);
+                    if (! empty($line['editable']) && isset($qtyInput[$i]) && $qtyInput[$i] !== '') {
+                        $qty = max(0, min(99999, (float) $qtyInput[$i]));
+                    }
+                    return [
+                        'label'    => $line['label'] ?? '',
+                        'qty'      => $qty,
+                        'unit'     => (float) ($line['unit'] ?? 0),
+                        'subtotal' => round($qty * (float) ($line['unit'] ?? 0), 2),
+                    ];
+                })
                 ->values()
                 ->all();
             $finalAmount = round(array_sum(array_column($finalLines, 'subtotal')), 2);

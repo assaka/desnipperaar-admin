@@ -14,6 +14,7 @@
                     <th class="pb-1 w-20 text-right">Aantal</th>
                     <th class="pb-1 w-28 text-right">Prijs €</th>
                     <th class="pb-1 w-16 text-center">Optie</th>
+                    <th class="pb-1 w-16 text-center">Bewerk</th>
                     <th class="pb-1 w-28 text-right">Subtotaal</th>
                     <th class="pb-1 w-8"></th>
                 </tr>
@@ -26,6 +27,7 @@
                         <td class="pr-2 py-1"><input type="number" step="0.01" min="0" name="lines[{{ $i }}][qty]" value="{{ $r['qty'] ?? '' }}" class="w-full border p-1 text-right qty"></td>
                         <td class="pr-2 py-1"><input type="number" step="0.01" min="0" name="lines[{{ $i }}][unit]" value="{{ $r['unit'] ?? '' }}" class="w-full border p-1 text-right unit"></td>
                         <td class="pr-2 py-1 text-center"><input type="checkbox" name="lines[{{ $i }}][optional]" value="1" class="opt" @checked(!empty($r['optional'])) title="Klant kan deze regel zelf kiezen"></td>
+                        <td class="pr-2 py-1 text-center"><input type="checkbox" name="lines[{{ $i }}][editable]" value="1" class="edit" @checked(!empty($r['editable'])) title="Klant kan het aantal zelf aanpassen"></td>
                         <td class="pr-2 py-1 text-right font-mono line-sub">€ 0,00</td>
                         <td class="py-1 text-center"><button type="button" class="text-red-600 font-bold remove-line" title="Regel verwijderen">×</button></td>
                     </tr>
@@ -33,19 +35,19 @@
             </tbody>
             <tfoot>
                 <tr class="border-t font-bold">
-                    <td colspan="4" class="pt-1 text-right">Basisbedrag excl. btw</td>
+                    <td colspan="5" class="pt-1 text-right">Basisbedrag excl. btw</td>
                     <td class="pt-1 text-right font-mono" id="quote-lines-total">€ 0,00</td>
                     <td></td>
                 </tr>
                 <tr class="text-gray-500">
-                    <td colspan="4" class="text-right">Optionele regels (klant kiest)</td>
+                    <td colspan="5" class="text-right">Optionele regels (klant kiest)</td>
                     <td class="text-right font-mono" id="quote-lines-optional">€ 0,00</td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
         <button type="button" id="add-line" class="mt-1 text-sm border px-2 py-1 font-bold">+ regel</button>
-        <p class="text-xs text-gray-500 mt-1">Vink <strong>Optie</strong> aan voor een regel die de klant zelf kan aan- of uitzetten op de offertepagina. Het basisbedrag telt alleen de niet-optionele regels.</p>
+        <p class="text-xs text-gray-500 mt-1">Vink <strong>Optie</strong> aan voor een regel die de klant zelf kan aan- of uitzetten op de offertepagina. Het basisbedrag telt alleen de niet-optionele regels. Vink <strong>Bewerk</strong> aan als de klant het aantal zelf mag aanpassen.</p>
     </div>
 
     <div>

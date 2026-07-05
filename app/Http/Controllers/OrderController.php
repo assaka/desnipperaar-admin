@@ -295,6 +295,7 @@ class OrderController extends Controller
             'lines.*.qty'            => 'nullable|numeric|min:0|max:99999',
             'lines.*.unit'           => 'nullable|numeric|min:0|max:999999.99',
             'lines.*.optional'       => 'nullable|boolean',
+            'lines.*.editable'       => 'nullable|boolean',
         ]);
 
         $isOffer = $data['intent'] === 'offer';
@@ -309,6 +310,7 @@ class OrderController extends Controller
                 'unit'     => (float) ($r['unit'] ?? 0),
                 'subtotal' => round((float) ($r['qty'] ?? 0) * (float) ($r['unit'] ?? 0), 2),
                 'optional' => ! empty($r['optional']),
+                'editable' => ! empty($r['editable']),
             ])
             ->filter(fn ($r) => $r['label'] !== '')
             ->values()

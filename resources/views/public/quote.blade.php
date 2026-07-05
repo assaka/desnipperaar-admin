@@ -7,6 +7,7 @@
     $allLines = $order->quote_lines ?? [];
     $hasOptional = collect($allLines)->contains(fn ($l) => !empty($l['optional']));
     $baseExcl = (float) ($order->quoted_amount_excl_btw ?? 0);
+    $fixedBase = collect($allLines)->filter(fn ($l) => empty($l['optional']) && empty($l['editable']))->sum(fn ($l) => (float) $l['subtotal']);
     $eur  = fn ($n) => '€ '.number_format((float) $n, 2, ',', '.');
     $qtyf = fn ($q) => 0.0 == fmod((float) $q, 1) ? number_format($q, 0, ',', '.') : number_format($q, 2, ',', '.');
 @endphp
@@ -36,13 +37,22 @@
             <tr><th>Omschrijving</th><th class="r">Aantal</th><th class="r">Prijs</th><th class="r">Subtotaal</th></tr>
         </thead>
         <tbody>
-            @foreach ($allLines as $line)
+            @foreach ($allLines as $i => $line)
                 @if (empty($line['optional']))
                 <tr>
                     <td>{{ $line['label'] }}</td>
-                    <td class="r">{{ $qtyf($line['qty']) }}</td>
+                    <td class="r">
+                        @if ($active && !empty($line['editable']))
+                            <input type="number" step="1" min="0" max="99999" name="qty[{{ $i }}]" form="accept-form"
+                                   value="{{ (float) $line['qty'] }}" class="qty-edit" data-line="{{ $i }}"
+                                   data-unit="{{ number_format($line['unit'], 2, '.', '') }}" data-scope="base"
+                                   style="width:64px;text-align:right;">
+                        @else
+                            {{ $qtyf($line['qty']) }}
+                        @endif
+                    </td>
                     <td class="r">{{ $eur($line['unit']) }}</td>
-                    <td class="r">{{ $eur($line['subtotal']) }}</td>
+                    <td class="r" id="lsub-{{ $i }}">{{ $eur($line['subtotal']) }}</td>
                 </tr>
                 @endif
             @endforeach
@@ -86,9 +96,18 @@
                         <tr>
                             <td style="width:26px;"><input type="checkbox" class="opt-line" id="opt-{{ $i }}" name="optional_lines[]" value="{{ $i }}" data-subtotal="{{ number_format($line['subtotal'], 2, '.', '') }}"></td>
                             <td><label for="opt-{{ $i }}">{{ $line['label'] }}</label></td>
-                            <td class="r">{{ $qtyf($line['qty']) }}</td>
+                            <td class="r">
+                                @if (!empty($line['editable']))
+                                    <input type="number" step="1" min="0" max="99999" name="qty[{{ $i }}]" form="accept-form"
+                                           value="{{ (float) $line['qty'] }}" class="qty-edit" data-line="{{ $i }}"
+                                           data-unit="{{ number_format($line['unit'], 2, '.', '') }}" data-scope="opt"
+                                           style="width:64px;text-align:right;">
+                                @else
+                                    {{ $qtyf($line['qty']) }}
+                                @endif
+                            </td>
                             <td class="r">{{ $eur($line['unit']) }}</td>
-                            <td class="r">+ {{ $eur($line['subtotal']) }}</td>
+                            <td class="r" id="osub-{{ $i }}">+ {{ $eur($line['subtotal']) }}</td>
                         </tr>
                         @endif
                     @endforeach
@@ -194,18 +213,32 @@
                 var form    = document.getElementById('accept-form');
                 var overlay = document.getElementById('accept-modal');
                 var confirmed = false;
-                var base = {{ number_format($baseExcl, 2, '.', '') }};
+                var fixedBase = {{ number_format($fixedBase, 2, '.', '') }};
 
                 function euro(n) {
                     return '€ ' + n.toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
                 function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+                function lineSub(inp) { return (parseFloat(inp.value) || 0) * (parseFloat(inp.dataset.unit) || 0); }
 
                 function recalc() {
-                    var total = base;
-                    document.querySelectorAll('.opt-line:checked').forEach(function (cb) {
-                        total += parseFloat(cb.dataset.subtotal) || 0;
+                    var base = fixedBase;
+                    // Editable mandatory lines contribute their live qty * unit.
+                    document.querySelectorAll('.qty-edit[data-scope="base"]').forEach(function (inp) {
+                        var s = lineSub(inp);
+                        base += s;
+                        setText('lsub-' + inp.dataset.line, euro(s));
                     });
+                    // Keep editable optional line subtotals in sync.
+                    document.querySelectorAll('.qty-edit[data-scope="opt"]').forEach(function (inp) {
+                        setText('osub-' + inp.dataset.line, '+ ' + euro(lineSub(inp)));
+                    });
+                    var optional = 0;
+                    document.querySelectorAll('.opt-line:checked').forEach(function (cb) {
+                        var inp = document.querySelector('.qty-edit[data-scope="opt"][data-line="' + cb.value + '"]');
+                        optional += inp ? lineSub(inp) : (parseFloat(cb.dataset.subtotal) || 0);
+                    });
+                    var total = base + optional;
                     var incl = total * 1.21;
                     setText('amt-excl', euro(total));
                     setText('amt-btw',  euro(total * 0.21));
@@ -216,6 +249,9 @@
 
                 document.querySelectorAll('.opt-line').forEach(function (cb) {
                     cb.addEventListener('change', recalc);
+                });
+                document.querySelectorAll('.qty-edit').forEach(function (inp) {
+                    inp.addEventListener('input', recalc);
                 });
                 recalc();
 
