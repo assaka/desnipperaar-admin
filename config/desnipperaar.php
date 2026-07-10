@@ -20,6 +20,12 @@ return [
     ],
 
     'pilot' => [
+        // Master switch for the Amsterdam pilot. When false, no new order,
+        // group-deal participant, or customer is ever flagged as pilot, so the
+        // 20% pilot discount and its badges/labels disappear from order intake,
+        // planning, quotes and emails. Historical orders keep their stored
+        // pilot flag, so past bons/invoices still render their pilot line.
+        'enabled'        => env('PILOT_ENABLED', false),
         'postcode_start' => 1011,
         'postcode_end'   => 1109,
         'discount_pct'   => 20,

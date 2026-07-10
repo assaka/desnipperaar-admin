@@ -107,7 +107,8 @@ class OrderController extends Controller
 
         $postcode = $customer->postcode;
         $numeric  = (int) substr($postcode ?? '', 0, 4);
-        $pilot    = $numeric >= config('desnipperaar.pilot.postcode_start')
+        $pilot    = config('desnipperaar.pilot.enabled')
+                 && $numeric >= config('desnipperaar.pilot.postcode_start')
                  && $numeric <= config('desnipperaar.pilot.postcode_end');
 
         $order = Order::create([

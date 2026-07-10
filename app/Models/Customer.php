@@ -42,6 +42,9 @@ class Customer extends Model
 
     public function isInPilot(): bool
     {
+        if (!config('desnipperaar.pilot.enabled')) {
+            return false;
+        }
         $numeric = (int) substr($this->postcode ?? '', 0, 4);
         return $numeric >= config('desnipperaar.pilot.postcode_start')
             && $numeric <= config('desnipperaar.pilot.postcode_end');

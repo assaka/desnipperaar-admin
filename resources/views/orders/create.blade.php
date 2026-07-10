@@ -225,9 +225,12 @@
                 },
 
                 get pilot() {
+                    @if (! config('desnipperaar.pilot.enabled'))
+                    return false;
+                    @endif
                     const pc = (this.selected?.postcode || this.postcode || '').replace(/\s/g,'');
                     const n = parseInt(pc.substring(0,4), 10);
-                    return n >= 1020 && n <= 1039;
+                    return n >= {{ (int) config('desnipperaar.pilot.postcode_start') }} && n <= {{ (int) config('desnipperaar.pilot.postcode_end') }};
                 },
 
                 async search() {

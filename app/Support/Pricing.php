@@ -53,7 +53,7 @@ class Pricing
      */
     public static function isPilotPostcode(?string $postcode): bool
     {
-        if (!$postcode) {
+        if (!$postcode || !config('desnipperaar.pilot.enabled')) {
             return false;
         }
         $prefix = (int) substr(preg_replace('/\s+/', '', $postcode), 0, 4);
