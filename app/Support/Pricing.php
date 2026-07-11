@@ -18,6 +18,25 @@ class Pricing
 
     public const VAT_RATE              = 0.21;
 
+    // Pickup ("ophaal") surcharge for the "sooner" option outside the free zone.
+    // Regio Amsterdam (first PICKUP_FREE_KM km, one-way road distance) is free.
+    public const PICKUP_FREE_KM        = 20;
+    public const PICKUP_RATE_PER_KM    = 0.65;
+
+    /**
+     * Authoritative pickup-cost calculation. The static site sends the km and the
+     * chosen option, but the amount is always recomputed here so the client can
+     * never dictate the price. Free ("gratis vanaf 2 weken") is always 0; "sooner"
+     * costs EUR 0,65 per km beyond the first 20 km, one-way.
+     */
+    public static function pickupCost(?int $km, bool $sooner): float
+    {
+        if (!$sooner || $km === null || $km <= self::PICKUP_FREE_KM) {
+            return 0.0;
+        }
+        return round(($km - self::PICKUP_FREE_KM) * self::PICKUP_RATE_PER_KM, 2);
+    }
+
     public const MEDIA_PRICES = [
         'hdd'    => 9,
         'ssd'    => 15,
@@ -152,7 +171,8 @@ class Pricing
         int $containers,
         ?array $mediaItems,
         bool $pilot,
-        bool $firstBoxFree
+        bool $firstBoxFree,
+        float $pickupCost = 0.0
     ): array {
         if ($pilot) {
             // Pilot replaces all organizer perks per the pricing rule.
@@ -178,8 +198,11 @@ class Pricing
         }
 
         $mediaSubtotal   = array_sum(array_column($mediaLines, 'subtotal'));
-        $subtotal        = round($quote['subtotal'] + $mediaSubtotal, 2);
-        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotal, 2);
+        // Pickup cost carries no discount, so it is added to both subtotal and
+        // subtotal_regular (discount = regular - subtotal stays unchanged).
+        $pickupCost      = round(max(0, $pickupCost), 2);
+        $subtotal        = round($quote['subtotal'] + $mediaSubtotal + $pickupCost, 2);
+        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotal + $pickupCost, 2);
         $discount        = round($subtotalRegular - $subtotal, 2);
         $vat             = round($subtotal * self::VAT_RATE, 2);
         $total           = round($subtotal + $vat, 2);
@@ -187,6 +210,7 @@ class Pricing
         return [
             'lines'            => $quote['lines'],
             'media_lines'      => $mediaLines,
+            'pickup_cost'      => $pickupCost,
             'subtotal'         => $subtotal,
             'subtotal_regular' => $subtotalRegular,
             'discount'         => $discount,

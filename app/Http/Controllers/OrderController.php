@@ -162,6 +162,10 @@ class OrderController extends Controller
                     $q['lines'][] = ['label' => $mediaLabels[$k], 'qty' => $qty, 'unit' => $mediaPrices[$k], 'subtotal' => $mediaPrices[$k] * $qty];
                 }
             }
+            $pickupCost = (float) ($order->pickup_cost ?? 0);
+            if ($pickupCost > 0) {
+                $q['lines'][] = ['label' => 'Eerder ophalen (binnen 2 weken)', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
+            }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
             $q['vat']      = round($q['subtotal'] * 0.21, 2);
             $q['total']    = round($q['subtotal'] + $q['vat'], 2);

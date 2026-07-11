@@ -44,6 +44,9 @@ class OrderController extends Controller
             'first_box_free' => 'nullable|in:0,1,true,false',
             'coupon_code'    => 'nullable|string|max:50',
             'lang'           => 'nullable|in:nl,en',
+            'ophaal_keuze'   => 'nullable|string|max:60',
+            'ophaal_km'      => 'nullable|integer|min:0|max:400',
+            'ophaal_kosten'  => 'nullable|numeric|min:0|max:1000',
         ]);
 
         $locale = in_array($data['lang'] ?? null, ['nl', 'en'], true) ? $data['lang'] : 'nl';
@@ -62,6 +65,13 @@ class OrderController extends Controller
         $loc = strtolower($data['locatie'] ?? '');
         $mode = str_contains($loc, 'brengen') ? 'breng'
               : (str_contains($loc, 'mobiel')  ? 'mobiel' : 'ophaal');
+
+        // Pickup cost. The static site sends the road distance (ophaal_km) and the
+        // chosen option (ophaal_keuze = 'sooner'|'free'); we recompute the amount
+        // server-side so the client can never dictate the price.
+        $pickupKm     = isset($data['ophaal_km']) && $data['ophaal_km'] !== '' ? (int) $data['ophaal_km'] : null;
+        $pickupChoice = (($data['ophaal_keuze'] ?? '') === 'sooner') ? 'sooner' : 'free';
+        $pickupCost   = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice === 'sooner');
 
         // Volume line dropped — box_count / container_count / media_items carry the same info structurally.
         $notes = collect([
@@ -125,6 +135,9 @@ class OrderController extends Controller
             'state'              => Order::STATE_NIEUW,
             'pilot'              => $pilot,
             'first_box_free'     => $this->isKennismakingEligible($data),
+            'pickup_cost'        => $pickupCost,
+            'pickup_km'          => $pickupKm,
+            'pickup_choice'      => $pickupChoice,
         ]);
 
         // Increment coupon usage if a valid code was submitted.

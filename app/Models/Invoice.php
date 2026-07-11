@@ -91,6 +91,17 @@ class Invoice extends Model
             }
         }
 
+        // Pickup surcharge for the "sooner" option (0 for free pickup / regio Amsterdam).
+        $pickupCost = (float) ($order->pickup_cost ?? 0);
+        if ($pickupCost > 0) {
+            $lines[] = [
+                'label'    => 'Eerder ophalen (binnen 2 weken)',
+                'qty'      => 1,
+                'unit'     => $pickupCost,
+                'subtotal' => $pickupCost,
+            ];
+        }
+
         $subtotal = array_sum(array_column($lines, 'subtotal'));
         $vat      = round($subtotal * 0.21, 2);
         $total    = round($subtotal + $vat, 2);

@@ -37,6 +37,16 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
         </tr>
     @endforeach
 
+    @if (!empty($pickupCost) && $pickupCost > 0)
+        <tr>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Eerder ophalen (binnen 2 weken)</td>
+            <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
+            <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
+                € {{ number_format($pickupCost, 2, ',', '.') }}
+            </td>
+        </tr>
+    @endif
+
     <tr>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (!empty($discount) && $discount > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} (excl. btw)</td>
         <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
