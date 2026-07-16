@@ -151,15 +151,12 @@ class OrderController extends Controller
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
         $availableTransitions = $this->nextStates($order->state);
 
-        $mediaPrices = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
-        $mediaLabels = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
-
-        $buildQuote = function ($boxes, $containers, $media) use ($order, $mediaPrices, $mediaLabels) {
+        $buildQuote = function ($boxes, $containers, $media) use ($order) {
             $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
             foreach ((array) $media as $k => $qty) {
-                $qty = (int) $qty;
-                if ($qty > 0 && isset($mediaPrices[$k])) {
-                    $q['lines'][] = ['label' => $mediaLabels[$k], 'qty' => $qty, 'unit' => $mediaPrices[$k], 'subtotal' => $mediaPrices[$k] * $qty];
+                $line = \App\Support\Pricing::mediaLine($k, (int) $qty);
+                if ($line !== null) {
+                    $q['lines'][] = $line;
                 }
             }
             $pickupCost = (float) ($order->pickup_cost ?? 0);
@@ -202,7 +199,7 @@ class OrderController extends Controller
             $cntrs = $bonWithActuals->actual_containers ?? $order->container_count;
             $media = !empty($bonWithActuals->actual_media) ? $bonWithActuals->actual_media : ($order->media_items ?? []);
 
-            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop'];
+            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop', 'printer', 'tape'];
             $orderedMediaInt = array_map('intval', array_merge(array_fill_keys($mediaKeys, 0), (array) ($order->media_items ?? [])));
             $actualMediaInt  = array_map('intval', array_merge(array_fill_keys($mediaKeys, 0), (array) $media));
             ksort($orderedMediaInt); ksort($actualMediaInt);

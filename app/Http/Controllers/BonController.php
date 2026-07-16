@@ -25,15 +25,12 @@ class BonController extends Controller
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4']);
 
         $order        = $bon->order;
-        $mediaPrices  = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
-        $mediaLabels  = ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
-
-        $buildQuote = function ($boxes, $containers, $media) use ($order, $mediaPrices, $mediaLabels) {
+        $buildQuote = function ($boxes, $containers, $media) use ($order) {
             $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
             foreach ((array) $media as $k => $qty) {
-                $qty = (int) $qty;
-                if ($qty > 0 && isset($mediaPrices[$k])) {
-                    $q['lines'][] = ['label' => $mediaLabels[$k], 'qty' => $qty, 'unit' => $mediaPrices[$k], 'subtotal' => $mediaPrices[$k] * $qty];
+                $line = \App\Support\Pricing::mediaLine($k, (int) $qty);
+                if ($line !== null) {
+                    $q['lines'][] = $line;
                 }
             }
             $pickupCost = (float) ($order->pickup_cost ?? 0);
@@ -104,7 +101,7 @@ class BonController extends Controller
         if (array_key_exists('actual_media', $data) && is_array($data['actual_media'])) {
             // Store the full 5-key dict (preserving explicit zeros). Empty-array saves were indistinguishable
             // from "never saved" and caused media to appear reset to 0 on reload.
-            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop'];
+            $mediaKeys = ['hdd', 'ssd', 'usb', 'phone', 'laptop', 'printer', 'tape'];
             $patch['actual_media'] = array_combine(
                 $mediaKeys,
                 array_map(fn ($k) => (int) ($data['actual_media'][$k] ?? 0), $mediaKeys)

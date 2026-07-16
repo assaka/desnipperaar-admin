@@ -76,18 +76,15 @@ class Invoice extends Model
         $lines = $quote['lines'];
 
         // Add media lines.
-        $mediaPrices = ['hdd' => 9, 'ssd' => 15, 'usb' => 6, 'phone' => 12, 'laptop' => 19];
+        // Richer invoice labels; pricing + staffel come from the central Pricing class.
         $mediaLabels = ['hdd' => 'HDD / harde schijf', 'ssd' => 'SSD / NVMe', 'usb' => 'USB-stick / SD',
-                        'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop'];
+                        'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop', 'printer' => 'Printer / kopieerapparaat',
+                        'tape' => 'Backup-tape (LTO)'];
         foreach ($media as $k => $q) {
-            $q = (int) $q;
-            if ($q > 0 && isset($mediaPrices[$k])) {
-                $lines[] = [
-                    'label'    => $mediaLabels[$k] ?? ucfirst($k),
-                    'qty'      => $q,
-                    'unit'     => $mediaPrices[$k],
-                    'subtotal' => $mediaPrices[$k] * $q,
-                ];
+            $line = \App\Support\Pricing::mediaLine($k, (int) $q);
+            if ($line !== null) {
+                $line['label'] = $mediaLabels[$k] ?? $line['label'];
+                $lines[] = $line;
             }
         }
 
