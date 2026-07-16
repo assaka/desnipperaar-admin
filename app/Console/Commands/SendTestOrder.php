@@ -61,11 +61,11 @@ class SendTestOrder extends Command
         $sender = User::orderBy('id')->first();
         $media  = ['hdd' => 1, 'usb' => 2];
 
-        // 1034DN sits inside the Amsterdam pilot range, so the pilot discount is exercised too.
+        // 1034DN sits inside the Amsterdam pilot postcode range. Use the same helper
+        // as the real order flow so a disabled pilot (pilot.enabled=false) is honoured
+        // and the test invoice matches what a real order would be charged.
         $postcode = '1034DN';
-        $numeric  = (int) substr($postcode, 0, 4);
-        $pilot    = $numeric >= config('desnipperaar.pilot.postcode_start')
-                 && $numeric <= config('desnipperaar.pilot.postcode_end');
+        $pilot    = \App\Support\Pricing::isPilotPostcode($postcode);
 
         // Fake, clearly-marked numbers that do NOT match the real "PREFIX-YEAR-%"
         // pattern, so production order/bon/certificate/invoice sequences are never
