@@ -43,9 +43,12 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $tr($line['label']) }}</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;">
                 {{ $line['qty'] }} &times; € {{ number_format($line['unit'], 2, ',', '.') }}
+                @if (!empty($line['was_unit']))
+                    <span style="text-decoration:line-through;color:#999;margin-left:4px;">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                @endif
             </td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
-                € {{ number_format($line['subtotal'], 2, ',', '.') }}
+                € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
             </td>
         </tr>
     @endforeach
@@ -56,12 +59,19 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
     </tr>
     @php
         $discountKennismaking = collect($quote['lines'])->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
-        $discountPilot = max(0, round((float)($discount ?? 0) - $discountKennismaking, 2));
+        $discountStaffel = collect($mediaLines)->sum(fn ($l) => isset($l['was_subtotal']) ? $l['was_subtotal'] - $l['subtotal'] : 0);
+        $discountPilot = max(0, round((float)($discount ?? 0) - $discountKennismaking - $discountStaffel, 2));
     @endphp
     @if ($discountKennismaking > 0)
         <tr>
             <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Descuento de bienvenida</td>
             <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td>
+        </tr>
+    @endif
+    @if ($discountStaffel > 0)
+        <tr>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Descuento por volumen soportes de datos</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountStaffel, 2, ',', '.') }}</td>
         </tr>
     @endif
     @if ($discountPilot > 0)
