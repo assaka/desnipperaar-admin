@@ -31,6 +31,9 @@ class Subscriber extends Model
 
     public function unsubscribeUrl(): string
     {
-        return route('subscribers.unsubscribe', $this->unsubscribe_token);
+        // Emit the link under the public site (desnipperaar.nl), not the admin
+        // host. server.js reverse-proxies /afmelden/<token> back to this app's
+        // token-gated route, so the customer never sees admin.desnipperaar.nl.
+        return rtrim(config('desnipperaar.public_url'), '/') . '/afmelden/' . $this->unsubscribe_token;
     }
 }

@@ -15,6 +15,7 @@
             <th class="pr-4">Bron</th>
             <th class="pr-4">Campagne</th>
             <th class="pr-4">Aangemeld</th>
+            <th class="pr-4">Afgemeld</th>
             <th class="pr-4">Status</th>
         </tr>
     </thead>
@@ -26,6 +27,7 @@
             <td class="pr-4">{{ $s->source ?: '—' }}</td>
             <td class="pr-4">{{ $s->utm_campaign ?: ($s->gclid ? 'google ads' : '—') }}</td>
             <td class="pr-4">{{ $s->created_at?->format('d-m-Y H:i') }}</td>
+            <td class="pr-4">{{ $s->unsubscribed_at?->format('d-m-Y H:i') ?: '—' }}</td>
             <td class="pr-4">
                 <span class="inline-block px-2 py-0.5 text-xs font-bold uppercase
                     {{ $s->unsubscribed_at ? 'bg-gray-300 text-gray-600' : 'bg-black text-yellow-400' }}">
@@ -34,7 +36,7 @@
             </td>
         </tr>
         @empty
-        <tr><td colspan="6" class="py-8 text-center text-gray-400">Nog geen aanmeldingen.</td></tr>
+        <tr><td colspan="7" class="py-8 text-center text-gray-400">Nog geen aanmeldingen.</td></tr>
         @endforelse
     </tbody>
 </table>
