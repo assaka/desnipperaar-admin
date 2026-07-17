@@ -8,7 +8,7 @@
 <p>Team DeSnipperaar</p>
 
 <p style="font-size:11px;color:#999;margin-top:24px;border-top:1px solid #EEE;padding-top:12px;">
-    U ontvangt dit omdat u zich aanmeldde voor de SnipperDag.
+    U ontvangt dit omdat u zich heeft aangemeld voor de SnipperDag.
     <a href="{{ $unsubscribeUrl }}" style="color:#999;">Afmelden</a>.
 </p>
 @endcomponent
