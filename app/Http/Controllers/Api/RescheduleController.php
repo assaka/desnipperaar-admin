@@ -87,7 +87,7 @@ class RescheduleController extends Controller
     {
         return [
             'order_number'         => $order->order_number,
-            'locale'               => in_array($order->locale, ['nl', 'en'], true) ? $order->locale : 'nl',
+            'locale'               => in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl',
             'state'                => $order->state,
             'pickup_date'          => $order->pickup_date?->toDateString(),
             'pickup_window'        => $order->pickup_window,

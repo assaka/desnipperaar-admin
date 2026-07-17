@@ -43,13 +43,13 @@ class OrderController extends Controller
             'media_json'     => 'nullable|string|max:2000',
             'first_box_free' => 'nullable|in:0,1,true,false',
             'coupon_code'    => 'nullable|string|max:50',
-            'lang'           => 'nullable|in:nl,en',
+            'lang'           => 'nullable|in:nl,en,fr,es',
             'ophaal_keuze'   => 'nullable|string|max:60',
             'ophaal_km'      => 'nullable|integer|min:0|max:400',
             'ophaal_kosten'  => 'nullable|numeric|min:0|max:1000',
         ]);
 
-        $locale = in_array($data['lang'] ?? null, ['nl', 'en'], true) ? $data['lang'] : 'nl';
+        $locale = in_array($data['lang'] ?? null, ['nl', 'en', 'fr', 'es'], true) ? $data['lang'] : 'nl';
 
         // Postcode extraction — from "plaats" field which may contain city+postcode.
         // Capture digits + letters separately so we keep the full NL format (e.g. 1034AB).

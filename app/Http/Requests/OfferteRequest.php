@@ -43,7 +43,7 @@ class OfferteRequest extends FormRequest
             'akkoord'    => 'required|accepted',
 
             'website'    => 'nullable|string|max:255',
-            'lang'       => 'nullable|in:nl,en',
+            'lang'       => 'nullable|in:nl,en,fr,es',
         ];
     }
 

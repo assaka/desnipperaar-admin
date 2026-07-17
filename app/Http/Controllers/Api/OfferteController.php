@@ -20,7 +20,7 @@ class OfferteController extends Controller
 
         $data = $request->validated();
 
-        $locale = in_array($data['lang'] ?? null, ['nl', 'en'], true) ? $data['lang'] : 'nl';
+        $locale = in_array($data['lang'] ?? null, ['nl', 'en', 'fr', 'es'], true) ? $data['lang'] : 'nl';
 
         $postcode = null;
         if (preg_match('/\b(\d{4})\s?([A-Za-z]{0,2})\b/', $data['plaats'] ?? '', $m)) {

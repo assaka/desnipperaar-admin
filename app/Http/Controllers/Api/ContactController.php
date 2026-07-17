@@ -15,7 +15,7 @@ class ContactController extends Controller
             'email'   => 'required|email',
             'subject' => 'nullable|string|max:255',
             'message' => 'required|string|max:5000',
-            'lang'    => 'nullable|in:nl,en',
+            'lang'    => 'nullable|in:nl,en,fr,es',
         ]);
 
         // TODO: dispatch SendContactForm job. For now just return OK.
