@@ -40,7 +40,7 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
 
     @foreach ($mediaLines as $line)
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $tr($line['label']) }}</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">{{ $tr($line['label']) }}@if (!empty($line['was_subtotal']))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;">
                 {{ $line['qty'] }} &times; € {{ number_format($line['unit'], 2, ',', '.') }}
                 @if (!empty($line['was_unit']))
@@ -48,30 +48,24 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
                 @endif
             </td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
-                € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                € {{ number_format($line['subtotal'], 2, ',', '.') }}
             </td>
         </tr>
     @endforeach
 
-    <tr>
-        <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (!empty($discount) && $discount > 0) ? 'Sous-total avant réduction' : 'Sous-total' }} (hors TVA)</td>
-        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($subtotalRegular ?? $subtotal, 2, ',', '.') }}</td>
-    </tr>
     @php
         $discountKennismaking = collect($quote['lines'])->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
         $discountStaffel = collect($mediaLines)->sum(fn ($l) => isset($l['was_subtotal']) ? $l['was_subtotal'] - $l['subtotal'] : 0);
         $discountPilot = max(0, round((float)($discount ?? 0) - $discountKennismaking - $discountStaffel, 2));
     @endphp
+    <tr>
+        <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Sous-total avant réduction' : 'Sous-total' }} (hors TVA)</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format(($subtotalRegular ?? $subtotal) - $discountStaffel, 2, ',', '.') }}</td>
+    </tr>
     @if ($discountKennismaking > 0)
         <tr>
             <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Réduction de bienvenue</td>
             <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td>
-        </tr>
-    @endif
-    @if ($discountStaffel > 0)
-        <tr>
-            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Remise volume supports de données</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountStaffel, 2, ',', '.') }}</td>
         </tr>
     @endif
     @if ($discountPilot > 0)
@@ -89,6 +83,9 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
         <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;">€ {{ number_format($total, 2, ',', '.') }}</td>
     </tr>
 </table>
+@if ($discountStaffel > 0)
+    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* La remise volume sur les supports de données est déjà incluse dans ces prix.</p>
+@endif
 
 @if ($order->quote_body)
 <div style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{!! nl2br(e($order->quote_body)) !!}</div>
