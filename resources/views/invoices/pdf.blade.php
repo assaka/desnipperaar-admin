@@ -93,10 +93,22 @@
                 <th class="r">Subtotaal</th>
             </tr>
         </thead>
+    @php
+        // A staffel is a per-unit reduction on data carriers, so it belongs in the
+        // line price itself (flagged with an asterisk to one footnote) rather than
+        // in a discount row. Kennismaking (unit 0) and the pilot keep their rows,
+        // so both must be excluded from each other's total.
+        $isStaffel = fn ($l) => \App\Support\Pricing::isMediaLine($l) && isset($l['was_subtotal']);
+        $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
+        $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
+        $discountStaffel = round(collect($invoice->lines)->sum(fn ($l) => $isStaffel($l) ? $l['was_subtotal'] - $l['subtotal'] : 0), 2);
+        $discountKennismaking = collect($invoice->lines)->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
+        $discountPilot = max(0, round($discount - $discountKennismaking - $discountStaffel, 2));
+    @endphp
         <tbody>
             @foreach ($invoice->lines as $line)
                 <tr>
-                    <td>{{ $line['label'] }}</td>
+                    <td>{{ $line['label'] }}@if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
                     <td class="r">{{ $line['qty'] }}</td>
                     <td class="r">
                         € {{ number_format($line['unit'], 2, ',', '.') }}
@@ -105,23 +117,15 @@
                         @endif
                     </td>
                     <td class="r">
-                        € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                        € {{ number_format($isStaffel($line) ? $line['subtotal'] : ($line['was_subtotal'] ?? $line['subtotal']), 2, ',', '.') }}
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    @php
-        $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
-        $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
-    @endphp
     <table class="totals">
-        <tr><td class="k">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
-        @php
-            $discountKennismaking = collect($invoice->lines)->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
-            $discountPilot = max(0, round($discount - $discountKennismaking, 2));
-        @endphp
+        <tr><td class="k">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular - $discountStaffel, 2, ',', '.') }}</td></tr>
         @if ($discountKennismaking > 0)
             <tr><td class="k">Korting kennismaking</td><td class="v">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
         @endif
@@ -131,6 +135,9 @@
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
     </table>
+    @if ($discountStaffel > 0)
+        <p style="font-size:9px;color:#777;margin:4px 0 0;">* De staffelkorting op datadragers is al in deze prijzen verwerkt.</p>
+    @endif
 
     <div class="pay">
         <h3>Betaling</h3>

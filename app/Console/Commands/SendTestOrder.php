@@ -38,7 +38,8 @@ class SendTestOrder extends Command
         {--full : Run the whole lifecycle: order, signed bon, certificate and invoice}
         {--reschedule : Run the reschedule-delivery-day flow: confirm, request new day, confirm new day}
         {--boxes=4 : Number of boxes}
-        {--containers=1 : Number of 240 L roll containers}';
+        {--containers=1 : Number of 240 L roll containers}
+        {--media= : Data carriers as key:qty pairs, e.g. hdd:120,usb:600,phone:30 (default hdd:1,usb:2). Use high quantities to exercise the volume staffel.}';
 
     protected $description = 'Create a test order (optionally the full pipeline) and send the customer e-mails to a chosen address.';
 
@@ -59,7 +60,22 @@ class SendTestOrder extends Command
         $this->info("Creating test order for {$email} (locale={$locale}, full=" . ($full ? 'yes' : 'no') . ')');
 
         $sender = User::orderBy('id')->first();
-        $media  = ['hdd' => 1, 'usb' => 2];
+
+        // --media=hdd:120,usb:600 lets a test exercise the volume staffel, which the
+        // default single-unit quantities never reach.
+        $media = ['hdd' => 1, 'usb' => 2];
+        if ($raw = trim((string) $this->option('media'))) {
+            $media = [];
+            foreach (explode(',', $raw) as $pair) {
+                [$k, $q] = array_pad(explode(':', trim($pair), 2), 2, null);
+                $k = strtolower(trim((string) $k));
+                if (! isset(\App\Support\Pricing::MEDIA_TIERS[$k]) || (int) $q <= 0) {
+                    $this->error("Invalid --media entry '{$pair}'. Use key:qty with a known carrier, e.g. hdd:120.");
+                    return self::FAILURE;
+                }
+                $media[$k] = (int) $q;
+            }
+        }
 
         // 1034DN sits inside the Amsterdam pilot postcode range. Use the same helper
         // as the real order flow so a disabled pilot (pilot.enabled=false) is honoured

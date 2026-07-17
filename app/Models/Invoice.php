@@ -77,9 +77,7 @@ class Invoice extends Model
 
         // Add media lines.
         // Richer invoice labels; pricing + staffel come from the central Pricing class.
-        $mediaLabels = ['hdd' => 'HDD / harde schijf', 'ssd' => 'SSD / NVMe', 'usb' => 'USB-stick / SD',
-                        'phone' => 'Telefoon / tablet', 'laptop' => 'Laptop', 'printer' => 'Printer / kopieerapparaat',
-                        'tape' => 'Backup-tape (LTO)'];
+        $mediaLabels = \App\Support\Pricing::MEDIA_LABELS_INVOICE;
         foreach ($media as $k => $q) {
             $line = \App\Support\Pricing::mediaLine($k, (int) $q);
             if ($line !== null) {

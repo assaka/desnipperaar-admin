@@ -89,6 +89,36 @@ class Pricing
         return (float) self::MEDIA_TIERS[$key][self::mediaTierIndex($qty)];
     }
 
+    // Richer labels used on the invoice, which relabels the lines it copies from
+    // mediaLine(). Kept here so line-type detection has a single home.
+    public const MEDIA_LABELS_INVOICE = [
+        'hdd'     => 'HDD / harde schijf',
+        'ssd'     => 'SSD / NVMe',
+        'usb'     => 'USB-stick / SD',
+        'phone'   => 'Telefoon / tablet',
+        'laptop'  => 'Laptop',
+        'printer' => 'Printer / kopieerapparaat',
+        'tape'    => 'Backup-tape (LTO)',
+    ];
+
+    /**
+     * True when a priced line is a data-carrier line, i.e. its only possible
+     * discount is the volume staffel. Kennismaking and the Amsterdam pilot both
+     * discount box/container lines instead, so they must not be confused with it.
+     * Lines built from now on carry `kind`; invoice snapshots stored before that
+     * are matched on their label, in either the plain or the invoice spelling.
+     */
+    public static function isMediaLine(array $line): bool
+    {
+        if (($line['kind'] ?? null) === 'media') {
+            return true;
+        }
+        $label = $line['label'] ?? '';
+
+        return in_array($label, self::MEDIA_LABELS, true)
+            || in_array($label, self::MEDIA_LABELS_INVOICE, true);
+    }
+
     /**
      * One priced media line with the volume staffel applied. Sets
      * was_unit/was_subtotal when the tiered unit is below the base (tier-0) price,
@@ -105,6 +135,7 @@ class Pricing
         $unit = self::mediaUnit($key, $qty);
         $row = [
             'label'    => self::MEDIA_LABELS[$key] ?? ucfirst($key),
+            'kind'     => 'media',
             'qty'      => $qty,
             'unit'     => $unit,
             'subtotal' => round($unit * $qty, 2),
