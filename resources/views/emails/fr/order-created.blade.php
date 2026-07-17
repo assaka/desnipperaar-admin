@@ -84,7 +84,7 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
     </tr>
 </table>
 @if ($discountStaffel > 0)
-    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* La remise volume sur les supports de données est déjà incluse dans ces prix.</p>
+    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Remise volume appliquée et déjà incluse dans ces prix.</p>
 @endif
 
 @if ($order->quote_body)

@@ -148,7 +148,7 @@
         <tr class="grand"><td>Total TTC</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
     </table>
     @if ($discountStaffel > 0)
-        <p style="font-size:9px;color:#777;margin:4px 0 0;">* La remise volume sur les supports de données est déjà incluse dans ces prix.</p>
+        <p style="font-size:9px;color:#777;margin:4px 0 0;">* Remise volume appliquée et déjà incluse dans ces prix.</p>
     @endif
 
     <div class="pay">

@@ -84,7 +84,7 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
     </tr>
 </table>
 @if ($discountStaffel > 0)
-    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* El descuento por volumen en soportes de datos ya está incluido en estos precios.</p>
+    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Descuento por volumen aplicado y ya incluido en estos precios.</p>
 @endif
 
 @if ($order->quote_body)

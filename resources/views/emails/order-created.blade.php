@@ -81,7 +81,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
     </tr>
 </table>
 @if ($discountStaffel > 0)
-    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* De staffelkorting op datadragers is al in deze prijzen verwerkt.</p>
+    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
 @endif
 
 @if ($order->quote_body)

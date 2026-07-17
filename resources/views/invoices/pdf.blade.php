@@ -136,7 +136,7 @@
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
     </table>
     @if ($discountStaffel > 0)
-        <p style="font-size:9px;color:#777;margin:4px 0 0;">* De staffelkorting op datadragers is al in deze prijzen verwerkt.</p>
+        <p style="font-size:9px;color:#777;margin:4px 0 0;">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
     @endif
 
     <div class="pay">

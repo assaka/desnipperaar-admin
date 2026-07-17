@@ -84,7 +84,7 @@ We will contact you within one business day to confirm the pickup.</p>
     </tr>
 </table>
 @if ($discountStaffel > 0)
-    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* The volume discount on data carriers is already included in these prices.</p>
+    <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Volume discount applied and already included in these prices.</p>
 @endif
 
 @if ($order->quote_body)
