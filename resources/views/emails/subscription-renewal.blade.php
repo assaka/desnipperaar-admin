@@ -9,7 +9,7 @@ en wij blijven ophalen. U kiest zelf hoe het verdergaat.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Doet u niets?</strong> Dan gaat uw abonnement vanaf {{ $renewalDate->copy()->addDay()->format('d-m-Y') }}
-    over naar <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} per 4 weken excl. btw@endif.
+    over naar <strong>Flex</strong>@if ($flexPrice) (€ {{ number_format($flexPrice, 2, ',', '.') }} per 4 weken excl. btw)@endif.
     Flex is altijd opzegbaar, u zit nergens meer aan vast. Verlengt u wel, dan houdt u het voordeeltarief.
 </p>
 

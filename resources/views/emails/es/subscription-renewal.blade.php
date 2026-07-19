@@ -12,7 +12,7 @@ está y seguimos recogiendo. Usted elige cómo continúa.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>¿No hace nada?</strong> Desde el {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} su suscripción
-    pasa a <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} cada 4 semanas sin IVA@endif.
+    pasa a <strong>Flex</strong>@if ($flexPrice) (€ {{ number_format($flexPrice, 2, ',', '.') }} cada 4 semanas sin IVA)@endif.
     Flex es cancelable en cualquier momento, sin compromiso. Si renueva, mantiene la tarifa reducida.
 </p>
 

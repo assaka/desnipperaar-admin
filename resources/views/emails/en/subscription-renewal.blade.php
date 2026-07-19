@@ -12,7 +12,7 @@ keep collecting. You choose how it continues.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Do nothing?</strong> From {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} your subscription
-    moves to <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} every 4 weeks excl. VAT@endif.
+    moves to <strong>Flex</strong>@if ($flexPrice) (€ {{ number_format($flexPrice, 2, ',', '.') }} every 4 weeks excl. VAT)@endif.
     Flex is cancellable at any time, no further commitment. Renew and you keep the discounted rate.
 </p>
 

@@ -12,7 +12,7 @@ nous continuons les enlèvements. C'est vous qui choisissez la suite.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Vous ne faites rien ?</strong> À partir du {{ $renewalDate->copy()->addDay()->format('d-m-Y') }},
-    votre abonnement passe en <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA@endif.
+    votre abonnement passe en <strong>Flex</strong>@if ($flexPrice) (€ {{ number_format($flexPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA)@endif.
     Flex est résiliable à tout moment, sans engagement. Si vous renouvelez, vous conservez le tarif avantageux.
 </p>
 
