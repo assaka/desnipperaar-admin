@@ -1,18 +1,18 @@
-@component('emails.en._layout', ['title' => 'We deliver your container '.$order->order_number])
+@component('emails.en._layout', ['title' => 'We deliver your container '.$visit->bon_number])
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">We deliver your container tomorrow.</h1>
 
 <p>Dear {{ explode(' ', $order->customer_name)[0] }},</p>
 
-<p>A short reminder. Tomorrow, {{ $order->pickup_date->format('d-m-Y') }}, we deliver your sealed
+<p>A short reminder. Tomorrow, {{ $visit->planned_for->format('d-m-Y') }}, we deliver your sealed
 240 litre roll container.</p>
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
-    <tr><td style="background:#F5F5F5;font-weight:700;">Delivery day</td><td><strong>{{ $order->pickup_date->format('d-m-Y') }}</strong></td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Delivery day</td><td><strong>{{ $visit->planned_for->format('d-m-Y') }}</strong></td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Address</td><td>{{ $order->customer_address }}, {{ $order->customer_postcode }} {{ $order->customer_city }}</td></tr>
     @if ($firstPickup)
         <tr><td style="background:#F5F5F5;font-weight:700;">First pickup</td><td><strong>{{ $firstPickup->format('d-m-Y') }}</strong></td></tr>
     @endif
-    <tr><td style="background:#F5F5F5;font-weight:700;">Reference</td><td style="font-family:monospace;">{{ $order->order_number }}</td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Reference</td><td style="font-family:monospace;">{{ $visit->bon_number }}</td></tr>
 </table>
 
 <p>Please make sure someone is present or that the spot is accessible, so we can put the container
