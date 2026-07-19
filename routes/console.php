@@ -40,6 +40,14 @@ Schedule::command('subscriptions:plan')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
 
+// Dagelijks 16:00 Europe/Amsterdam: herinnering voor de ophalingen van morgen.
+// Aan het eind van de middag, zodat de klant de container nog dezelfde avond
+// buiten kan zetten.
+Schedule::command('subscriptions:remind')
+    ->dailyAt('16:00')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
+
 // Dagelijks 09:00 Europe/Amsterdam: klanten met een Vast- of Jaartermijn die
 // over ongeveer een maand afloopt krijgen de verlengmail. Draait vóór de
 // omzetting naar maandelijks (die zit in subscriptions:invoice), zodat niemand

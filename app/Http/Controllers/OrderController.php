@@ -6,6 +6,7 @@ use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
 use App\Mail\QuoteSent;
 use App\Mail\SubscriptionActivated;
+use App\Mail\SubscriptionTerminated;
 use App\Models\Bon;
 use App\Models\Customer;
 use App\Models\Driver;
@@ -208,10 +209,20 @@ class OrderController extends Controller
             'sub_ends_on'       => $endsOn->toDateString(),
         ]);
 
+        $order->refresh();
+
         $message = 'Abonnement opgezegd per '.$endsOn->format('d-m-Y').'.';
-        if ($order->fresh()->owesReturnCost()) {
+        if ($order->owesReturnCost()) {
             $message .= ' € '.number_format((float) config('desnipperaar.subscription.return_cost'), 2, ',', '.')
                 .' retourkosten komen op de slotfactuur.';
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new SubscriptionTerminated($order));
+            $message .= ' Bevestiging verstuurd naar '.$order->customer_email.'.';
+        } catch (\Throwable $e) {
+            report($e);
+            $message .= ' LET OP: de bevestigingsmail is NIET verstuurd, zie de logs.';
         }
 
         return back()->with('status', $message);
