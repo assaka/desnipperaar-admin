@@ -68,8 +68,12 @@
                     <td class="text-sm">{{ $abo->sub_active_from?->format('Y-m-d') ?? '—' }}</td>
                     <td class="text-right">
                         @unless ($abo->sub_active_from)
-                            <a href="{{ route('orders.show', $abo) }}"
-                               class="inline-block px-3 py-1 text-xs font-bold bg-green-700 text-white hover:bg-green-800">Goedkeuren</a>
+                            {{-- Label bewust "openen" en niet "goedkeuren": deze link doet niets
+                                 anders dan navigeren. Goedkeuren gebeurt op de orderpagina, met
+                                 een ingangsdatum erbij. Een groene knop die belooft te keuren en
+                                 alleen doorlinkt laat je denken dat het al gebeurd is. --}}
+                            <a href="{{ route('orders.show', $abo) }}#goedkeuren"
+                               class="inline-block px-3 py-1 text-xs font-bold bg-green-700 text-white hover:bg-green-800">Openen om goed te keuren ›</a>
                         @endunless
                     </td>
                 </tr>

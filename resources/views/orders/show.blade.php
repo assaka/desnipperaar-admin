@@ -145,8 +145,8 @@
             @if (! $order->sub_active_from)
                 {{-- Aanvraag wacht op goedkeuring. De prijs staat al vast, dus er
                      valt niets te offreren: alleen een ingangsdatum kiezen. --}}
-                <div class="mt-3 bg-white border-2 border-blue-600 p-3">
-                    <p class="font-bold mb-1">Aanvraag goedkeuren</p>
+                <div id="goedkeuren" class="mt-3 bg-white border-2 border-green-700 p-4">
+                    <p class="font-black text-lg mb-1">Aanvraag goedkeuren</p>
                     <p class="text-xs text-gray-600 mb-3">
                         De klant krijgt direct een bevestiging met looptijd, frequentie, prijs en ingangsdatum.
                         Vanaf die datum loopt de termijn en start de facturatie, met de eerste maand naar rato.
