@@ -128,18 +128,50 @@ class PlanningController extends Controller
             }
         }
 
+        // Abonnementsritten zijn bons, geen orders, en stonden daarom niet op het
+        // bord. Ze horen er wel: het bord is waar je over chauffeurs verdeelt.
+        if ($start && $end) {
+            $bons = \App\Models\Bon::whereNotNull('planned_for')
+                ->whereBetween('planned_for', [$start, $end])
+                ->whereHas('order', fn ($q) => $q->where('type', Order::TYPE_ABONNEMENT))
+                ->with('order')
+                ->get();
+            foreach ($bons as $bon) {
+                $events[] = $this->buildBonEvent($bon);
+            }
+        }
+
         return response()->json($events);
     }
 
     public function move(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'order_id'    => 'required|integer|exists:orders,id',
+            'kind'        => 'required|in:order,bon',
+            'id'          => 'required|integer',
             'pickup_date' => 'required|date|after_or_equal:today',
             'window'      => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
         ]);
 
-        $order = Order::findOrFail($data['order_id']);
+        // Een abonnementsrit is een bon: verslepen werkt de bon bij, niet een
+        // order. De klant krijgt geen bevestigingsmail (die belooft "ophaal"),
+        // wel de dag ervoor een herinnering die de nieuwe datum meeneemt.
+        if ($data['kind'] === 'bon') {
+            $bon = \App\Models\Bon::findOrFail($data['id']);
+            abort_if($bon->picked_up_at !== null, 422, 'Deze rit is al gereden en kan niet meer verplaatst worden.');
+
+            // Een verplaatste rit is niet meer de ritmedatum, dus reset de
+            // herinnering zodat hij opnieuw uitgaat voor de nieuwe dag.
+            $bon->update([
+                'planned_for'      => $data['pickup_date'],
+                'planned_window'   => $data['window'],
+                'reminder_sent_at' => null,
+            ]);
+
+            return response()->json(['ok' => true, 'mailed' => false]);
+        }
+
+        $order = Order::findOrFail($data['id']);
         abort_unless($order->state === Order::STATE_BEVESTIGD, 422, 'Alleen bevestigde orders kunnen verplaatst worden.');
 
         $changed = $order->pickup_date?->toDateString() !== $data['pickup_date']
@@ -154,13 +186,8 @@ class PlanningController extends Controller
             'reschedule_notes'            => null,
         ]);
 
-        // Ritten onder een abonnement krijgen geen PickupConfirmed. Die mail heet
-        // "Ophaalmoment bevestigd", wat bij een bezorging het omgekeerde zegt van
-        // wat er gebeurt, en de klant krijgt sowieso de dag ervoor een
-        // herinnering die wel weet of wij komen brengen of halen. Zie ook de
-        // gelijke guard in OrderController::confirmPickup().
         $mailed = false;
-        if ($changed && ! $order->isAbonnement()) {
+        if ($changed) {
             try {
                 Mail::to($order->customer_email)
                     ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));

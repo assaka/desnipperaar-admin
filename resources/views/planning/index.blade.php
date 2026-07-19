@@ -112,7 +112,12 @@ try {
 
                 if (newDate === oldDate && newWindow === oldWindow) return;
 
-                if (!confirm(`Verplaatsen naar ${newDate} (${newWindow})?\nKlant krijgt een nieuwe bevestigingsmail.`)) {
+                // Een abonnementsrit (bon) krijgt geen bevestigingsmail maar een
+                // herinnering de dag ervoor; een losse order wel een bevestiging.
+                const note = ev._kind === 'bon'
+                    ? 'Klant krijgt de dag ervoor een herinnering met de nieuwe datum.'
+                    : 'Klant krijgt een nieuwe bevestigingsmail.';
+                if (!confirm(`Verplaatsen naar ${newDate} (${newWindow})?\n${note}`)) {
                     eventsService.update(original);
                     return;
                 }
@@ -125,7 +130,7 @@ try {
                             'X-CSRF-TOKEN': csrf,
                             'Accept': 'application/json',
                         },
-                        body: JSON.stringify({ order_id: ev._orderId, pickup_date: newDate, window: newWindow }),
+                        body: JSON.stringify({ kind: ev._kind, id: ev._moveId, pickup_date: newDate, window: newWindow }),
                     });
                     if (!r.ok) throw new Error(await r.text());
                     const data = await r.json();
