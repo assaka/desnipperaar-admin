@@ -45,7 +45,7 @@
                 @endphp
                 <tr class="border-b hover:bg-yellow-50 {{ $status === 'beeindigd' ? 'opacity-60' : '' }}">
                     <td class="py-2 font-mono">
-                        <a href="{{ route('orders.show', $abo) }}" class="underline">{{ $abo->order_number }}</a>
+                        <a href="{{ route('abonnementen.show', $abo) }}" class="underline">{{ $abo->order_number }}</a>
                     </td>
                     <td>
                         {{ $abo->customer_name }}
@@ -72,7 +72,7 @@
                                  anders dan navigeren. Goedkeuren gebeurt op de orderpagina, met
                                  een ingangsdatum erbij. Een groene knop die belooft te keuren en
                                  alleen doorlinkt laat je denken dat het al gebeurd is. --}}
-                            <a href="{{ route('orders.show', $abo) }}#goedkeuren"
+                            <a href="{{ route('abonnementen.show', $abo) }}#goedkeuren"
                                class="inline-block px-3 py-1 text-xs font-bold bg-green-700 text-white hover:bg-green-800">Openen om goed te keuren ›</a>
                         @endunless
                     </td>

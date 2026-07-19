@@ -2,6 +2,11 @@
     $freqLabels = ['4w' => '1x toutes les 4 semaines', '2w' => '1x toutes les 2 semaines', '1w' => '1x par semaine', '2pw' => '2x par semaine'];
     $termLabels = ['flex' => 'Flex (min. 3 mois, puis mensuel)', 'vast' => 'Fixe (12 mois)', 'jaar' => 'Paiement annuel (12 mois d\'avance)'];
     $per = $order->sub_term === 'jaar' ? 'par an' : 'par mois';
+    $days = [1 => 'lundi', 2 => 'mardi', 3 => 'mercredi', 4 => 'jeudi', 5 => 'vendredi'];
+    $pickupDay = $order->sub_freq === '2pw'
+        ? 'lundi et jeudi'
+        : ($days[$order->subPickupWeekday()] ?? null);
+    $next = $order->nextPickupDate();
 @endphp
 @component('emails.fr._layout', ['title' => 'Abonnement '.$order->order_number.' actif'])
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Votre abonnement est actif.</h1>
@@ -14,6 +19,12 @@
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Conteneur</td><td>Conteneur roulant scellé 240 L</td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Fréquence</td><td>{{ $freqLabels[$order->sub_freq] ?? $order->sub_freq }}</td></tr>
+    @if ($pickupDay)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Jour d'enlèvement fixe</td><td>{{ ucfirst($pickupDay) }}</td></tr>
+    @endif
+    @if ($next)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Premier enlèvement</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
+    @endif
     <tr><td style="background:#F5F5F5;font-weight:700;">Durée</td><td>{{ $termLabels[$order->sub_term] ?? $order->sub_term }}</td></tr>
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Prix</td><td>
@@ -26,8 +37,9 @@
     @endif
 </table>
 
-<p>Nous vous contactons sous un jour ouvré pour installer le conteneur et convenir du premier
-enlèvement. Ensuite, nous collectons selon ce calendrier, sans autre démarche de votre part.</p>
+<p>Nous vous contactons sous un jour ouvré pour installer le conteneur. Ensuite, nous collectons
+selon ce calendrier, sans autre démarche de votre part. Si un jour d'enlèvement tombe un jour
+férié, nous venons le jour ouvré suivant et le reste du calendrier reste inchangé.</p>
 
 <p>Vous recevez un certificat de destruction selon DIN 66399 à chaque enlèvement.</p>
 

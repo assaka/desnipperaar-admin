@@ -2,6 +2,11 @@
     $freqLabels = ['4w' => '1x cada 4 semanas', '2w' => '1x cada 2 semanas', '1w' => '1x por semana', '2pw' => '2x por semana'];
     $termLabels = ['flex' => 'Flex (mín. 3 meses, luego mensual)', 'vast' => 'Fijo (12 meses)', 'jaar' => 'Pago anual (12 meses por adelantado)'];
     $per = $order->sub_term === 'jaar' ? 'al año' : 'al mes';
+    $days = [1 => 'lunes', 2 => 'martes', 3 => 'miércoles', 4 => 'jueves', 5 => 'viernes'];
+    $pickupDay = $order->sub_freq === '2pw'
+        ? 'lunes y jueves'
+        : ($days[$order->subPickupWeekday()] ?? null);
+    $next = $order->nextPickupDate();
 @endphp
 @component('emails.es._layout', ['title' => 'Suscripción '.$order->order_number.' activa'])
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Su suscripción está activa.</h1>
@@ -14,6 +19,12 @@
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Contenedor</td><td>Contenedor con ruedas precintado de 240 L</td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Frecuencia</td><td>{{ $freqLabels[$order->sub_freq] ?? $order->sub_freq }}</td></tr>
+    @if ($pickupDay)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Día de recogida fijo</td><td>{{ ucfirst($pickupDay) }}</td></tr>
+    @endif
+    @if ($next)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Primera recogida</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
+    @endif
     <tr><td style="background:#F5F5F5;font-weight:700;">Duración</td><td>{{ $termLabels[$order->sub_term] ?? $order->sub_term }}</td></tr>
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Precio</td><td>
@@ -26,8 +37,9 @@
     @endif
 </table>
 
-<p>Nos pondremos en contacto con usted en un día laborable para colocar el contenedor y acordar
-la primera recogida. Después recogemos según este calendario, sin que tenga que hacer nada más.</p>
+<p>Nos pondremos en contacto con usted en un día laborable para colocar el contenedor. Después
+recogemos según este calendario, sin que tenga que hacer nada más. Si un día de recogida cae en
+festivo, vamos el siguiente día laborable y el resto del calendario no cambia.</p>
 
 <p>Recibirá un certificado de destrucción según DIN 66399 en cada recogida.</p>
 

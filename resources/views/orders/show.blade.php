@@ -71,7 +71,7 @@
             <h2 class="font-black mb-2">Ophaling onder abonnement</h2>
             <p class="text-sm">
                 Hoort bij
-                <a href="{{ route('orders.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
+                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
                 @if ($order->subscription) · {{ $order->subscription->subFreqLabel() }} @endif
                 @if ($order->subscription_scheduled_for && $order->pickup_date && ! $order->subscription_scheduled_for->equalTo($order->pickup_date))
                     <br><span class="text-xs text-gray-600">Ritme gaf {{ $order->subscription_scheduled_for->format('d-m-Y') }}, verschoven wegens weekend of feestdag. De reeks loopt gewoon door op het oude ritme.</span>
@@ -83,179 +83,6 @@
         </section>
     @endif
 
-    @if ($order->isAbonnement())
-        <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
-            <div class="flex justify-between items-baseline mb-3">
-                <h2 class="font-black">Abonnement</h2>
-                @php $subStatus = $order->subStatus(); @endphp
-                <span class="text-xs font-bold uppercase px-2 py-1 {{ match ($subStatus) {
-                    'actief' => 'bg-green-700 text-white',
-                    'opgezegd' => 'bg-yellow-400 text-black',
-                    'beeindigd' => 'bg-gray-500 text-white',
-                    default => 'bg-orange-500 text-white',
-                } }}">
-                    {{ $subStatus === 'beeindigd' ? 'beëindigd' : $subStatus }}
-                </span>
-            </div>
-            <table class="text-sm">
-                <tr><td class="pr-4 text-gray-600">Container</td><td>240 L verzegelde rolcontainer</td></tr>
-                <tr><td class="pr-4 text-gray-600">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>
-                @if ($order->sub_active_from)
-                    <tr><td class="pr-4 text-gray-600">Ophaaldag</td><td>
-                        <strong>{{ $order->subPickupWeekdayLabel() }}</strong>
-                        @if ($order->sub_freq !== '2pw' && $order->isRunning())
-                            <form method="POST" action="{{ route('orders.pickup-day', $order) }}" class="inline-flex items-center gap-1 ml-2">
-                                @csrf
-                                <select name="pickup_weekday" class="border px-1 py-0.5 text-xs">
-                                    @foreach (\App\Models\Order::PICKUP_WEEKDAYS as $iso => $label)
-                                        <option value="{{ $iso }}" @selected($order->subPickupWeekday() == $iso)>{{ ucfirst($label) }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" class="px-2 py-0.5 text-xs border border-gray-600 hover:bg-gray-200">Wijzig</button>
-                            </form>
-                        @endif
-                    </td></tr>
-                @endif
-                <tr><td class="pr-4 text-gray-600">Looptijd</td><td>{{ $order->subTermLabel() }}</td></tr>
-                <tr>
-                    <td class="pr-4 text-gray-600">{{ $order->sub_active_from ? 'Afgesproken prijs' : 'Richtprijs' }}</td>
-                    <td>
-                        @if ($order->sub_price_excl_btw)
-                            <strong>€ {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}</strong>
-                            {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw
-                        @else
-                            <span class="text-gray-400">—</span>
-                        @endif
-                    </td>
-                </tr>
-                @if ($order->sub_active_from)
-                    <tr><td class="pr-4 text-gray-600">Loopt sinds</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
-                    <tr><td class="pr-4 text-gray-600">Minimumtermijn</td><td>
-                        {{ $order->subMinimumMonths() }} maanden, t/m {{ $order->minimumTermEnd()->format('d-m-Y') }}
-                    </td></tr>
-                @endif
-                @if ($order->subRenewalDate())
-                    <tr><td class="pr-4 text-gray-600">Termijn loopt af</td><td>
-                        {{ $order->subRenewalDate()->format('d-m-Y') }}
-                        @if ($order->sub_renewal_notified_at)
-                            <span class="text-xs text-gray-500">· verlengmail verstuurd {{ $order->sub_renewal_notified_at->format('d-m-Y') }}</span>
-                        @else
-                            <span class="text-xs text-gray-500">· verlengmail gaat automatisch een maand vooraf</span>
-                        @endif
-                        <br><span class="text-xs text-gray-600">Daarna maandelijks tegen het Vast-tarief, tenzij de klant verlengt.</span>
-                    </td></tr>
-                @endif
-                @if ($order->sub_terminated_at)
-                    <tr><td class="pr-4 text-gray-600">Opgezegd op</td><td>{{ $order->sub_terminated_at->format('d-m-Y H:i') }}</td></tr>
-                    <tr><td class="pr-4 text-gray-600">Loopt tot en met</td><td><strong>{{ $order->sub_ends_on->format('d-m-Y') }}</strong></td></tr>
-                @endif
-                <tr><td class="pr-4 text-gray-600">Laatst gefactureerd</td><td>
-                    @if ($order->sub_last_invoiced_period)
-                        periode vanaf {{ $order->sub_last_invoiced_period->format('d-m-Y') }}
-                    @else
-                        <span class="text-gray-400">nog niet</span>
-                    @endif
-                </td></tr>
-            </table>
-
-            @if (! $order->sub_active_from)
-                {{-- Aanvraag wacht op goedkeuring. De prijs staat al vast, dus er
-                     valt niets te offreren: alleen een ingangsdatum kiezen. --}}
-                <div id="goedkeuren" class="mt-3 bg-white border-2 border-green-700 p-4">
-                    <p class="font-black text-lg mb-1">Aanvraag goedkeuren</p>
-                    <p class="text-xs text-gray-600 mb-3">
-                        De klant krijgt direct een bevestiging met looptijd, frequentie, prijs en ingangsdatum.
-                        Vanaf die datum loopt de termijn en start de facturatie, met de eerste maand naar rato.
-                    </p>
-                    <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
-                        @csrf
-                        <label class="text-sm">
-                            <span class="block text-gray-600 text-xs mb-1">Ingangsdatum</span>
-                            <input type="date" name="starts_on" required
-                                   value="{{ old('starts_on', now()->toDateString()) }}"
-                                   class="border px-2 py-1 text-sm">
-                        </label>
-                        @if ($order->sub_freq === '2pw')
-                            <span class="text-sm text-gray-700">Ophaaldagen: <strong>maandag en donderdag</strong></span>
-                        @else
-                            <label class="text-sm">
-                                <span class="block text-gray-600 text-xs mb-1">Vaste ophaaldag</span>
-                                <select name="pickup_weekday" class="border px-2 py-1 text-sm">
-                                    @foreach (\App\Models\Order::PICKUP_WEEKDAYS as $iso => $label)
-                                        <option value="{{ $iso }}" @selected(old('pickup_weekday', min(now()->dayOfWeekIso, 5)) == $iso)>{{ ucfirst($label) }}</option>
-                                    @endforeach
-                                </select>
-                            </label>
-                        @endif
-                        <button type="submit" class="px-4 py-1.5 text-sm font-bold bg-green-700 text-white hover:bg-green-800">
-                            Activeer abonnement
-                        </button>
-                    </form>
-                    @error('starts_on')
-                        <p class="text-sm text-red-700 mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
-            @endif
-
-            @if ($order->isRunning() && ! $order->sub_terminated_at)
-                @php $earliest = $order->earliestTerminationDate(); @endphp
-                <p class="text-xs text-gray-600 mt-3">
-                    Losse ophalingen onder dit abonnement maak je aan als aparte orders.
-                    Facturen worden elke nacht als concept aangemaakt, vooruit per maand.
-                </p>
-                <form method="POST" action="{{ route('orders.renew-subscription', $order) }}" class="mt-3 flex items-center gap-2">
-                    @csrf
-                    <span class="text-sm text-gray-700">Klant reageerde op de verlengmail:</span>
-                    <select name="term" class="border px-2 py-1 text-sm">
-                        <option value="jaar">nog een jaar vooruit</option>
-                        <option value="vast">nog een vaste termijn van 12 maanden</option>
-                    </select>
-                    <button type="submit" class="px-3 py-1 text-sm border border-gray-600 hover:bg-gray-200">Termijn vastleggen</button>
-                </form>
-
-                <form method="POST" action="{{ route('orders.terminate-subscription', $order) }}" class="mt-3"
-                      onsubmit="return confirm('Abonnement {{ $order->order_number }} opzeggen per {{ $earliest->format('d-m-Y') }}?');">
-                    @csrf
-                    <button type="submit" class="px-3 py-1 text-sm border border-gray-600 hover:bg-gray-200">
-                        Zeg op per {{ $earliest->format('d-m-Y') }}
-                    </button>
-                    <span class="text-xs text-gray-600 ml-2">
-                        Eerste toegestane einddatum, minimumtermijn meegerekend.
-                        @if ($order->sub_term === 'flex' && $earliest->lessThan($order->sub_active_from->copy()->addMonthsNoOverflow(12)))
-                            Hierbij komt € {{ number_format((float) config('desnipperaar.subscription.return_cost'), 2, ',', '.') }} retourkosten op de slotfactuur.
-                        @endif
-                    </span>
-                </form>
-                @php $upcoming = $order->pickups()->whereDate('pickup_date', '>=', now()->toDateString())->limit(8)->get(); @endphp
-                <div class="mt-4">
-                    <p class="font-bold text-sm mb-1">Ingeplande ophalingen</p>
-                    @if ($upcoming->isEmpty())
-                        <p class="text-xs text-gray-600">Nog niets ingepland. De planner draait elke nacht om 02:30 en zet 90 dagen vooruit klaar.</p>
-                    @else
-                        <ul class="text-sm">
-                            @foreach ($upcoming as $p)
-                                <li>
-                                    {{ $p->pickup_date->format('d-m-Y') }} ·
-                                    <a href="{{ route('orders.show', $p) }}" class="underline font-mono text-xs">{{ $p->order_number }}</a>
-                                    @if ($p->subscription_scheduled_for && ! $p->subscription_scheduled_for->equalTo($p->pickup_date))
-                                        <span class="text-xs text-gray-500">verschoven van {{ $p->subscription_scheduled_for->format('d-m-Y') }}</span>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
-            @elseif ($order->sub_terminated_at && ! $order->hasEnded())
-                <p class="text-sm mt-3 bg-yellow-100 border border-yellow-500 px-3 py-2">
-                    Opgezegd. Loopt door tot en met {{ $order->sub_ends_on->format('d-m-Y') }} en wordt tot dan gefactureerd.
-                    Plan het ophalen van de container op of na die datum.
-                </p>
-            @endif
-        </section>
-    @endif
-
-    {{-- Alleen voor maatwerkoffertes. Een abonnement heeft een vaste prijs uit de
-         gepubliceerde tabel en wordt hierboven goedgekeurd, niet geoffreerd. --}}
     @if ($order->type === 'quote')
         <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
             <h2 class="font-black mb-3">Offerte op maat</h2>
@@ -296,11 +123,7 @@
         </section>
     @endif
 
-    {{-- Niet bij een abonnement. Dit blok rekent de losse doos- en containerprijzen
-         via Pricing::quote(), dus het toonde € 120 voor de rolcontainer op een
-         abonnement van € 29,95 per maand. De echte prijs staat in het blauwe
-         abonnementsblok, en de facturen lopen via Invoice::fromSubscription(). --}}
-    @if (! $order->isAbonnement() && count($quote['lines']))
+    @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht
                 @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
@@ -409,10 +232,6 @@
         </section>
     @endif
 
-    {{-- Ook niet bij een abonnement. Een abonnement is een contract, geen bezoek:
-         het heeft geen chauffeur, geen ophaaldatum en geen dagdeel. De losse
-         ophalingen eronder zijn eigen orders en worden daar gepland. --}}
-    @unless ($order->isAbonnement())
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
@@ -493,10 +312,8 @@
             <p class="text-xs text-gray-600 mt-2">Maakt (of werkt bij) de bon met de chauffeur + ophaalmoment, en stuurt een bevestigingsmail naar de klant.</p>
         </form>
     </section>
-    @endunless
 
-    {{-- Een abonnement krijgt zelf nooit een bon; die horen bij de losse ophalingen. --}}
-    @if ($order->state !== 'nieuw' && ! $order->isAbonnement())
+    @if ($order->state !== 'nieuw')
     <section class="mb-6">
         <h2 class="font-black mb-2">Bons</h2>
         @forelse ($order->bons as $bon)

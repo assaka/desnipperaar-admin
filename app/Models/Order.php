@@ -100,6 +100,8 @@ class Order extends Model
         'sub_terminated_at',
         'sub_ends_on',
         'sub_last_invoiced_period',
+        'sub_billing_provider',
+        'sub_billing_ref',
         'public_token',
         'reschedule_requested_at',
         'reschedule_requested_date',
@@ -306,6 +308,60 @@ class Order extends Model
         $d = $this->subPickupWeekday();
 
         return self::PICKUP_WEEKDAYS[$d] ?? '—';
+    }
+
+    /** 2x per week ligt vast op maandag en donderdag. */
+    const TWICE_WEEKLY_ISO = [1, 4];
+
+    /**
+     * De eerste ophaaldatum volgens het ritme, vóór verschuiven voor weekend of
+     * feestdag. Staat hier en niet in de planner, omdat de activatiemail dezelfde
+     * datum moet noemen als de planner aanmaakt. Twee keer uitrekenen betekent
+     * vroeg of laat twee verschillende antwoorden.
+     */
+    public function subFirstScheduledDate(): ?\Carbon\Carbon
+    {
+        if (! $this->sub_active_from) {
+            return null;
+        }
+
+        $cursor = $this->sub_active_from->copy()->startOfDay();
+
+        if ($this->sub_freq === '2pw') {
+            while (! in_array($cursor->dayOfWeekIso, self::TWICE_WEEKLY_ISO, true)) {
+                $cursor->addDay();
+            }
+
+            return $cursor;
+        }
+
+        $weekday = $this->subPickupWeekday() ?? $cursor->dayOfWeekIso;
+        while ($cursor->dayOfWeekIso !== $weekday) {
+            $cursor->addDay();
+        }
+
+        return $cursor;
+    }
+
+    /**
+     * De eerstvolgende ophaaldatum. Is er al een ophaling ingepland, dan die,
+     * want dat is wat de klant en de chauffeur zien staan. Anders de berekende
+     * eerste datum, verschoven als hij op een weekend of feestdag valt.
+     */
+    public function nextPickupDate(): ?\Carbon\Carbon
+    {
+        $planned = $this->pickups()
+            ->whereDate('pickup_date', '>=', now()->toDateString())
+            ->orderBy('pickup_date')
+            ->first();
+
+        if ($planned) {
+            return $planned->pickup_date;
+        }
+
+        $slot = $this->subFirstScheduledDate();
+
+        return $slot ? \App\Support\WorkingDays::next($slot) : null;
     }
 
     public function subIntervalDays(): ?int

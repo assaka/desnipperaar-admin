@@ -30,9 +30,6 @@ class GenerateSubscriptionPickups extends Command
 
     protected $description = 'Plan de komende ophalingen van lopende abonnementen in';
 
-    /** 2x per week is vast maandag en donderdag. */
-    private const TWICE_WEEKLY_DAYS = [\Carbon\CarbonInterface::MONDAY, \Carbon\CarbonInterface::THURSDAY];
-
     public function handle(): int
     {
         $today   = $this->option('date') ? \Carbon\Carbon::parse($this->option('date')) : now();
@@ -129,14 +126,16 @@ class GenerateSubscriptionPickups extends Command
      */
     private function slots(Order $sub, \Carbon\Carbon $until): \Generator
     {
-        $start = $sub->sub_active_from->copy()->startOfDay();
+        // Het ankerpunt komt uit het model, zodat de activatiemail exact dezelfde
+        // eerste datum noemt als hier wordt aangemaakt.
+        $cursor = $sub->subFirstScheduledDate();
+        if (! $cursor) {
+            return;
+        }
 
         if ($sub->sub_freq === '2pw') {
-            // Vaste weekdagen. De ingangsdatum zelf telt mee als hij op een van
-            // die dagen valt, anders begint het op de eerstvolgende.
-            $cursor = $start->copy();
             while ($cursor->lessThanOrEqualTo($until)) {
-                if (in_array($cursor->dayOfWeek, self::TWICE_WEEKLY_DAYS, true)) {
+                if (in_array($cursor->dayOfWeekIso, Order::TWICE_WEEKLY_ISO, true)) {
                     yield $cursor->copy();
                 }
                 $cursor->addDay();
@@ -148,16 +147,6 @@ class GenerateSubscriptionPickups extends Command
         $interval = $sub->subIntervalDays();
         if (! $interval) {
             return;
-        }
-
-        // Verankeren op de afgesproken ophaaldag, niet op de ingangsdatum. De
-        // eerste ophaling is de eerstvolgende keer dat die dag zich voordoet op
-        // of na de ingangsdatum. Alle intervallen zijn een veelvoud van zeven
-        // dagen, dus daarna blijft de reeks vanzelf op die weekdag staan.
-        $weekday = $sub->subPickupWeekday() ?? $start->dayOfWeekIso;
-        $cursor = $start->copy();
-        while ($cursor->dayOfWeekIso !== $weekday) {
-            $cursor->addDay();
         }
 
         while ($cursor->lessThanOrEqualTo($until)) {

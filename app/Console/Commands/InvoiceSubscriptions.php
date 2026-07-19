@@ -94,6 +94,17 @@ class InvoiceSubscriptions extends Command
                 continue;
             }
 
+            // Zodra online incasso live staat is dit de plek waar het uiteenloopt:
+            // een abonnement met een sub_billing_ref wordt door de aggregator
+            // geïncasseerd en hoort hier geen tweede rekening te krijgen. De
+            // periode- en bedragberekening in Invoice::fromSubscription blijft
+            // dan gewoon staan, alleen het innen verhuist.
+            if ($order->sub_billing_ref) {
+                $this->line(sprintf('%s loopt via %s, overgeslagen', $order->order_number, $order->sub_billing_provider ?: 'externe incasso'));
+                $skipped++;
+                continue;
+            }
+
             try {
                 $invoice = Invoice::fromSubscription($order, $periodStart);
             } catch (QueryException $e) {

@@ -50,6 +50,21 @@ class OrderController extends Controller
     }
 
     /**
+     * Detailpagina van een abonnement. Bewust een eigen view en niet orders.show:
+     * die pagina gaat uit van één klus met een prijs per doos, een ophaaldatum en
+     * een bon, en stond vol met uitzonderingen om te verbergen wat voor een
+     * contract niet klopt.
+     */
+    public function showAbonnement(Order $order)
+    {
+        abort_unless($order->isAbonnement(), 404);
+
+        $order->load('customer', 'invoices');
+
+        return view('abonnementen.show', compact('order'));
+    }
+
+    /**
      * Keur een abonnementsaanvraag goed en zet hem live.
      *
      * Bewust geen offerte-met-acceptatie zoals bij maatwerk. De prijs staat al
@@ -315,6 +330,13 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        // Abonnementen hebben hun eigen pagina. Oude links (mails, bookmarks,
+        // de SalesAlert) blijven zo werken zonder dat deze pagina weer moet weten
+        // wat een abonnement is.
+        if ($order->isAbonnement()) {
+            return redirect()->route('abonnementen.show', $order);
+        }
+
         $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate', 'invoices']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
         $availableTransitions = $this->nextStates($order->state);

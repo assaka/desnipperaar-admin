@@ -1,5 +1,10 @@
 @php
     $per = $order->sub_term === 'jaar' ? 'per jaar' : 'per maand';
+    $days = [1 => 'maandag', 2 => 'dinsdag', 3 => 'woensdag', 4 => 'donderdag', 5 => 'vrijdag'];
+    $pickupDay = $order->sub_freq === '2pw'
+        ? 'maandag en donderdag'
+        : ($days[$order->subPickupWeekday()] ?? null);
+    $next = $order->nextPickupDate();
 @endphp
 @component('emails._layout', ['title' => 'Abonnement '.$order->order_number.' actief'])
 <h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Uw abonnement is actief.</h1>
@@ -12,6 +17,12 @@
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Container</td><td>240 L verzegelde rolcontainer</td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>
+    @if ($pickupDay)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Vaste ophaaldag</td><td>{{ ucfirst($pickupDay) }}</td></tr>
+    @endif
+    @if ($next)
+        <tr><td style="background:#F5F5F5;font-weight:700;">Eerste ophaling</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
+    @endif
     <tr><td style="background:#F5F5F5;font-weight:700;">Looptijd</td><td>{{ $order->subTermLabel() }}</td></tr>
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Prijs</td><td>
@@ -24,9 +35,9 @@
     @endif
 </table>
 
-<p>Wij nemen binnen één werkdag contact met u op om de container te plaatsen en het eerste
-ophaalmoment af te spreken. Daarna halen wij op volgens dit schema, zonder dat u er verder
-iets voor hoeft te doen.</p>
+<p>Wij nemen binnen één werkdag contact met u op om de container te plaatsen. Daarna halen wij
+op volgens dit schema, zonder dat u er verder iets voor hoeft te doen. Valt een ophaaldag op
+een feestdag, dan komen wij de eerstvolgende werkdag en blijft het schema verder ongewijzigd.</p>
 
 <p>Bij elke ophaling ontvangt u een vernietigingscertificaat volgens DIN 66399.</p>
 
