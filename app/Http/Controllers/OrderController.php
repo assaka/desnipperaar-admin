@@ -66,9 +66,10 @@ class OrderController extends Controller
         abort_if($order->sub_active_from !== null, 422, 'This subscription is already active.');
 
         $data = $request->validate([
-            'starts_on' => 'required|date',
+            'starts_on'      => 'required|date',
+            'pickup_weekday' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(Order::PICKUP_WEEKDAYS))],
         ], [
-            'starts_on.required' => 'Kies de eerste ophaaldatum.',
+            'starts_on.required' => 'Kies de ingangsdatum.',
         ]);
 
         $startsOn = \Carbon\Carbon::parse($data['starts_on'])->startOfDay();
@@ -76,6 +77,10 @@ class OrderController extends Controller
         $order->update([
             'sub_active_from'     => $startsOn->toDateString(),
             'sub_term_started_on' => $startsOn->toDateString(),
+            // Zonder keuze de weekdag van de ingangsdatum, maar nooit een
+            // weekenddag: daar rijden we niet.
+            'sub_pickup_weekday'  => $data['pickup_weekday']
+                ?? min($startsOn->dayOfWeekIso, 5),
             'state'               => Order::STATE_BEVESTIGD,
         ]);
 
@@ -94,6 +99,39 @@ class OrderController extends Controller
             $order->customer_email,
             $startsOn->format('d-m-Y'),
             $order->subPeriodEnd($startsOn)->format('d-m-Y'),
+        ));
+    }
+
+    /**
+     * Wijzig de vaste ophaaldag van een lopend abonnement.
+     *
+     * Toekomstige ophalingen die nog niet gereden zijn worden weggegooid, zodat
+     * de planner ze vannacht opnieuw aanmaakt op de nieuwe dag. Ophalingen met
+     * een bon blijven staan: die zijn geweest, of staan op het punt te gebeuren,
+     * en daar hoort geen administratie achteraf overheen.
+     */
+    public function changePickupDay(Request $request, Order $order)
+    {
+        abort_unless($order->isAbonnement(), 422, 'Only subscriptions have a pickup day.');
+        abort_unless($order->isRunning(), 422, 'This subscription is not running.');
+
+        $data = $request->validate([
+            'pickup_weekday' => ['required', \Illuminate\Validation\Rule::in(array_keys(Order::PICKUP_WEEKDAYS))],
+        ]);
+
+        $order->update(['sub_pickup_weekday' => (int) $data['pickup_weekday']]);
+
+        $dropped = Order::where('subscription_order_id', $order->id)
+            ->whereDate('pickup_date', '>=', now()->toDateString())
+            ->whereDoesntHave('bons')
+            ->delete();
+
+        $order->refresh();
+
+        return back()->with('status', sprintf(
+            'Ophaaldag gewijzigd naar %s. %d nog niet gereden ophaling(en) verwijderd, de planner zet ze vannacht opnieuw klaar.',
+            $order->subPickupWeekdayLabel(),
+            $dropped,
         ));
     }
 

@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/activate-subscription', [\App\Http\Controllers\OrderController::class, 'activateSubscription'])->name('orders.activate-subscription');
     Route::post('/orders/{order}/terminate-subscription', [\App\Http\Controllers\OrderController::class, 'terminateSubscription'])->name('orders.terminate-subscription');
     Route::post('/orders/{order}/renew-subscription', [\App\Http\Controllers\OrderController::class, 'renewSubscription'])->name('orders.renew-subscription');
+    Route::post('/orders/{order}/pickup-day', [\App\Http\Controllers\OrderController::class, 'changePickupDay'])->name('orders.pickup-day');
 
     Route::get('/invoices',                          [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}',                [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');

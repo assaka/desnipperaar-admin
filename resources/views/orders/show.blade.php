@@ -100,6 +100,22 @@
             <table class="text-sm">
                 <tr><td class="pr-4 text-gray-600">Container</td><td>240 L verzegelde rolcontainer</td></tr>
                 <tr><td class="pr-4 text-gray-600">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>
+                @if ($order->sub_active_from)
+                    <tr><td class="pr-4 text-gray-600">Ophaaldag</td><td>
+                        <strong>{{ $order->subPickupWeekdayLabel() }}</strong>
+                        @if ($order->sub_freq !== '2pw' && $order->isRunning())
+                            <form method="POST" action="{{ route('orders.pickup-day', $order) }}" class="inline-flex items-center gap-1 ml-2">
+                                @csrf
+                                <select name="pickup_weekday" class="border px-1 py-0.5 text-xs">
+                                    @foreach (\App\Models\Order::PICKUP_WEEKDAYS as $iso => $label)
+                                        <option value="{{ $iso }}" @selected($order->subPickupWeekday() == $iso)>{{ ucfirst($label) }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="px-2 py-0.5 text-xs border border-gray-600 hover:bg-gray-200">Wijzig</button>
+                            </form>
+                        @endif
+                    </td></tr>
+                @endif
                 <tr><td class="pr-4 text-gray-600">Looptijd</td><td>{{ $order->subTermLabel() }}</td></tr>
                 <tr>
                     <td class="pr-4 text-gray-600">{{ $order->sub_active_from ? 'Afgesproken prijs' : 'Richtprijs' }}</td>
@@ -154,11 +170,23 @@
                     <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
                         @csrf
                         <label class="text-sm">
-                            <span class="block text-gray-600 text-xs mb-1">Eerste ophaaldatum</span>
+                            <span class="block text-gray-600 text-xs mb-1">Ingangsdatum</span>
                             <input type="date" name="starts_on" required
                                    value="{{ old('starts_on', now()->toDateString()) }}"
                                    class="border px-2 py-1 text-sm">
                         </label>
+                        @if ($order->sub_freq === '2pw')
+                            <span class="text-sm text-gray-700">Ophaaldagen: <strong>maandag en donderdag</strong></span>
+                        @else
+                            <label class="text-sm">
+                                <span class="block text-gray-600 text-xs mb-1">Vaste ophaaldag</span>
+                                <select name="pickup_weekday" class="border px-2 py-1 text-sm">
+                                    @foreach (\App\Models\Order::PICKUP_WEEKDAYS as $iso => $label)
+                                        <option value="{{ $iso }}" @selected(old('pickup_weekday', min(now()->dayOfWeekIso, 5)) == $iso)>{{ ucfirst($label) }}</option>
+                                    @endforeach
+                                </select>
+                            </label>
+                        @endif
                         <button type="submit" class="px-4 py-1.5 text-sm font-bold bg-green-700 text-white hover:bg-green-800">
                             Activeer abonnement
                         </button>

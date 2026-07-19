@@ -150,7 +150,16 @@ class GenerateSubscriptionPickups extends Command
             return;
         }
 
+        // Verankeren op de afgesproken ophaaldag, niet op de ingangsdatum. De
+        // eerste ophaling is de eerstvolgende keer dat die dag zich voordoet op
+        // of na de ingangsdatum. Alle intervallen zijn een veelvoud van zeven
+        // dagen, dus daarna blijft de reeks vanzelf op die weekdag staan.
+        $weekday = $sub->subPickupWeekday() ?? $start->dayOfWeekIso;
         $cursor = $start->copy();
+        while ($cursor->dayOfWeekIso !== $weekday) {
+            $cursor->addDay();
+        }
+
         while ($cursor->lessThanOrEqualTo($until)) {
             yield $cursor->copy();
             $cursor->addDays($interval);

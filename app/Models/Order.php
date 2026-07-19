@@ -92,6 +92,7 @@ class Order extends Model
         'quote_token',
         'sub_term',
         'sub_freq',
+        'sub_pickup_weekday',
         'sub_price_excl_btw',
         'sub_active_from',
         'sub_term_started_on',
@@ -130,6 +131,7 @@ class Order extends Model
         'sub_ends_on' => 'date',
         'sub_last_invoiced_period' => 'date',
         'subscription_scheduled_for' => 'date',
+        'sub_pickup_weekday' => 'integer',
         'pickup_cost' => 'decimal:2',
         'pickup_km' => 'integer',
         'box_count' => 'integer',
@@ -277,6 +279,35 @@ class Order extends Model
      * (maandag en donderdag liggen niet even ver uit elkaar) en wordt daarom
      * apart afgehandeld in de generator.
      */
+    /** Werkdagen waarop opgehaald kan worden, als ISO-weekdag. */
+    const PICKUP_WEEKDAYS = [
+        1 => 'maandag',
+        2 => 'dinsdag',
+        3 => 'woensdag',
+        4 => 'donderdag',
+        5 => 'vrijdag',
+    ];
+
+    /**
+     * De vaste ophaaldag. Valt terug op de weekdag van de ingangsdatum, zodat een
+     * abonnement zonder expliciete keuze zich gedraagt zoals het altijd al deed.
+     */
+    public function subPickupWeekday(): ?int
+    {
+        return $this->sub_pickup_weekday ?? $this->sub_active_from?->dayOfWeekIso;
+    }
+
+    public function subPickupWeekdayLabel(): string
+    {
+        if ($this->sub_freq === '2pw') {
+            return 'maandag en donderdag';
+        }
+
+        $d = $this->subPickupWeekday();
+
+        return self::PICKUP_WEEKDAYS[$d] ?? '—';
+    }
+
     public function subIntervalDays(): ?int
     {
         return match ($this->sub_freq) {
