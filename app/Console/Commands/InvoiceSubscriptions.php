@@ -8,12 +8,14 @@ use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
 
 /**
- * Factureer lopende abonnementen, vooruit, per kalendermaand.
+ * Factureer lopende abonnementen, vooruit, per periode van 4 weken.
  *
- * De eerste periode start op de activatiedatum en loopt tot het einde van die
- * maand, naar rato. Daarna is elke periode een hele maand, of een heel jaar bij
- * jaarbetaling. Er wordt vooruit gefactureerd, dus zodra een periode is
- * begonnen (of vandaag begint) mag de factuur eruit.
+ * De prijs is per 4 weken, zoals geadverteerd, niet per kalendermaand. De eerste
+ * periode start op de bezorgdag en loopt precies 28 dagen (52 weken bij
+ * jaarbetaling), dus die loopt altijd vol, geen deelperiode aan het begin. Er
+ * wordt vooruit gefactureerd, dus zodra een periode is begonnen (of vandaag
+ * begint) mag de factuur eruit. Een deelperiode ontstaat alleen nog bij opzeggen
+ * midden in een periode.
  *
  * Facturen worden als concept aangemaakt, niet verstuurd. Geld dat vanzelf de
  * deur uit gaat zonder dat iemand ernaar heeft gekeken is een groter risico dan
@@ -27,7 +29,7 @@ class InvoiceSubscriptions extends Command
                             {--date= : Reken alsof het deze datum is (Y-m-d), voor herstel en tests}
                             {--dry-run : Toon wat er zou gebeuren, maak niets aan}';
 
-    protected $description = 'Maak conceptfacturen voor lopende abonnementen (vooruit, per maand)';
+    protected $description = 'Maak conceptfacturen voor lopende abonnementen (vooruit, per 4 weken)';
 
     public function handle(): int
     {
@@ -137,7 +139,7 @@ class InvoiceSubscriptions extends Command
 
     /**
      * De eerste nog niet gefactureerde periode. Zonder eerdere factuur is dat de
-     * activatiedatum zelf, zodat de startmaand naar rato meeloopt.
+     * bezorgdag zelf, en daar begint de eerste periode van 4 weken.
      */
     private function nextPeriodStart(Order $order): \Carbon\Carbon
     {

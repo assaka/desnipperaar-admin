@@ -17,7 +17,7 @@ We will confirm your subscription and pickup schedule within one business day.</
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Price</td><td>
             € {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}
-            {{ $order->sub_term === 'jaar' ? 'per year' : 'per month' }} (excl. VAT)
+            {{ $order->sub_term === 'jaar' ? 'per year' : 'every 4 weeks' }} (excl. VAT)
         </td></tr>
     @endif
 </table>

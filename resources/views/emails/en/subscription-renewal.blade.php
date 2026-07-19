@@ -12,9 +12,9 @@ keep collecting. Only the terms change.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Do nothing?</strong> From {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} your subscription
-    continues monthly at
+    continues at
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} per month excl. VAT,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} every 4 weeks excl. VAT,
     @endif
     and you can stop at any time. No further commitment.
 </p>
@@ -32,7 +32,7 @@ keep collecting. Only the terms change.</p>
         <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Monthly</td>
         <td>
             @if ($monthlyPrice)
-                € {{ number_format($monthlyPrice, 2, ',', '.') }} per month excl. VAT.
+                € {{ number_format($monthlyPrice, 2, ',', '.') }} every 4 weeks excl. VAT.
             @endif
             Cancel any time. This happens automatically if you do not reply.
         </td>

@@ -17,7 +17,7 @@ Confirmaremos su suscripción y su calendario de recogida en un día laborable.<
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Precio</td><td>
             € {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}
-            {{ $order->sub_term === 'jaar' ? 'al año' : 'al mes' }} (sin IVA)
+            {{ $order->sub_term === 'jaar' ? 'al año' : 'cada 4 semanas' }} (sin IVA)
         </td></tr>
     @endif
 </table>

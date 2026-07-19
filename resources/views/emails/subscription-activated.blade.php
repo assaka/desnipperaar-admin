@@ -1,5 +1,5 @@
 @php
-    $per = $order->sub_term === 'jaar' ? 'per jaar' : 'per maand';
+    $per = $order->sub_term === 'jaar' ? 'per jaar' : 'per 4 weken';
     $days = [1 => 'maandag', 2 => 'dinsdag', 3 => 'woensdag', 4 => 'donderdag', 5 => 'vrijdag'];
     $pickupDay = $order->sub_freq === '2pw'
         ? 'maandag en donderdag'

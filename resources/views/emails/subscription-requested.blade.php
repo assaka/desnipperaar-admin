@@ -13,7 +13,7 @@ Wij bevestigen uw abonnement en het ophaalschema binnen één werkdag.</p>
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Prijs</td><td>
             € {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}
-            {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} (excl. btw)
+            {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per 4 weken' }} (excl. btw)
         </td></tr>
     @endif
 </table>

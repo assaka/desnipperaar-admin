@@ -79,7 +79,7 @@
                 <td>
                     @if ($order->sub_price_excl_btw)
                         <strong>€ {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}</strong>
-                        {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw
+                        {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per 4 weken' }} excl. btw
                     @else
                         <span class="text-gray-400">—</span>
                     @endif

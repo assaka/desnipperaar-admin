@@ -1,7 +1,7 @@
 @php
     $freqLabels = ['4w' => '1x cada 4 semanas', '2w' => '1x cada 2 semanas', '1w' => '1x por semana', '2pw' => '2x por semana'];
     $termLabels = ['flex' => 'Flex (mín. 3 meses, luego mensual)', 'vast' => 'Fijo (12 meses)', 'jaar' => 'Pago anual (12 meses por adelantado)'];
-    $per = $order->sub_term === 'jaar' ? 'al año' : 'al mes';
+    $per = $order->sub_term === 'jaar' ? 'al año' : 'cada 4 semanas';
     $days = [1 => 'lunes', 2 => 'martes', 3 => 'miércoles', 4 => 'jueves', 5 => 'viernes'];
     $pickupDay = $order->sub_freq === '2pw'
         ? 'lunes y jueves'

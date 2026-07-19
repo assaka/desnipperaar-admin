@@ -12,9 +12,9 @@ nous continuons les enlèvements. Seules les conditions changent.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Vous ne faites rien ?</strong> À partir du {{ $renewalDate->copy()->addDay()->format('d-m-Y') }},
-    votre abonnement continue au mois pour
+    votre abonnement continue pour
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} par mois hors TVA,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA,
     @endif
     et vous pouvez arrêter à tout moment. Sans aucun engagement.
 </p>
@@ -32,7 +32,7 @@ nous continuons les enlèvements. Seules les conditions changent.</p>
         <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Au mois</td>
         <td>
             @if ($monthlyPrice)
-                € {{ number_format($monthlyPrice, 2, ',', '.') }} par mois hors TVA.
+                € {{ number_format($monthlyPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA.
             @endif
             Résiliable à tout moment. C'est ce qui se passe automatiquement sans réponse de votre part.
         </td>

@@ -15,7 +15,7 @@
             @if ($order->sub_price_excl_btw)
             <div class="row"><span class="k">Prijs incl. btw</span>
                 <span class="v">€ {{ number_format($order->sub_price_excl_btw * 1.21, 2, ',', '.') }}
-                    {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }}</span></div>
+                    {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per 4 weken' }}</span></div>
             @endif
             <div class="row"><span class="k">Bevestigd op</span>
                 <span class="v">{{ $order->quote_accepted_at->format('d-m-Y H:i') }}</span></div>

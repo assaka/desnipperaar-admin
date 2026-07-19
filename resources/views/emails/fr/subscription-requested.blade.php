@@ -17,7 +17,7 @@ Nous confirmons votre abonnement et votre calendrier d'enlèvement sous un jour 
     @if ($order->sub_price_excl_btw)
         <tr><td style="background:#F5F5F5;font-weight:700;">Prix</td><td>
             € {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}
-            {{ $order->sub_term === 'jaar' ? 'par an' : 'par mois' }} (hors TVA)
+            {{ $order->sub_term === 'jaar' ? 'par an' : 'toutes les 4 semaines' }} (hors TVA)
         </td></tr>
     @endif
 </table>

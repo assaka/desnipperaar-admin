@@ -9,9 +9,9 @@ en wij blijven ophalen. Alleen de voorwaarden veranderen.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Doet u niets?</strong> Dan gaat uw abonnement vanaf {{ $renewalDate->copy()->addDay()->format('d-m-Y') }}
-    maandelijks door voor
+    door voor
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} per maand excl. btw,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw,
     @endif
     en kunt u op elk moment stoppen. U zit dan nergens meer aan vast.
 </p>
@@ -29,7 +29,7 @@ en wij blijven ophalen. Alleen de voorwaarden veranderen.</p>
         <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Maandelijks</td>
         <td>
             @if ($monthlyPrice)
-                € {{ number_format($monthlyPrice, 2, ',', '.') }} per maand excl. btw.
+                € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw.
             @endif
             Altijd opzegbaar. Dit gebeurt automatisch als u niet reageert.
         </td>

@@ -38,7 +38,7 @@
     <tr><td style="color:#666;">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>
     <tr><td style="color:#666;">Looptijd</td><td>{{ $order->subTermLabel() }}</td></tr>
     @if ($order->sub_price_excl_btw)
-      <tr><td style="color:#666;">Richtprijs</td><td>€ {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }} {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }}</td></tr>
+      <tr><td style="color:#666;">Richtprijs</td><td>€ {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }} {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per 4 weken' }}</td></tr>
     @endif
   @endif
   @if ($order->notes)

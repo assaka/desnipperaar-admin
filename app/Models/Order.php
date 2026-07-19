@@ -543,39 +543,34 @@ class Order extends Model
         return $this->sub_term_started_on ?? $this->sub_active_from;
     }
 
-    /**
-     * Einde van de factuurperiode die op $start begint.
-     *
-     * Alles ligt op maandgrenzen, ook de jaarperiode. Een jaar dat op 15 juli
-     * begint loopt dus tot en met 31 juli van het jaar erop, gelijk met het
-     * einde van de contracttermijn. Zonder die uitlijning zou er na een
-     * jaarperiode een restje van een halve maand overblijven, en dat restje zou
-     * als losse periode gefactureerd worden.
-     */
-    public function subPeriodEnd(\Carbon\Carbon $start): \Carbon\Carbon
+    /** Aantal weken in één factuurperiode. Flex en Vast per 4 weken, Jaar per 52. */
+    public function subPeriodWeeks(): int
     {
-        if ($this->sub_term === 'jaar') {
-            return $start->copy()->startOfMonth()->addMonthsNoOverflow(12)->endOfMonth()->startOfDay();
-        }
-
-        return $start->copy()->endOfMonth()->startOfDay();
+        return $this->sub_term === 'jaar' ? 52 : 4;
     }
 
     /**
-     * Lengte van een volle periode in dagen, gerekend vanaf de 1e van de
-     * startmaand. Dit is de noemer voor een deelperiode. Een start op de 15e
-     * moet 17 van 31 dagen betalen, dus de noemer is de hele maand en niet het
-     * stuk dat we toevallig factureren.
+     * Einde van de factuurperiode die op $start begint.
+     *
+     * De prijs is per 4 weken, niet per kalendermaand: zo adverteren wij het en
+     * zo is de prijs gezet. Een periode is dus precies 28 dagen (52 weken bij
+     * jaarbetaling), geteld vanaf de bezorgdag. Geen maandgrenzen, en daardoor
+     * geen deelperiode aan het begin: de eerste periode start op de bezorgdag en
+     * loopt vol.
+     */
+    public function subPeriodEnd(\Carbon\Carbon $start): \Carbon\Carbon
+    {
+        return $start->copy()->addWeeks($this->subPeriodWeeks())->subDay()->startOfDay();
+    }
+
+    /**
+     * Lengte van een volle periode in dagen. De noemer voor een deelperiode.
+     * Die deelperiode ontstaat alleen nog bij opzeggen midden in een periode,
+     * niet meer aan het begin, want de periode begint op de bezorgdag.
      */
     public function subPeriodNominalDays(\Carbon\Carbon $start): int
     {
-        if ($this->sub_term === 'jaar') {
-            $from = $start->copy()->startOfMonth();
-
-            return $from->diffInDays($this->subPeriodEnd($start)) + 1;
-        }
-
-        return $start->daysInMonth;
+        return $this->subPeriodWeeks() * 7;
     }
 
     /**
