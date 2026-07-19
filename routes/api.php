@@ -10,6 +10,12 @@ Route::post('/order', [\App\Http\Controllers\Api\OrderController::class, 'store'
 Route::post('/offerte', [\App\Http\Controllers\Api\OfferteController::class, 'store'])
     ->middleware('throttle:20,1');
 
+// Abonnementsaanvraag (240 L rolcontainer, periodiek) — zelfde route als een
+// offerte: admin bevestigt met een offerte op maat, klant accepteert via token.
+// Wachtlijstaanvragen buiten het werkgebied gaan naar de Node-kant, niet hier.
+Route::post('/subscription', [\App\Http\Controllers\Api\SubscriptionController::class, 'store'])
+    ->middleware('throttle:20,1');
+
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])
     ->middleware('throttle:20,1');
 

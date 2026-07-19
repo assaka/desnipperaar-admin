@@ -34,6 +34,87 @@ class OrderController extends Controller
         return view('offertes.index', compact('offertes'));
     }
 
+    /**
+     * Abonnementen staan los van /orders en /offertes. Ze blijven hier ook
+     * staan nadat de klant heeft geaccepteerd: een abonnement loopt door, en
+     * verdwijnt dus niet uit de lijst zoals een geaccepteerde offerte dat doet.
+     */
+    public function abonnementen()
+    {
+        $abonnementen = Order::with('customer')
+            ->where('type', Order::TYPE_ABONNEMENT)
+            ->orderByDesc('id')
+            ->paginate(25);
+        return view('abonnementen.index', compact('abonnementen'));
+    }
+
+    /**
+     * Verleng of wissel de termijn, nadat de klant op de verlengmail heeft
+     * gereageerd. Dekt alle drie de antwoorden: nog een jaar vooruit, nog een
+     * vaste termijn, of terug naar een vaste termijn vanuit maandelijks.
+     *
+     * De nieuwe termijn begint de dag na de huidige, zodat er geen gat of
+     * overlap ontstaat in de facturatie. Loopt er geen termijn meer (de klant
+     * zit al op maandelijks), dan start hij vandaag.
+     */
+    public function renewSubscription(Request $request, Order $order)
+    {
+        abort_unless($order->isAbonnement(), 422, 'Only subscriptions can be renewed.');
+        abort_unless($order->isRunning(), 422, 'This subscription is not running.');
+        abort_if($order->sub_terminated_at !== null, 422, 'This subscription has been terminated.');
+
+        $data = $request->validate([
+            'term' => ['required', \Illuminate\Validation\Rule::in(['vast', 'jaar'])],
+        ]);
+
+        $current = $order->subRenewalDate();
+        $startsOn = $current ? $current->copy()->addDay() : now()->startOfDay();
+
+        $order->update([
+            'sub_term'                => $data['term'],
+            'sub_price_excl_btw'      => config("desnipperaar.subscription.prices.{$data['term']}.{$order->sub_freq}")
+                                          ?? $order->sub_price_excl_btw,
+            'sub_term_started_on'     => $startsOn->toDateString(),
+            'sub_renewal_notified_at' => null,
+        ]);
+
+        $order->refresh();
+
+        return back()->with('status', sprintf(
+            'Termijn gewijzigd naar %s, ingaand %s en lopend tot %s.',
+            $order->subTermLabel(),
+            $startsOn->format('d-m-Y'),
+            $order->subRenewalDate()?->format('d-m-Y') ?? 'onbepaald',
+        ));
+    }
+
+    /**
+     * Zeg een lopend abonnement op. Nooit per direct: het loopt door tot de
+     * eerste datum die de minimumtermijn en de lopende maand toestaan. Tot die
+     * datum wordt gewoon doorgefactureerd, want de klant houdt de container.
+     */
+    public function terminateSubscription(Request $request, Order $order)
+    {
+        abort_unless($order->isAbonnement(), 422, 'Only subscriptions can be terminated.');
+        abort_unless($order->sub_active_from !== null, 422, 'This subscription is not active yet.');
+        abort_if($order->sub_terminated_at !== null, 422, 'This subscription has already been terminated.');
+
+        $endsOn = $order->earliestTerminationDate();
+
+        $order->update([
+            'sub_terminated_at' => now(),
+            'sub_ends_on'       => $endsOn->toDateString(),
+        ]);
+
+        $message = 'Abonnement opgezegd per '.$endsOn->format('d-m-Y').'.';
+        if ($order->fresh()->owesReturnCost()) {
+            $message .= ' € '.number_format((float) config('desnipperaar.subscription.return_cost'), 2, ',', '.')
+                .' retourkosten komen op de slotfactuur.';
+        }
+
+        return back()->with('status', $message);
+    }
+
     // Open customer reschedule requests (cleared when a new pickup is confirmed).
     public function reschedules()
     {
@@ -281,7 +362,15 @@ class OrderController extends Controller
 
     public function sendQuote(Request $request, Order $order)
     {
-        abort_unless($order->type === Order::TYPE_QUOTE, 422, 'Only quote-type orders can have a quote sent.');
+        // Abonnementen lopen door dezelfde offertemachinerie: de admin bevestigt
+        // looptijd, frequentie en prijs met een offerte op maat, de klant
+        // accepteert via dezelfde tokenpagina. Alleen de acceptatie verschilt,
+        // zie QuoteAcceptController.
+        abort_unless(
+            in_array($order->type, [Order::TYPE_QUOTE, Order::TYPE_ABONNEMENT], true),
+            422,
+            'Only quote or subscription orders can have a quote sent.'
+        );
 
         // Two distinct intents share this endpoint:
         //   offer   -> a binding quote with an amount + accept button

@@ -36,6 +36,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/planning/move',  [\App\Http\Controllers\PlanningController::class, 'move'])->name('planning.move');
 
     Route::get('/offertes', [\App\Http\Controllers\OrderController::class, 'offertes'])->name('offertes.index');
+    Route::get('/abonnementen', [\App\Http\Controllers\OrderController::class, 'abonnementen'])->name('abonnementen.index');
+    Route::post('/orders/{order}/terminate-subscription', [\App\Http\Controllers\OrderController::class, 'terminateSubscription'])->name('orders.terminate-subscription');
+    Route::post('/orders/{order}/renew-subscription', [\App\Http\Controllers\OrderController::class, 'renewSubscription'])->name('orders.renew-subscription');
 
     Route::get('/invoices',                          [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}',                [\App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
 use App\Mail\SalesAlert;
+use App\Mail\SubscriptionActivated;
 use App\Models\Bon;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -103,10 +104,17 @@ class QuoteAcceptController extends Controller
             ])->save();
         }
 
+        $isAbonnement = $order->isAbonnement();
+
         // On acceptance: mint a new B- order number, keep the O- reference as audit
         // trail, and persist the contact + delivery details the customer confirmed.
+        //
+        // Een abonnement is hierop de uitzondering. Dat wordt geen losse order:
+        // het blijft type abonnement, houdt zijn A-nummer en gaat alleen lopen
+        // (sub_active_from). De losse ophalingen daaronder worden later als
+        // aparte orders aangemaakt, want één abonnement is niet één ophaling.
         $order->update([
-            'order_number'         => Order::generateOrderNumber(),
+            'order_number'         => $isAbonnement ? $order->order_number : Order::generateOrderNumber(),
             'customer_name'        => $data['naam'],
             'customer_email'       => $data['email'],
             'customer_phone'       => $data['telefoon'],
@@ -120,19 +128,33 @@ class QuoteAcceptController extends Controller
             // forwards the real client IP here (X-Forwarded-For is rewritten by the
             // second Caddy hop). Fall back to the framework IP for direct hits.
             'quote_acceptance_ip'  => $request->header('X-Quote-Client-Ip') ?: $request->ip(),
-            'type'                 => Order::TYPE_DIRECT,
+            'type'                 => $isAbonnement ? Order::TYPE_ABONNEMENT : Order::TYPE_DIRECT,
+            // De afgesproken prijs vervangt de richtprijs uit de aanvraag, zodat
+            // de lijst en de facturatie straks van hetzelfde bedrag uitgaan.
+            'sub_price_excl_btw'   => $isAbonnement ? $finalAmount : $order->sub_price_excl_btw,
+            'sub_active_from'      => $isAbonnement ? now()->toDateString() : $order->sub_active_from,
+            // De eerste contracttermijn begint op de activatiedatum. Bij een
+            // verlenging schuift dit anker door, zie Order::convertToMonthly.
+            'sub_term_started_on'  => $isAbonnement ? now()->toDateString() : $order->sub_term_started_on,
         ]);
 
         // Bon is NOT created on accept — admin will plan the pickup and create the bon then.
 
+        // OrderCreated beschrijft één ophaling met een ophaalmoment. Dat klopt
+        // niet voor een abonnement, dat op dit moment alleen gaat lopen. Een
+        // abonnement krijgt daarom zijn eigen activatiemail, met looptijd,
+        // frequentie, prijs en startdatum, en zonder ophaaldatum die er nog
+        // niet is.
         try {
-            Mail::to($order->customer_email)->send(new OrderCreated($order));
+            Mail::to($order->customer_email)->send(
+                $isAbonnement ? new SubscriptionActivated($order) : new OrderCreated($order)
+            );
         } catch (\Throwable $e) {
             report($e);
         }
 
         try {
-            Mail::send(new SalesAlert($order, 'new_order'));
+            Mail::send(new SalesAlert($order, $isAbonnement ? 'subscription_active' : 'new_order'));
         } catch (\Throwable $e) {
             report($e);
         }

@@ -29,6 +29,7 @@
                     @endphp
                     <a href="{{ route('reschedules.index') }}" class="mr-4 {{ request()->routeIs('reschedules.*') ? 'font-bold underline' : '' }}">Herplanningen{!! $reschedBadge !!}</a>
                     <a href="{{ route('offertes.index') }}" class="mr-4 {{ request()->routeIs('offertes.*') ? 'font-bold underline' : '' }}">Offertes</a>
+                    <a href="{{ route('abonnementen.index') }}" class="mr-4 {{ request()->routeIs('abonnementen.*') ? 'font-bold underline' : '' }}">Abonnementen</a>
                     <a href="{{ route('invoices.index') }}" class="mr-4 {{ request()->routeIs('facturen.*|invoices.*') ? 'font-bold underline' : '' }}">Facturen</a>
                     <a href="{{ route('customers.index') }}" class="mr-4 {{ request()->routeIs('customers.*') ? 'font-bold underline' : '' }}">Klanten</a>
                     <a href="{{ route('group-deals.index') }}" class="mr-4 {{ request()->routeIs('group-deals.*') ? 'font-bold underline' : '' }}">Groepsdeals</a>

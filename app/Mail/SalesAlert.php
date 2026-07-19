@@ -16,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
  * actually delivered to the sales@ mailbox, and reply-to is the customer so
  * the team can answer directly from the alert.
  *
- * $kind: 'quote_request' | 'new_order'
+ * $kind: 'quote_request' | 'subscription_request' | 'new_order'
  */
 class SalesAlert extends Mailable
 {
@@ -29,7 +29,12 @@ class SalesAlert extends Mailable
     public function envelope(): Envelope
     {
         $salesEmail = config('desnipperaar.notifications.sales_email');
-        $label = $this->kind === 'quote_request' ? 'Nieuwe offerteaanvraag' : 'Nieuwe order';
+        $label = match ($this->kind) {
+            'quote_request'        => 'Nieuwe offerteaanvraag',
+            'subscription_request' => 'Nieuwe abonnementsaanvraag',
+            'subscription_active'  => 'Abonnement geactiveerd',
+            default                => 'Nieuwe order',
+        };
         $who = $this->order->customer_name ?: $this->order->customer_email;
 
         return new Envelope(

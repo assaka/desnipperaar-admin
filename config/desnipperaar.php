@@ -8,11 +8,30 @@ return [
     'order' => [
         'prefix'        => env('DESNIPPERAAR_ORDER_PREFIX', 'B'),  // bestelling
         'quote_prefix'  => env('DESNIPPERAAR_QUOTE_PREFIX', 'O'),  // offerte
+        'sub_prefix'    => env('DESNIPPERAAR_SUB_PREFIX',   'A'),  // abonnement
         'start'         => (int) env('DESNIPPERAAR_ORDER_START', 142),
     ],
 
     'bon' => [
         'prefix' => env('DESNIPPERAAR_BON_PREFIX', 'P'),
+    ],
+
+    'subscription' => [
+        // Prijs per 240 L rolcontainer, excl. btw. Flex en Vast zijn per maand,
+        // Jaar is een vooruitbetaling voor twaalf maanden. Deze tabel moet gelijk
+        // blijven aan order.html op desnipperaar.nl en aan
+        // docs/subscription-lead-spec.md in die repo. De aanvraag stuurt alleen
+        // looptijd en frequentie mee, nooit een prijs: die rekenen we hier.
+        'prices' => [
+            'flex' => ['4w' => 34.95, '2w' => 54.95, '1w' => 94.95, '2pw' => 164.95],
+            'vast' => ['4w' => 29.95, '2w' => 49.95, '1w' => 89.95, '2pw' => 159.95],
+            'jaar' => ['4w' => 329.00, '2w' => 549.00, '1w' => 989.00, '2pw' => 1759.00],
+        ],
+
+        // Logistieke retourkosten bij opzeggen van Flex binnen twaalf maanden.
+        // Gepubliceerd op /rolcontainer-huren als de werkelijke kosten van de
+        // retourrit, uitdrukkelijk geen boete. Wijzig hier en op die pagina samen.
+        'return_cost' => (float) env('DESNIPPERAAR_SUB_RETURN_COST', 75.00),
     ],
 
     'certificate' => [

@@ -66,9 +66,106 @@
         @endif
     </section>
 
-    @if ($order->type === 'quote')
+    @if ($order->isAbonnement())
+        <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
+            <div class="flex justify-between items-baseline mb-3">
+                <h2 class="font-black">Abonnement</h2>
+                @php $subStatus = $order->subStatus(); @endphp
+                <span class="text-xs font-bold uppercase px-2 py-1 {{ match ($subStatus) {
+                    'actief' => 'bg-green-700 text-white',
+                    'opgezegd' => 'bg-yellow-400 text-black',
+                    'beeindigd' => 'bg-gray-500 text-white',
+                    default => 'bg-orange-500 text-white',
+                } }}">
+                    {{ $subStatus === 'beeindigd' ? 'beëindigd' : $subStatus }}
+                </span>
+            </div>
+            <table class="text-sm">
+                <tr><td class="pr-4 text-gray-600">Container</td><td>240 L verzegelde rolcontainer</td></tr>
+                <tr><td class="pr-4 text-gray-600">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>
+                <tr><td class="pr-4 text-gray-600">Looptijd</td><td>{{ $order->subTermLabel() }}</td></tr>
+                <tr>
+                    <td class="pr-4 text-gray-600">{{ $order->sub_active_from ? 'Afgesproken prijs' : 'Richtprijs' }}</td>
+                    <td>
+                        @if ($order->sub_price_excl_btw)
+                            <strong>€ {{ number_format($order->sub_price_excl_btw, 2, ',', '.') }}</strong>
+                            {{ $order->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
+                    </td>
+                </tr>
+                @if ($order->sub_active_from)
+                    <tr><td class="pr-4 text-gray-600">Loopt sinds</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
+                    <tr><td class="pr-4 text-gray-600">Minimumtermijn</td><td>
+                        {{ $order->subMinimumMonths() }} maanden, t/m {{ $order->minimumTermEnd()->format('d-m-Y') }}
+                    </td></tr>
+                @endif
+                @if ($order->subRenewalDate())
+                    <tr><td class="pr-4 text-gray-600">Termijn loopt af</td><td>
+                        {{ $order->subRenewalDate()->format('d-m-Y') }}
+                        @if ($order->sub_renewal_notified_at)
+                            <span class="text-xs text-gray-500">· verlengmail verstuurd {{ $order->sub_renewal_notified_at->format('d-m-Y') }}</span>
+                        @else
+                            <span class="text-xs text-gray-500">· verlengmail gaat automatisch een maand vooraf</span>
+                        @endif
+                        <br><span class="text-xs text-gray-600">Daarna maandelijks tegen het Vast-tarief, tenzij de klant verlengt.</span>
+                    </td></tr>
+                @endif
+                @if ($order->sub_terminated_at)
+                    <tr><td class="pr-4 text-gray-600">Opgezegd op</td><td>{{ $order->sub_terminated_at->format('d-m-Y H:i') }}</td></tr>
+                    <tr><td class="pr-4 text-gray-600">Loopt tot en met</td><td><strong>{{ $order->sub_ends_on->format('d-m-Y') }}</strong></td></tr>
+                @endif
+                <tr><td class="pr-4 text-gray-600">Laatst gefactureerd</td><td>
+                    @if ($order->sub_last_invoiced_period)
+                        periode vanaf {{ $order->sub_last_invoiced_period->format('d-m-Y') }}
+                    @else
+                        <span class="text-gray-400">nog niet</span>
+                    @endif
+                </td></tr>
+            </table>
+
+            @if ($order->isRunning() && ! $order->sub_terminated_at)
+                @php $earliest = $order->earliestTerminationDate(); @endphp
+                <p class="text-xs text-gray-600 mt-3">
+                    Losse ophalingen onder dit abonnement maak je aan als aparte orders.
+                    Facturen worden elke nacht als concept aangemaakt, vooruit per maand.
+                </p>
+                <form method="POST" action="{{ route('orders.renew-subscription', $order) }}" class="mt-3 flex items-center gap-2">
+                    @csrf
+                    <span class="text-sm text-gray-700">Klant reageerde op de verlengmail:</span>
+                    <select name="term" class="border px-2 py-1 text-sm">
+                        <option value="jaar">nog een jaar vooruit</option>
+                        <option value="vast">nog een vaste termijn van 12 maanden</option>
+                    </select>
+                    <button type="submit" class="px-3 py-1 text-sm border border-gray-600 hover:bg-gray-200">Termijn vastleggen</button>
+                </form>
+
+                <form method="POST" action="{{ route('orders.terminate-subscription', $order) }}" class="mt-3"
+                      onsubmit="return confirm('Abonnement {{ $order->order_number }} opzeggen per {{ $earliest->format('d-m-Y') }}?');">
+                    @csrf
+                    <button type="submit" class="px-3 py-1 text-sm border border-gray-600 hover:bg-gray-200">
+                        Zeg op per {{ $earliest->format('d-m-Y') }}
+                    </button>
+                    <span class="text-xs text-gray-600 ml-2">
+                        Eerste toegestane einddatum, minimumtermijn meegerekend.
+                        @if ($order->sub_term === 'flex' && $earliest->lessThan($order->sub_active_from->copy()->addMonthsNoOverflow(12)))
+                            Hierbij komt € {{ number_format((float) config('desnipperaar.subscription.return_cost'), 2, ',', '.') }} retourkosten op de slotfactuur.
+                        @endif
+                    </span>
+                </form>
+            @elseif ($order->sub_terminated_at && ! $order->hasEnded())
+                <p class="text-sm mt-3 bg-yellow-100 border border-yellow-500 px-3 py-2">
+                    Opgezegd. Loopt door tot en met {{ $order->sub_ends_on->format('d-m-Y') }} en wordt tot dan gefactureerd.
+                    Plan het ophalen van de container op of na die datum.
+                </p>
+            @endif
+        </section>
+    @endif
+
+    @if ($order->type === 'quote' || $order->isAbonnement())
         <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
-            <h2 class="font-black mb-3">Offerte op maat</h2>
+            <h2 class="font-black mb-3">{{ $order->isAbonnement() ? 'Bevestiging op maat' : 'Offerte op maat' }}</h2>
             @if ($order->quote_accepted_at)
                 <div class="bg-green-100 border border-green-400 px-3 py-2 mb-3 text-sm">
                     ✓ Geaccepteerd op {{ $order->quote_accepted_at->format('d-m-Y H:i') }} vanaf IP {{ $order->quote_acceptance_ip }}.

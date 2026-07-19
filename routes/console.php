@@ -22,6 +22,24 @@ Schedule::command('desnipperaar:dag-announce')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
 
+// Dagelijks 03:00 Europe/Amsterdam: conceptfacturen voor lopende abonnementen,
+// vooruit per kalendermaand. Draait elke dag en niet alleen op de 1e, zodat een
+// gemiste dag of een abonnement dat midden in de maand start vanzelf bijtrekt.
+// Idempotent via de unique index op (order_id, period_start).
+Schedule::command('subscriptions:invoice')
+    ->dailyAt('03:00')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
+
+// Dagelijks 09:00 Europe/Amsterdam: klanten met een Vast- of Jaartermijn die
+// over ongeveer een maand afloopt krijgen de verlengmail. Draait vóór de
+// omzetting naar maandelijks (die zit in subscriptions:invoice), zodat niemand
+// een termijnwissel meemaakt zonder vooraf gevraagd te zijn.
+Schedule::command('subscriptions:renewal-notice')
+    ->dailyAt('09:00')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
+
 Schedule::command('mail:fetch-inbound')
     ->everyFiveMinutes()
     ->withoutOverlapping();
