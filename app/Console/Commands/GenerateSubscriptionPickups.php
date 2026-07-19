@@ -2,24 +2,25 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Bon;
 use App\Models\Order;
 use App\Support\WorkingDays;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
 
 /**
- * Zet de komende ophalingen van elk lopend abonnement als losse orders klaar.
+ * Zet de komende ophalingen van elk lopend abonnement klaar als bons.
  *
- * Een abonnement heeft zelf geen ophaaldatum en staat daarom niet op het
- * planbord. De bezoeken eronder zijn gewone orders met een datum, zodat ze
- * meelopen in de planning, een chauffeur krijgen, een bon en een certificaat.
- * Ze worden nooit los gefactureerd, zie de guards in Invoice::fromBon() en
- * BonController.
+ * Een abonnement is één order: één afspraak met de klant. De ritten eronder zijn
+ * bons op diezelfde order, en elke vernietiging levert een certificaat bij die
+ * bon. Eerder kreeg elke ophaling een eigen order, waardoor er bij één klant een
+ * dozijn orders in de lijst stond voor wat één abonnement is.
  *
- * Het ritme wordt geteld vanaf de ingangsdatum. Valt een ophaling in het weekend
- * of op een feestdag, dan schuift alleen die ene een week op, naar dezelfde weekdag.
- * De reeks zelf blijft op de oorspronkelijke data doorlopen, dus één verschuiving
- * sleept de rest niet mee.
+ * Het ritme wordt geteld vanaf de bezorgdag. Valt een ophaling in het weekend of
+ * op een feestdag, dan schuift alleen die ene een week op, naar dezelfde weekdag.
+ * De reeks blijft op de oorspronkelijke data doorlopen, dus één verschuiving
+ * sleept de rest niet mee. scheduled_for bewaart die oorspronkelijke datum, zodat
+ * een verschoven rit niet elke nacht opnieuw wordt aangemaakt.
  */
 class GenerateSubscriptionPickups extends Command
 {
@@ -29,7 +30,7 @@ class GenerateSubscriptionPickups extends Command
                             {--subscription= : Alleen dit abonnement (id), voor direct na goedkeuren}
                             {--dry-run : Toon wat er zou gebeuren, maak niets aan}';
 
-    protected $description = 'Plan de komende ophalingen van lopende abonnementen in';
+    protected $description = 'Plan de komende ophalingen van lopende abonnementen in als bons';
 
     public function handle(): int
     {
@@ -51,84 +52,61 @@ class GenerateSubscriptionPickups extends Command
                 continue;
             }
 
-            // Voorbij de opzegdatum hoeft er niets meer gepland te worden.
             $until = $sub->sub_ends_on && $sub->sub_ends_on->lessThan($horizon)
                 ? $sub->sub_ends_on->copy()
                 : $horizon;
 
             foreach ($this->slots($sub, $until) as $scheduled) {
                 // Niet terugplannen. Wat in het verleden ligt is of gereden, of
-                // gemist, en dat los je niet op met een order van vandaag.
+                // gemist, en dat los je niet op met een rit van vandaag.
                 if ($scheduled->lessThan($today)) {
                     continue;
                 }
 
-                $exists = Order::where('subscription_order_id', $sub->id)
-                    ->whereDate('subscription_scheduled_for', $scheduled->toDateString())
-                    ->exists();
-                if ($exists) {
+                if ($sub->bons()->whereDate('scheduled_for', $scheduled->toDateString())->exists()) {
                     continue;
                 }
 
-                $pickupDate = WorkingDays::nextSameWeekday($scheduled);
+                $plannedFor = WorkingDays::nextSameWeekday($scheduled);
 
-                // Bij wekelijks of twee keer per week valt zo'n opgeschoven rit
-                // op een dag waar al een ophaling staat. Twee keer op dezelfde
-                // dag langsrijden heeft geen zin, dus die ene slaan we over: de
-                // eerstvolgende reguliere ophaling vangt het op.
-                if (! $pickupDate->equalTo($scheduled)) {
-                    $bezet = Order::where('subscription_order_id', $sub->id)
-                        ->whereDate('pickup_date', $pickupDate->toDateString())
-                        ->exists();
-                    if ($bezet) {
-                        $this->warn(sprintf(
-                            '%s ophaling %s valt op een feestdag; %s heeft al een rit, deze keer overgeslagen',
-                            $sub->order_number,
-                            $scheduled->format('d-m-Y'),
-                            $pickupDate->format('d-m-Y'),
-                        ));
-                        continue;
-                    }
+                // Bij wekelijks of twee keer per week valt zo'n opgeschoven rit op
+                // een dag waar al een bon staat. Twee keer op dezelfde dag
+                // langsrijden heeft geen zin, dus die ene slaan we over.
+                if (! $plannedFor->equalTo($scheduled)
+                    && $sub->bons()->whereDate('planned_for', $plannedFor->toDateString())->exists()) {
+                    $this->warn(sprintf(
+                        '%s ophaling %s valt op een feestdag; %s heeft al een rit, deze keer overgeslagen',
+                        $sub->order_number,
+                        $scheduled->format('d-m-Y'),
+                        $plannedFor->format('d-m-Y'),
+                    ));
+                    continue;
                 }
 
+                $shift = $plannedFor->equalTo($scheduled) ? '' : ' (verschoven van '.$scheduled->format('d-m-Y').')';
+
                 if ($dry) {
-                    $shift = $pickupDate->equalTo($scheduled) ? '' : ' (verschoven van '.$scheduled->format('d-m-Y').')';
-                    $this->line(sprintf('[dry] %s → ophaling %s%s', $sub->order_number, $pickupDate->format('d-m-Y'), $shift));
+                    $this->line(sprintf('[dry] %s → ophaling %s%s', $sub->order_number, $plannedFor->format('d-m-Y'), $shift));
                     $made++;
                     continue;
                 }
 
                 try {
-                    $child = Order::create([
-                        'order_number'               => Order::generateOrderNumber(),
-                        'type'                       => Order::TYPE_DIRECT,
-                        'subscription_order_id'      => $sub->id,
-                        'subscription_scheduled_for' => $scheduled->toDateString(),
-                        'customer_id'                => $sub->customer_id,
-                        'customer_name'              => $sub->customer_name,
-                        'customer_email'             => $sub->customer_email,
-                        'customer_phone'             => $sub->customer_phone,
-                        'customer_address'           => $sub->customer_address,
-                        'customer_postcode'          => $sub->customer_postcode,
-                        'customer_city'              => $sub->customer_city,
-                        'locale'                     => $sub->locale,
-                        'delivery_mode'              => 'ophaal',
-                        'container_count'            => 1,
-                        'box_count'                  => 0,
-                        'state'                      => Order::STATE_BEVESTIGD,
-                        'pickup_date'                => $pickupDate->toDateString(),
-                        'pickup_window'              => 'flexibel',
-                        'notes'                      => 'Ophaling onder abonnement '.$sub->order_number
-                                                        .' ('.$sub->subFreqLabel().'). Niet los factureren.',
+                    $bon = Bon::create([
+                        'bon_number'     => Bon::generateBonNumber(),
+                        'order_id'       => $sub->id,
+                        'mode'           => Bon::MODE_OPHAAL,
+                        'planned_for'    => $plannedFor->toDateString(),
+                        'planned_window' => 'flexibel',
+                        'scheduled_for'  => $scheduled->toDateString(),
                     ]);
                 } catch (QueryException $e) {
-                    // De unique index op (subscription_order_id, scheduled_for)
-                    // heeft toegeslagen: al ingepland door een parallelle run.
+                    // De unique index op (order_id, scheduled_for) heeft
+                    // toegeslagen: al ingepland door een parallelle run.
                     continue;
                 }
 
-                $shift = $pickupDate->equalTo($scheduled) ? '' : ' (verschoven van '.$scheduled->format('d-m-Y').')';
-                $this->info(sprintf('%s → %s op %s%s', $sub->order_number, $child->order_number, $pickupDate->format('d-m-Y'), $shift));
+                $this->info(sprintf('%s → bon %s op %s%s', $sub->order_number, $bon->bon_number, $plannedFor->format('d-m-Y'), $shift));
                 $made++;
             }
         }
@@ -139,9 +117,7 @@ class GenerateSubscriptionPickups extends Command
     }
 
     /**
-     * De data die het ritme voorschrijft, vóór verschuiven. Geteld vanaf de
-     * ingangsdatum, zodat het patroon vast ligt en niet afhangt van wanneer deze
-     * command toevallig draait.
+     * De data die het ritme voorschrijft, vóór verschuiven.
      *
      * @return \Generator<\Carbon\Carbon>
      */

@@ -127,40 +127,23 @@ class OrderController extends Controller
 
         $order->refresh();
 
-        // De bezorging is een rit als elke andere: iemand moet de container
-        // brengen. Als losse order komt hij op het planbord, krijgt hij een
-        // chauffeur en een bon. Zonder deze order staat er alleen een datum op
-        // het contract en rijdt er niemand.
+        // De bezorging is een rit, geen aparte order. Een abonnement is één
+        // afspraak met de klant, dus de ritten eronder zijn bons op diezelfde
+        // order. Deze rit brengt de container en vernietigt niets, dus hij levert
+        // ook geen certificaat op.
         //
-        // $startsOn is hierboven al op een werkdag gezet, dus de rit valt samen
-        // met de contractstart.
-        $deliveryDate = $startsOn->copy();
-        $delivery = Order::firstOrCreate(
+        // $startsOn staat hierboven al op een werkdag, dus de rit valt samen met
+        // de contractstart.
+        $delivery = \App\Models\Bon::firstOrCreate(
+            ['order_id' => $order->id, 'scheduled_for' => $startsOn->toDateString()],
             [
-                'subscription_order_id'      => $order->id,
-                'subscription_scheduled_for' => $startsOn->toDateString(),
-            ],
-            [
-                'order_number'      => Order::generateOrderNumber(),
-                'type'              => Order::TYPE_BEZORGING,
-                'customer_id'       => $order->customer_id,
-                'customer_name'     => $order->customer_name,
-                'customer_email'    => $order->customer_email,
-                'customer_phone'    => $order->customer_phone,
-                'customer_address'  => $order->customer_address,
-                'customer_postcode' => $order->customer_postcode,
-                'customer_city'     => $order->customer_city,
-                'locale'            => $order->locale,
-                'delivery_mode'     => Order::DELIVERY_OPHAAL,
-                'container_count'   => 1,
-                'box_count'         => 0,
-                'state'             => Order::STATE_BEVESTIGD,
-                'pickup_date'       => $deliveryDate->toDateString(),
-                'pickup_window'     => 'flexibel',
-                'notes'             => 'Container BRENGEN voor abonnement '.$order->order_number
-                                        .' ('.$order->subFreqLabel().'). Niet los factureren.',
+                'bon_number'     => \App\Models\Bon::generateBonNumber(),
+                'mode'           => \App\Models\Bon::MODE_BEZORGING,
+                'planned_for'    => $startsOn->toDateString(),
+                'planned_window' => 'flexibel',
             ]
         );
+        $deliveryDate = $startsOn->copy();
 
         // Meteen inplannen in plaats van wachten op de cron van 02:30. Anders
         // toont de pagina een eerstvolgende ophaaldatum terwijl er onder
@@ -176,14 +159,14 @@ class OrderController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y')
-                .', bezorgrit '.$delivery->order_number.' ingepland, maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
+                .', bezorgrit '.$delivery->bon_number.' ingepland, maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
         }
 
         $firstPickup = $order->nextPickupDate();
 
         return back()->with('status', sprintf(
             'Abonnement geactiveerd. Bezorgrit %s ingepland op %s, dan begint ook de facturatie. Eerste ophaling %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
-            $delivery->order_number,
+            $delivery->bon_number,
             $deliveryDate->format('d-m-Y'),
             $firstPickup ? $firstPickup->format('d-m-Y') : 'onbekend',
             $order->customer_email,
@@ -211,7 +194,7 @@ class OrderController extends Controller
         abort_unless($order->canResetToPending(), 422,
             'Er is al gereden of gefactureerd op dit abonnement. Zeg het op in plaats van het terug te zetten.');
 
-        $dropped = Order::where('subscription_order_id', $order->id)->delete();
+        $dropped = $order->bons()->delete();
 
         $order->update([
             'sub_active_from'          => null,
@@ -261,8 +244,8 @@ class OrderController extends Controller
         // die hangt niet aan het ophaalritme en is misschien al met de klant
         // afgesproken.
         $dropped = $order->pickups()
-            ->whereDate('pickup_date', '>=', now()->toDateString())
-            ->whereDoesntHave('bons')
+            ->whereNull('picked_up_at')
+            ->whereDate('planned_for', '>=', now()->toDateString())
             ->delete();
 
         $order->refresh();
@@ -347,7 +330,29 @@ class OrderController extends Controller
 
         $order->refresh();
 
-        $message = 'Abonnement opgezegd per '.$endsOn->format('d-m-Y').'.';
+        // De container moet ook weer terug. Dat stond tot nu toe alleen in de
+        // opzegmail en werd nergens ingepland, dus het hing van iemands geheugen
+        // af. Als bon op dezelfde order, op of na de einddatum.
+        $retourDatum = \App\Support\WorkingDays::nextSameWeekday($endsOn);
+        $retour = \App\Models\Bon::firstOrCreate(
+            ['order_id' => $order->id, 'scheduled_for' => $endsOn->toDateString()],
+            [
+                'bon_number'     => \App\Models\Bon::generateBonNumber(),
+                'mode'           => \App\Models\Bon::MODE_RETOUR,
+                'planned_for'    => $retourDatum->toDateString(),
+                'planned_window' => 'flexibel',
+            ]
+        );
+
+        // Geplande ophalingen na de einddatum vervallen; de klant heeft de
+        // container dan niet meer.
+        $order->bons()
+            ->where('mode', \App\Models\Bon::MODE_OPHAAL)
+            ->whereNull('picked_up_at')
+            ->whereDate('planned_for', '>', $endsOn->toDateString())
+            ->delete();
+
+        $message = 'Abonnement opgezegd per '.$endsOn->format('d-m-Y').'. Retourrit '.$retour->bon_number.' ingepland op '.$retourDatum->format('d-m-Y').'.';
         if ($order->owesReturnCost()) {
             $message .= ' € '.number_format((float) config('desnipperaar.subscription.return_cost'), 2, ',', '.')
                 .' retourkosten komen op de slotfactuur.';
@@ -568,7 +573,7 @@ class OrderController extends Controller
             $bon = Bon::create([
                 'bon_number' => Bon::generateBonNumber(),
                 'order_id'   => $order->id,
-                'mode'       => $order->isBezorging() ? Bon::MODE_BEZORGING : $order->delivery_mode,
+                'mode'       => $order->delivery_mode,
             ]);
         }
 
@@ -606,8 +611,8 @@ class OrderController extends Controller
         //
         // Hierdoor is het ook eenduidig wat er op de orderpagina mag staan: bij
         // een abonnementsrit is er nooit een bevestigingsmail verstuurd.
-        if ($order->isSubscriptionPickup()) {
-            $wat = $order->isBezorging() ? 'Bezorging' : 'Ophaling';
+        if ($order->isAbonnement()) {
+            $wat = 'Rit';
 
             return back()->with('status',
                 "{$wat} gepland met {$driver->name}. Geen bevestigingsmail: de klant krijgt de dag ervoor een herinnering.");
@@ -740,13 +745,6 @@ class OrderController extends Controller
      */
     private function nextStates(Order $order): array
     {
-        if ($order->isBezorging()) {
-            return match ($order->state) {
-                Order::STATE_BEVESTIGD => [Order::STATE_AFGESLOTEN],
-                default                => [],
-            };
-        }
-
         return match ($order->state) {
             Order::STATE_NIEUW       => [],  // use Plan ophaling form instead
             Order::STATE_BEVESTIGD   => [Order::STATE_OPGEHAALD],

@@ -50,15 +50,54 @@ class PlanningController extends Controller
         $days = min(max((int) $request->query('days', 14), 1), 60);
         $until = $from->copy()->addDays($days - 1)->endOfDay();
 
-        $orders = Order::where('state', Order::STATE_BEVESTIGD)
+        // Twee bronnen. Een losse order draagt zijn eigen datum; een abonnement
+        // is één order met meerdere ritten, en die ritten zijn bons met een
+        // eigen datum. Beide worden hier tot dezelfde regelvorm gemaakt, zodat
+        // de lijst niet hoeft te weten waar een rit vandaan komt.
+        $losse = Order::where('state', Order::STATE_BEVESTIGD)
+            ->where('type', '!=', Order::TYPE_ABONNEMENT)
             ->whereNotNull('pickup_date')
             ->whereBetween('pickup_date', [$from->toDateString(), $until->toDateString()])
-            ->with(['customer', 'bons.driver', 'subscription'])
-            ->orderBy('pickup_date')
-            ->orderBy('pickup_window')
-            ->orderBy('customer_city')
+            ->with(['customer', 'bons.driver'])
             ->get()
-            ->groupBy(fn (Order $o) => $o->pickup_date->toDateString());
+            ->map(fn (Order $o) => [
+                'datum'      => $o->pickup_date,
+                'soort'      => 'ophalen',
+                'window'     => $o->pickup_window ?: 'flexibel',
+                'klant'      => $o->customer_name,
+                'bedrijf'    => $o->customer?->company,
+                'adres'      => trim(($o->customer_address ?? '').', '.($o->customer_postcode ?? '').' '.($o->customer_city ?? ''), ', '),
+                'chauffeur'  => $o->bons->first()?->driver_name_snapshot,
+                'ref'        => $o->order_number,
+                'url'        => route('orders.show', $o),
+                'abonnement' => null,
+            ]);
+
+        $ritten = \App\Models\Bon::whereNotNull('planned_for')
+            ->whereBetween('planned_for', [$from->toDateString(), $until->toDateString()])
+            ->whereHas('order', fn ($q) => $q->where('type', Order::TYPE_ABONNEMENT))
+            ->with(['order.customer'])
+            ->get()
+            ->map(fn ($b) => [
+                'datum'      => $b->planned_for,
+                'soort'      => match ($b->mode) {
+                    \App\Models\Bon::MODE_BEZORGING => 'brengen',
+                    \App\Models\Bon::MODE_RETOUR    => 'retour',
+                    default                          => 'ophalen',
+                },
+                'window'     => $b->planned_window ?: 'flexibel',
+                'klant'      => $b->order->customer_name,
+                'bedrijf'    => $b->order->customer?->company,
+                'adres'      => trim(($b->order->customer_address ?? '').', '.($b->order->customer_postcode ?? '').' '.($b->order->customer_city ?? ''), ', '),
+                'chauffeur'  => $b->driver_name_snapshot,
+                'ref'        => $b->bon_number,
+                'url'        => route('bons.show', $b),
+                'abonnement' => ['nr' => $b->order->order_number, 'url' => route('abonnementen.show', $b->order)],
+            ]);
+
+        $orders = $losse->concat($ritten)
+            ->sortBy(fn ($r) => [$r['datum']->toDateString(), $r['window'], $r['klant']])
+            ->groupBy(fn ($r) => $r['datum']->toDateString());
 
         return view('planning.daily', compact('orders', 'from', 'until', 'days'));
     }
@@ -121,7 +160,7 @@ class PlanningController extends Controller
         // herinnering die wel weet of wij komen brengen of halen. Zie ook de
         // gelijke guard in OrderController::confirmPickup().
         $mailed = false;
-        if ($changed && ! $order->isSubscriptionPickup()) {
+        if ($changed && ! $order->isAbonnement()) {
             try {
                 Mail::to($order->customer_email)
                     ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));

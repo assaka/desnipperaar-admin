@@ -11,6 +11,7 @@ class Certificate extends Model
 
     protected $fillable = [
         'certificate_number',
+        'bon_id',
         'order_id',
         'destroyed_at',
         'weight_kg_final',
@@ -26,6 +27,11 @@ class Certificate extends Model
         'emailed_at'   => 'datetime',
         'weight_kg_final' => 'decimal:2',
     ];
+
+    public function bon()
+    {
+        return $this->belongsTo(Bon::class);
+    }
 
     public function order()
     {

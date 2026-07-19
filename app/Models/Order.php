@@ -217,9 +217,19 @@ class Order extends Model
         return $this->hasMany(Bon::class);
     }
 
+    /**
+     * Bij een abonnement hoort per vernietiging een certificaat, dus meerdere.
+     * Een losse order heeft er hooguit één; certificate() blijft daarvoor
+     * bestaan zodat bestaande schermen niet hoeven te weten welk geval het is.
+     */
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
     public function certificate()
     {
-        return $this->hasOne(Certificate::class);
+        return $this->hasOne(Certificate::class)->latestOfMany();
     }
 
     public function messages()
@@ -257,22 +267,10 @@ class Order extends Model
         return $this->type === self::TYPE_ABONNEMENT;
     }
 
-    /** Een rit waarbij wij een container komen brengen. */
-    public function isBezorging(): bool
+    /** Alle ritten onder dit abonnement: bezorging, ophalingen en retour. */
+    public function visits()
     {
-        return $this->type === self::TYPE_BEZORGING;
-    }
-
-    /** Het abonnement waar deze ophaling onder valt, als die er is. */
-    public function subscription()
-    {
-        return $this->belongsTo(self::class, 'subscription_order_id');
-    }
-
-    /** Alles wat onder dit abonnement is ingepland: de bezorging en de ophalingen. */
-    public function childOrders()
-    {
-        return $this->hasMany(self::class, 'subscription_order_id')->orderBy('pickup_date');
+        return $this->hasMany(Bon::class)->orderBy('planned_for');
     }
 
     /**
@@ -282,25 +280,20 @@ class Order extends Model
      */
     public function pickups()
     {
-        return $this->hasMany(self::class, 'subscription_order_id')
-            ->where('type', '!=', self::TYPE_BEZORGING)
-            ->orderBy('pickup_date');
+        return $this->hasMany(Bon::class)
+            ->where('mode', Bon::MODE_OPHAAL)
+            ->orderBy('planned_for');
     }
 
     /** De rit waarmee de container wordt gebracht. Er is er hooguit één. */
-    public function deliveryOrder()
+    public function deliveryVisit()
     {
-        return $this->hasOne(self::class, 'subscription_order_id')
-            ->where('type', self::TYPE_BEZORGING);
+        return $this->hasOne(Bon::class)->where('mode', Bon::MODE_BEZORGING);
     }
 
-    /**
-     * Een ophaling onder een abonnement. Die wordt NIET los gefactureerd: de
-     * klant betaalt het abonnement. Zie de guard in Invoice::fromBon().
-     */
-    public function isSubscriptionPickup(): bool
+    public function retourVisit()
     {
-        return $this->subscription_order_id !== null;
+        return $this->hasOne(Bon::class)->where('mode', Bon::MODE_RETOUR);
     }
 
     /**
@@ -410,12 +403,12 @@ class Order extends Model
     public function nextPickupDate(): ?\Carbon\Carbon
     {
         $planned = $this->pickups()
-            ->whereDate('pickup_date', '>=', now()->toDateString())
-            ->orderBy('pickup_date')
+            ->whereDate('planned_for', '>=', now()->toDateString())
+            ->orderBy('planned_for')
             ->first();
 
         if ($planned) {
-            return $planned->pickup_date;
+            return $planned->planned_for;
         }
 
         $slot = $this->subFirstScheduledDate();
@@ -488,9 +481,7 @@ class Order extends Model
         // te bepalen of er echt iets is gebeurd. Ook de bezorgrit telt mee: is
         // die getekend, dan staat de container bij de klant en is "nooit
         // geactiveerd" niet meer waar.
-        return ! $this->childOrders()
-            ->whereHas('bons', fn ($q) => $q->whereNotNull('picked_up_at'))
-            ->exists();
+        return ! $this->bons()->whereNotNull('picked_up_at')->exists();
     }
 
     /** Opgezegd én de einddatum is voorbij. Tot dan loopt het abonnement door. */

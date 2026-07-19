@@ -179,7 +179,7 @@ class BonController extends Controller
             // Niet bij een ophaling onder een abonnement: die is al betaald via
             // het maandbedrag. Zonder deze check zou hier automatisch een tweede
             // rekening de deur uit gaan, en die wordt ook nog direct verstuurd.
-            if (!$bon->order->isSubscriptionPickup() && !Invoice::where('bon_id', $bon->id)->exists()) {
+            if (! $bon->order->isAbonnement() && ! Invoice::where('bon_id', $bon->id)->exists()) {
                 try {
                     $invoice = Invoice::fromBon($bon->fresh());
                     Mail::to($invoice->customer_email)

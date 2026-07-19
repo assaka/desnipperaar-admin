@@ -24,20 +24,21 @@ class CertificateController extends Controller
 
     public function generate(Request $request, Order $order)
     {
-        if ($order->certificate) {
-            return redirect()->route('certificates.show', $order->certificate);
-        }
 
         // Bij een bezorging is er niets opgehaald en dus niets vernietigd. Een
         // vernietigingscertificaat daarvoor zou verklaren dat materiaal is
         // vernietigd dat nooit is meegenomen.
-        if ($order->isBezorging()) {
-            return back()->withErrors([
-                'certificate' => 'Dit is een bezorging, er is niets vernietigd. Een certificaat hoort bij de ophaling.'
-            ]);
-        }
+        // Een certificaat hoort bij één vernietiging, dus bij één getekende bon.
+        // Bij een abonnement zijn dat er meerdere op dezelfde order. Bezorg- en
+        // retourritten leveren er geen op: daar wordt niets meegenomen.
+        $bon = $order->bons()
+            ->whereNotNull('picked_up_at')
+            ->whereNotIn('mode', \App\Models\Bon::MODES_ZONDER_VERNIETIGING)
+            ->whereDoesntHave('certificate')
+            ->orderBy('picked_up_at')
+            ->first();
 
-        $hasSignedBon = $order->bons()->whereNotNull('picked_up_at')->exists();
+        $hasSignedBon = $bon !== null;
         if (!$hasSignedBon) {
             return back()->withErrors([
                 'certificate' => 'Nog geen getekende bon — materiaal is nog niet opgehaald/afgeleverd.'
@@ -47,6 +48,7 @@ class CertificateController extends Controller
         $certificate = Certificate::create([
             'certificate_number' => Certificate::generateCertificateNumber(),
             'order_id'           => $order->id,
+            'bon_id'             => $bon->id,
             'destroyed_at'       => now(),
             'destruction_method' => 'DIN 66399 P-5 / H-4',
             'operator_name'      => $request->user()->name,

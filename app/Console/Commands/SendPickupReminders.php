@@ -38,51 +38,51 @@ class SendPickupReminders extends Command
         // Bezorgingen én ophalingen, maar elk met hun eigen mail. Eén tekst voor
         // beide zou bij een bezorging vragen om een container buiten te zetten
         // die er nog niet staat.
-        $pickups = Order::whereNotNull('subscription_order_id')
-            ->whereNull('pickup_reminder_sent_at')
-            ->whereDate('pickup_date', $tomorrow->toDateString())
-            ->whereIn('state', [Order::STATE_NIEUW, Order::STATE_BEVESTIGD])
-            ->with('subscription')
+        $pickups = \App\Models\Bon::whereNull('reminder_sent_at')
+            ->whereNull('picked_up_at')
+            ->whereDate('planned_for', $tomorrow->toDateString())
+            ->whereHas('order', fn ($q) => $q->where('type', Order::TYPE_ABONNEMENT))
+            ->with('order')
             ->orderBy('id')
             ->get();
 
         $sent = 0;
 
         foreach ($pickups as $pickup) {
-            if (! $pickup->customer_email) {
+            if (! $pickup->order?->customer_email) {
                 continue;
             }
 
-            $isDelivery = $pickup->isBezorging();
+            $isDelivery = $pickup->mode === \App\Models\Bon::MODE_BEZORGING;
 
             if ($dry) {
                 $this->line(sprintf(
                     '[dry] %s %s %s → %s op %s',
-                    $pickup->order_number,
+                    $pickup->bon_number,
                     $isDelivery ? 'BRENGEN' : 'ophalen',
-                    $pickup->customer_name,
-                    $pickup->customer_email,
-                    $pickup->pickup_date->format('d-m-Y'),
+                    $pickup->order->customer_name,
+                    $pickup->order->customer_email,
+                    $pickup->planned_for->format('d-m-Y'),
                 ));
                 $sent++;
                 continue;
             }
 
             try {
-                Mail::to($pickup->customer_email)->send(
+                Mail::to($pickup->order->customer_email)->send(
                     $isDelivery ? new DeliveryReminder($pickup) : new PickupReminder($pickup)
                 );
             } catch (\Throwable $e) {
                 // Niet markeren, dan is er morgenvroeg nog een kans. Daarna is de
                 // ophaaldag zelf en heeft een herinnering geen zin meer.
                 report($e);
-                $this->error(sprintf('%s mail mislukt', $pickup->order_number));
+                $this->error(sprintf('%s mail mislukt', $pickup->bon_number));
                 continue;
             }
 
-            $pickup->update(['pickup_reminder_sent_at' => now()]);
+            $pickup->update(['reminder_sent_at' => now()]);
 
-            $this->info(sprintf('%s → %s (%s)', $pickup->order_number, $pickup->customer_email, $pickup->pickup_date->format('d-m-Y')));
+            $this->info(sprintf('%s → %s (%s)', $pickup->bon_number, $pickup->order->customer_email, $pickup->planned_for->format('d-m-Y')));
             $sent++;
         }
 

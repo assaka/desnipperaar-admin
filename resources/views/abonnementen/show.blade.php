@@ -89,13 +89,13 @@
                 <tr><td class="pr-4 text-gray-600">Container brengen</td><td>
                     <strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong>
                     <span class="text-xs text-gray-600">· hier begint de looptijd en de facturatie</span>
-                    @if ($order->deliveryOrder)
+                    @if ($order->deliveryVisit)
                         <br><span class="text-xs">Bezorgrit
-                            <a href="{{ route('orders.show', $order->deliveryOrder) }}" class="underline font-mono">{{ $order->deliveryOrder->order_number }}</a>
-                            op {{ $order->deliveryOrder->pickup_date->format('d-m-Y') }}
-                            · status {{ $order->deliveryOrder->state }}</span>
+                            <a href="{{ route('bons.show', $order->deliveryVisit) }}" class="underline font-mono">{{ $order->deliveryVisit->bon_number }}</a>
+                            op {{ $order->deliveryVisit->planned_for?->format('d-m-Y') }}
+                            · {{ $order->deliveryVisit->picked_up_at ? 'gereden' : 'nog niet gereden' }}</span>
                     @else
-                        <br><span class="text-xs text-red-700">Geen bezorgrit ingepland. Maak een order aan om de container te brengen.</span>
+                        <br><span class="text-xs text-red-700">Geen bezorgrit ingepland.</span>
                     @endif
                 </td></tr>
                 @if ($order->nextPickupDate())
@@ -206,23 +206,29 @@
                     @endif
                 </span>
             </form>
-            @php $upcoming = $order->pickups()->whereDate('pickup_date', '>=', now()->toDateString())->limit(8)->get(); @endphp
+            @php $upcoming = $order->pickups()->whereDate('planned_for', '>=', now()->toDateString())->limit(8)->get(); @endphp
             <div class="mt-4">
                 <p class="font-bold text-sm mb-1">Ingeplande ophalingen</p>
                 @if ($upcoming->isEmpty())
                     <p class="text-xs text-gray-600">Nog niets ingepland. De planner draait elke nacht om 02:30 en zet 90 dagen vooruit klaar.</p>
                 @else
                     <ul class="text-sm">
-                        @foreach ($upcoming as $p)
+                        @foreach ($upcoming as $b)
                             <li>
-                                {{ $p->pickup_date->format('d-m-Y') }} ·
-                                <a href="{{ route('orders.show', $p) }}" class="underline font-mono text-xs">{{ $p->order_number }}</a>
-                                @if ($p->subscription_scheduled_for && ! $p->subscription_scheduled_for->equalTo($p->pickup_date))
-                                    <span class="text-xs text-gray-500">verschoven van {{ $p->subscription_scheduled_for->format('d-m-Y') }}</span>
+                                {{ $b->planned_for->format('d-m-Y') }} ·
+                                <a href="{{ route('bons.show', $b) }}" class="underline font-mono text-xs">{{ $b->bon_number }}</a>
+                                <span class="text-xs text-gray-500">· {{ $b->driver_name_snapshot ?: 'geen chauffeur' }}</span>
+                                @if ($b->scheduled_for && ! $b->scheduled_for->equalTo($b->planned_for))
+                                    <span class="text-xs text-gray-500">· verschoven van {{ $b->scheduled_for->format('d-m-Y') }}</span>
                                 @endif
                             </li>
                         @endforeach
                     </ul>
+                @endif
+                @if ($order->retourVisit)
+                    <p class="text-xs text-gray-700 mt-2">Retourrit
+                        <a href="{{ route('bons.show', $order->retourVisit) }}" class="underline font-mono">{{ $order->retourVisit->bon_number }}</a>
+                        op {{ $order->retourVisit->planned_for?->format('d-m-Y') }} om de container op te halen.</p>
                 @endif
             </div>
 

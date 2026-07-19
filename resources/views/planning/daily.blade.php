@@ -63,35 +63,33 @@
                                 <th>Klant</th>
                                 <th>Adres</th>
                                 <th class="w-32">Chauffeur</th>
-                                <th class="w-28">Order</th>
+                                <th class="w-28">Ref</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($dag as $o)
-                                @php $brengen = $o->isBezorging(); @endphp
+                            @foreach ($dag as $r)
                                 <tr class="border-b hover:bg-yellow-50">
                                     <td class="py-1">
-                                        <span class="inline-block px-2 py-0.5 text-xs font-bold uppercase {{ $brengen ? 'bg-blue-700 text-white' : 'bg-gray-800 text-white' }}">
-                                            {{ $brengen ? 'brengen' : 'ophalen' }}
-                                        </span>
+                                        <span class="inline-block px-2 py-0.5 text-xs font-bold uppercase {{ match ($r['soort']) {
+                                            'brengen' => 'bg-blue-700 text-white',
+                                            'retour'  => 'bg-purple-700 text-white',
+                                            default   => 'bg-gray-800 text-white',
+                                        } }}">{{ $r['soort'] }}</span>
                                     </td>
-                                    <td>{{ $o->pickup_window ?: 'flexibel' }}</td>
+                                    <td>{{ $r['window'] }}</td>
                                     <td>
-                                        {{ $o->customer_name }}
-                                        @if ($o->customer?->company) <span class="text-xs text-gray-500">— {{ $o->customer->company }}</span>@endif
-                                        @if ($o->subscription)
+                                        {{ $r['klant'] }}
+                                        @if ($r['bedrijf']) <span class="text-xs text-gray-500">— {{ $r['bedrijf'] }}</span>@endif
+                                        @if ($r['abonnement'])
                                             <br><span class="text-xs text-gray-500">abonnement
-                                                <a href="{{ route('abonnementen.show', $o->subscription) }}" class="underline font-mono">{{ $o->subscription->order_number }}</a>
+                                                <a href="{{ $r['abonnement']['url'] }}" class="underline font-mono">{{ $r['abonnement']['nr'] }}</a>
                                             </span>
                                         @endif
                                     </td>
-                                    <td>{{ $o->customer_address }}, {{ $o->customer_postcode }} {{ $o->customer_city }}</td>
-                                    <td>
-                                        @php $driver = $o->bons->first()?->driver; @endphp
-                                        {{ $driver?->name ?? '—' }}
-                                    </td>
+                                    <td>{{ $r['adres'] }}</td>
+                                    <td>{{ $r['chauffeur'] ?: '—' }}</td>
                                     <td class="font-mono text-xs">
-                                        <a href="{{ route('orders.show', $o) }}" class="underline">{{ $o->order_number }}</a>
+                                        <a href="{{ $r['url'] }}" class="underline">{{ $r['ref'] }}</a>
                                     </td>
                                 </tr>
                             @endforeach

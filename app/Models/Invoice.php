@@ -156,11 +156,10 @@ class Invoice extends Model
         // herrekent uit de losse doos- en containerprijzen, dus dat zou een
         // rekening van ruim honderd euro opleveren bovenop het maandbedrag dat
         // de klant al betaalt. De abonnementsfactuur loopt via fromSubscription().
-        if ($order->isSubscriptionPickup()) {
+        if ($order->isAbonnement()) {
             throw new \LogicException(
-                "Order {$order->order_number} is een ophaling onder abonnement "
-                . ($order->subscription?->order_number ?? $order->subscription_order_id)
-                . ' en mag niet los gefactureerd worden.'
+                "Order {$order->order_number} is een abonnement en wordt per periode "
+                . 'gefactureerd via fromSubscription(), niet per rit.'
             );
         }
 

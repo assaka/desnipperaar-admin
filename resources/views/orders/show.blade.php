@@ -66,28 +66,6 @@
         @endif
     </section>
 
-    @if ($order->isSubscriptionPickup())
-        <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
-            <h2 class="font-black mb-2">
-                {{ $order->isBezorging() ? 'Bezorging onder abonnement' : 'Ophaling onder abonnement' }}
-            </h2>
-            @if ($order->isBezorging())
-                <p class="text-sm font-bold mb-1">Container BRENGEN, niet ophalen.</p>
-            @endif
-            <p class="text-sm">
-                Hoort bij
-                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
-                @if ($order->subscription) · {{ $order->subscription->subFreqLabel() }} @endif
-                @if ($order->subscription_scheduled_for && $order->pickup_date && ! $order->subscription_scheduled_for->equalTo($order->pickup_date))
-                    <br><span class="text-xs text-gray-600">Ritme gaf {{ $order->subscription_scheduled_for->format('d-m-Y') }}, dat is een feestdag of weekenddag. Deze rit schuift een week op; de reeks loopt gewoon door op het oude ritme.</span>
-                @endif
-            </p>
-            <p class="text-xs text-gray-600 mt-2">
-                Wordt <strong>niet los gefactureerd</strong>. De klant betaalt via het abonnement.
-            </p>
-        </section>
-    @endif
-
     @if ($order->type === 'quote')
         <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
             <h2 class="font-black mb-3">Offerte op maat</h2>
@@ -128,23 +106,7 @@
         </section>
     @endif
 
-    {{-- Niet bij een rit onder een abonnement. Dit blok rekent de losse doos- en
-         containerprijzen via Pricing::quote(), dus het toonde € 145,20 voor een
-         ophaling die de klant al via zijn maandbedrag betaalt. Zie ook de guards
-         in Invoice::fromBon() en BonController. --}}
-    @if ($order->isSubscriptionPickup())
-        <section class="mb-6 bg-gray-50 border-l-4 border-gray-400 p-4">
-            <h2 class="font-black mb-2">Prijs</h2>
-            <p class="text-sm">
-                Geen losse prijs. Deze rit valt onder abonnement
-                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>.
-                @if ($order->subscription?->sub_price_excl_btw)
-                    De klant betaalt € {{ number_format($order->subscription->sub_price_excl_btw, 2, ',', '.') }}
-                    {{ $order->subscription->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw.
-                @endif
-            </p>
-        </section>
-    @elseif (count($quote['lines']))
+    @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht
                 @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
@@ -255,7 +217,7 @@
 
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
-            <h2 class="font-black">{{ $order->isBezorging() ? 'Geplande bezorging' : 'Geplande ophaling' }}</h2>
+            <h2 class="font-black">Geplande ophaling</h2>
             @if ($order->state === 'bevestigd')
                 <button type="button" @click="editing = !editing" class="text-xs underline"
                         x-text="editing ? 'Annuleren' : 'Wijzig planning'"></button>
@@ -270,17 +232,7 @@
                 <div><strong>Chauffeur:</strong> {{ $firstBon?->driver_name_snapshot ?? '—' }}
                     @if ($firstBon?->driver_license_last4) <span class="font-mono text-xs">(****{{ $firstBon->driver_license_last4 }})</span>@endif
                 </div>
-                {{-- Alleen zeggen dat er gemaild is als dat ook zo is. Ritten onder
-                     een abonnement krijgen geen bevestiging maar een herinnering,
-                     zie de guard in OrderController::confirmPickup(). --}}
-                @if ($order->isSubscriptionPickup())
-                    <div class="mt-1 text-xs text-gray-600">
-                        Geen bevestigingsmail. De klant krijgt de dag ervoor een
-                        {{ $order->isBezorging() ? 'bezorgherinnering' : 'ophaalherinnering' }}.
-                    </div>
-                @else
                     <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
-                @endif
             </div>
         @endif
 
@@ -400,9 +352,7 @@
         </section>
     @endif
 
-    {{-- Geen certificaat bij een bezorging: er is niets meegenomen en dus niets
-         vernietigd. CertificateController::generate() weigert het ook. --}}
-    @if (($order->certificate || $hasSignedBon) && ! $order->isBezorging())
+    @if ($order->certificate || $hasSignedBon)
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>
             @if ($order->certificate)
