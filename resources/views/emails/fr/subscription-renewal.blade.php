@@ -14,7 +14,7 @@ nous continuons les enlèvements. Seules les conditions changent.</p>
     <strong>Vous ne faites rien ?</strong> À partir du {{ $renewalDate->copy()->addDay()->format('d-m-Y') }},
     votre abonnement continue pour
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA, notre tarif avantageux,
     @endif
     et vous pouvez arrêter à tout moment. Sans aucun engagement.
 </p>
@@ -29,7 +29,7 @@ nous continuons les enlèvements. Seules les conditions changent.</p>
         </tr>
     @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Au mois</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Au mois (tarif avantageux)</td>
         <td>
             @if ($monthlyPrice)
                 € {{ number_format($monthlyPrice, 2, ',', '.') }} toutes les 4 semaines hors TVA.

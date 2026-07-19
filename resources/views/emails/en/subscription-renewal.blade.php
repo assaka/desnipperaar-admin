@@ -14,7 +14,7 @@ keep collecting. Only the terms change.</p>
     <strong>Do nothing?</strong> From {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} your subscription
     continues at
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} every 4 weeks excl. VAT,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} every 4 weeks excl. VAT, our discounted rate,
     @endif
     and you can stop at any time. No further commitment.
 </p>
@@ -29,7 +29,7 @@ keep collecting. Only the terms change.</p>
         </tr>
     @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Monthly</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Monthly (discounted rate)</td>
         <td>
             @if ($monthlyPrice)
                 € {{ number_format($monthlyPrice, 2, ',', '.') }} every 4 weeks excl. VAT.

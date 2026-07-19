@@ -11,9 +11,9 @@ en wij blijven ophalen. Alleen de voorwaarden veranderen.</p>
     <strong>Doet u niets?</strong> Dan gaat uw abonnement vanaf {{ $renewalDate->copy()->addDay()->format('d-m-Y') }}
     door voor
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw, het voordeeltarief,
     @endif
-    en kunt u op elk moment stoppen. U zit dan nergens meer aan vast.
+    U kunt op elk moment stoppen. U zit dan nergens meer aan vast.
 </p>
 
 <p>Wilt u iets anders? Antwoord dan op deze email, dan regelen wij het.</p>
@@ -26,7 +26,7 @@ en wij blijven ophalen. Alleen de voorwaarden veranderen.</p>
         </tr>
     @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Maandelijks</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Maandelijks (voordeeltarief)</td>
         <td>
             @if ($monthlyPrice)
                 € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw.

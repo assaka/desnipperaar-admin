@@ -207,24 +207,68 @@ class PlanningController extends Controller
         $title = ($isProposal ? '⚠ VOORSTEL: ' : '')
                . $order->order_number . ' · ' . $order->customer_name;
 
-        $event = [
-            'id'          => ($isProposal ? 'proposal-' : 'order-') . $order->id,
-            'title'       => $title,
-            'calendarId'  => $isProposal
-                ? 'proposal'
-                : ($driverId ? 'driver-' . $driverId : 'unassigned'),
-            // extended props for JS callbacks
-            '_orderId'    => $order->id,
-            '_type'       => $type,
-            '_window'     => $window,
-            '_driverId'   => $driverId,
-            '_orderUrl'   => route('orders.show', $order),
-            '_customer'   => $order->customer_name,
-            '_address'    => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
-        ];
+        return $this->formatEvent(
+            id: ($isProposal ? 'proposal-' : 'order-') . $order->id,
+            title: $title,
+            calendarId: $isProposal ? 'proposal' : ($driverId ? 'driver-' . $driverId : 'unassigned'),
+            date: $date,
+            window: $window,
+            duration: (int) ($order->duration_minutes ?? 30),
+            ext: [
+                '_kind'     => 'order',
+                '_moveId'   => $order->id,
+                '_type'     => $type,
+                '_window'   => $window,
+                '_driverId' => $driverId,
+                '_orderUrl' => route('orders.show', $order),
+                '_customer' => $order->customer_name,
+                '_address'  => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
+            ],
+        );
+    }
 
-        $duration = (int) ($order->duration_minutes ?? 30);
-        if ($window === 'flexibel' || !$window) {
+    /**
+     * Een abonnementsrit op het bord. De rit is een bon, niet een order, dus de
+     * datum komt van de bon en verslepen werkt de bon bij. Brengen en retour
+     * krijgen een prefix, zodat een chauffeur niet met een lege container naar
+     * een ophaling rijdt of andersom.
+     */
+    private function buildBonEvent(\App\Models\Bon $bon): array
+    {
+        $prefix = match ($bon->mode) {
+            \App\Models\Bon::MODE_BEZORGING => 'BRENG · ',
+            \App\Models\Bon::MODE_RETOUR    => 'RETOUR · ',
+            default                          => '',
+        };
+        $order  = $bon->order;
+        $window = $bon->planned_window ?: 'flexibel';
+
+        return $this->formatEvent(
+            id: 'bon-' . $bon->id,
+            title: $prefix . $bon->bon_number . ' · ' . $order->customer_name,
+            calendarId: $bon->driver_id ? 'driver-' . $bon->driver_id : 'unassigned',
+            date: $bon->planned_for,
+            window: $window,
+            duration: 30,
+            ext: [
+                '_kind'     => 'bon',
+                '_moveId'   => $bon->id,
+                // Alleen nog niet gereden ritten mogen versleept worden.
+                '_type'     => $bon->picked_up_at ? 'done' : 'confirmed',
+                '_window'   => $window,
+                '_driverId' => $bon->driver_id,
+                '_orderUrl' => route('bons.show', $bon),
+                '_customer' => $order->customer_name,
+                '_address'  => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
+            ],
+        );
+    }
+
+    private function formatEvent(string $id, string $title, string $calendarId, $date, string $window, int $duration, array $ext): array
+    {
+        $event = ['id' => $id, 'title' => $title, 'calendarId' => $calendarId] + $ext;
+
+        if ($window === 'flexibel' || ! $window) {
             $event['start'] = $date->toDateString();
             $event['end']   = $date->toDateString();
         } else {
@@ -235,8 +279,8 @@ class PlanningController extends Controller
             } else {
                 [$from, $to] = explode('-', $window, 2);
             }
-            $startTs     = strtotime($date->toDateString() . ' ' . $from);
-            $endTs       = min(strtotime($date->toDateString() . ' ' . $to), $startTs + $duration * 60);
+            $startTs = strtotime($date->toDateString() . ' ' . $from);
+            $endTs   = min(strtotime($date->toDateString() . ' ' . $to), $startTs + $duration * 60);
             $event['start'] = date('Y-m-d H:i', $startTs);
             $event['end']   = date('Y-m-d H:i', $endTs);
         }

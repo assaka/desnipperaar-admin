@@ -14,7 +14,7 @@ está y seguimos recogiendo. Solo cambian las condiciones.</p>
     <strong>¿No hace nada?</strong> Desde el {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} su suscripción
     continúa por
     @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} cada 4 semanas sin IVA,
+        € {{ number_format($monthlyPrice, 2, ',', '.') }} cada 4 semanas sin IVA, nuestra tarifa reducida,
     @endif
     y puede parar cuando quiera. Sin ningún compromiso.
 </p>
@@ -29,7 +29,7 @@ está y seguimos recogiendo. Solo cambian las condiciones.</p>
         </tr>
     @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Mensual</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Mensual (tarifa reducida)</td>
         <td>
             @if ($monthlyPrice)
                 € {{ number_format($monthlyPrice, 2, ',', '.') }} cada 4 semanas sin IVA.
