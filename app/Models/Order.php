@@ -489,9 +489,18 @@ class Order extends Model
             return false;
         }
 
-        // Ook de bezorgrit telt mee: is die gereden, dan staat de container bij
-        // de klant en is "nooit geactiveerd" niet meer waar.
-        return ! $this->childOrders()->whereHas('bons')->exists();
+        // Kijken naar een GETEKENDE bon, niet naar het bestaan van een bon. Een
+        // bon wordt al aangemaakt zodra er een chauffeur wordt toegewezen, soms
+        // weken voor de rit. Dat blokkeerde het terugzetten van een abonnement
+        // waar nog niets voor was gereden.
+        //
+        // picked_up_at is hetzelfde signaal dat CertificateController gebruikt om
+        // te bepalen of er echt iets is gebeurd. Ook de bezorgrit telt mee: is
+        // die getekend, dan staat de container bij de klant en is "nooit
+        // geactiveerd" niet meer waar.
+        return ! $this->childOrders()
+            ->whereHas('bons', fn ($q) => $q->whereNotNull('picked_up_at'))
+            ->exists();
     }
 
     /** Opgezegd én de einddatum is voorbij. Tot dan loopt het abonnement door. */
