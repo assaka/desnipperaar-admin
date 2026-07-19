@@ -174,7 +174,10 @@ class BonController extends Controller
         }
 
         // Advance order state when pickup is finalized — triggers on explicit datetime OR on auto-fill at customer sign.
-        if ($bon->picked_up_at && in_array($bon->order->state, [\App\Models\Order::STATE_NIEUW, \App\Models\Order::STATE_BEVESTIGD])) {
+        // Niet bij een abonnement: dat is één doorlopende order met meerdere
+        // ritten, die mag niet op "opgehaald" springen omdat één bon getekend is.
+        if ($bon->picked_up_at && ! $bon->order->isAbonnement()
+            && in_array($bon->order->state, [\App\Models\Order::STATE_NIEUW, \App\Models\Order::STATE_BEVESTIGD])) {
             $bon->order->update(['state' => \App\Models\Order::STATE_OPGEHAALD]);
         }
 
@@ -207,9 +210,56 @@ class BonController extends Controller
                     report($e);
                 }
             }
+
+            // De bezorging van een abonnement zet de facturatiecyclus in gang. De
+            // container staat er nu, dus de eerste periode van 4 weken begint op
+            // deze werkelijke bezorgdatum, en de eerste factuur gaat meteen mee.
+            if ($bon->order->isAbonnement() && $bon->mode === Bon::MODE_BEZORGING) {
+                $this->startSubscriptionBilling($bon->fresh());
+            }
         }
 
         return redirect()->route('bons.show', $bon);
+    }
+
+    /**
+     * De bezorging is getekend: de container staat bij de klant. Vanaf hier loopt
+     * de facturatie, per 4 weken, vooruit.
+     *
+     * De cyclus begint op de WERKELIJKE bezorgdatum, niet op de datum die bij het
+     * goedkeuren was gepland. Kwam de container een week later, dan schuift de
+     * hele reeks mee: het contract, de facturatie en de ophalingen. Anders zou de
+     * klant betalen voor een periode waarin er nog geen container stond.
+     */
+    private function startSubscriptionBilling(Bon $delivery): void
+    {
+        $order   = $delivery->order;
+        $actual  = $delivery->picked_up_at->copy()->startOfDay();
+        $planned = $order->sub_active_from?->copy()->startOfDay();
+
+        if (! $planned || ! $actual->equalTo($planned)) {
+            // Re-anker op de echte bezorgdatum en plan de ophalingen opnieuw. De
+            // nog niet gereden ophaalbons hingen aan de oude datum.
+            $order->update([
+                'sub_active_from'     => $actual->toDateString(),
+                'sub_term_started_on' => $actual->toDateString(),
+            ]);
+            $order->pickups()->whereNull('picked_up_at')->delete();
+
+            try {
+                \Illuminate\Support\Facades\Artisan::call('subscriptions:plan', ['--subscription' => $order->id]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        // Eerste factuur meteen. De invoice-cron ziet de bezorgbon nu getekend,
+        // zet de periode op de bezorgdatum en verstuurt de factuur vooruit.
+        try {
+            \Illuminate\Support\Facades\Artisan::call('subscriptions:invoice', ['--subscription' => $order->id]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function pdf(Bon $bon)

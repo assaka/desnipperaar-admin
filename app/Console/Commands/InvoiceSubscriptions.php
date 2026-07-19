@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Factureer lopende abonnementen, vooruit, per periode van 4 weken.
@@ -27,6 +28,7 @@ class InvoiceSubscriptions extends Command
 {
     protected $signature = 'subscriptions:invoice
                             {--date= : Reken alsof het deze datum is (Y-m-d), voor herstel en tests}
+                            {--subscription= : Alleen dit abonnement (id), voor direct na bezorging}
                             {--dry-run : Toon wat er zou gebeuren, maak niets aan}';
 
     protected $description = 'Maak conceptfacturen voor lopende abonnementen (vooruit, per 4 weken)';
@@ -39,6 +41,7 @@ class InvoiceSubscriptions extends Command
 
         $subscriptions = Order::where('type', Order::TYPE_ABONNEMENT)
             ->whereNotNull('sub_active_from')
+            ->when($this->option('subscription'), fn ($q) => $q->whereKey((int) $this->option('subscription')))
             ->orderBy('id')
             ->get();
 
@@ -50,6 +53,16 @@ class InvoiceSubscriptions extends Command
             // sub_ends_on, dus een opgezegd abonnement loopt gewoon door tot die
             // datum en wordt tot dan nog normaal gefactureerd.
             if ($order->hasEnded()) {
+                continue;
+            }
+
+            // Niet factureren voordat de container er staat. De cyclus begint bij
+            // de werkelijke bezorging, dus zolang de bezorgbon niet getekend is,
+            // is er nog niets geleverd om voor te betalen. De bezorging zet zelf
+            // sub_active_from op de echte bezorgdatum (BonController::update).
+            $delivery = $order->deliveryVisit;
+            if (! $delivery || ! $delivery->picked_up_at) {
+                $skipped++;
                 continue;
             }
 
@@ -121,13 +134,28 @@ class InvoiceSubscriptions extends Command
 
             $order->update(['sub_last_invoiced_period' => $periodStart->toDateString()]);
 
+            // Automatisch versturen. Anders dan bij losse orders is dit veilig om
+            // vanzelf te doen: het bedrag is de afgesproken abonnementsprijs, geen
+            // herrekening die fout kan gaan, en de klant verwacht elke 4 weken een
+            // vaste factuur vooruit. Mislukt de mail, dan blijft de factuur als
+            // concept staan en kan hij met de hand verstuurd worden.
+            $mailed = false;
+            try {
+                Mail::to($invoice->customer_email)->send(new \App\Mail\InvoiceSent($invoice));
+                $invoice->update(['status' => Invoice::STATUS_SENT, 'sent_at' => now()]);
+                $mailed = true;
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
             $this->info(sprintf(
-                '%s → %s (%s t/m %s) € %s',
+                '%s → %s (%s t/m %s) € %s%s',
                 $order->order_number,
                 $invoice->invoice_number,
                 $invoice->period_start->format('d-m-Y'),
                 $invoice->period_end->format('d-m-Y'),
                 number_format((float) $invoice->amount_incl_btw, 2, ',', '.'),
+                $mailed ? ' · verstuurd' : ' · MAIL MISLUKT, blijft concept',
             ));
             $made++;
         }
