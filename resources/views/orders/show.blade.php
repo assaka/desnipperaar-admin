@@ -128,7 +128,21 @@
         </section>
     @endif
 
-    @if (count($quote['lines']))
+    {{-- Niet bij een rit onder een abonnement. Dit blok rekent de losse doos- en
+         containerprijzen via Pricing::quote(), dus het toonde € 145,20 voor een
+         ophaling die de klant al via zijn maandbedrag betaalt. Zie ook de guards
+         in Invoice::fromBon() en BonController. --}}
+    @if ($order->isSubscriptionPickup())
+        <section class="mb-6 bg-gray-50 border-l-4 border-gray-400 p-4">
+            <h2 class="font-black mb-2">Prijs</h2>
+            <p class="text-sm">
+                Geen losse prijs. Deze rit valt onder abonnement
+                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>@if ($order->subscription?->sub_price_excl_btw),
+                    € {{ number_format($order->subscription->sub_price_excl_btw, 2, ',', '.') }}
+                    {{ $order->subscription->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw@endif.
+            </p>
+        </section>
+    @elseif (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht
                 @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
@@ -254,7 +268,17 @@
                 <div><strong>Chauffeur:</strong> {{ $firstBon?->driver_name_snapshot ?? '—' }}
                     @if ($firstBon?->driver_license_last4) <span class="font-mono text-xs">(****{{ $firstBon->driver_license_last4 }})</span>@endif
                 </div>
-                <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
+                {{-- Alleen zeggen dat er gemaild is als dat ook zo is. Ritten onder
+                     een abonnement krijgen geen bevestiging maar een herinnering,
+                     zie de guard in OrderController::confirmPickup(). --}}
+                @if ($order->isSubscriptionPickup())
+                    <div class="mt-1 text-xs text-gray-600">
+                        Geen bevestigingsmail. De klant krijgt de dag ervoor een
+                        {{ $order->delivery_mode === \App\Models\Order::DELIVERY_BRENG ? 'bezorgherinnering' : 'ophaalherinnering' }}.
+                    </div>
+                @else
+                    <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
+                @endif
             </div>
         @endif
 

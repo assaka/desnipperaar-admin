@@ -583,13 +583,19 @@ class OrderController extends Controller
             'reschedule_notes'            => null,
         ]);
 
-        // PickupConfirmed heet "Ophaalmoment bevestigd" en gaat ervan uit dat wij
-        // iets komen halen. Bij een bezorging klopt dat niet. Die klant heeft de
-        // datum al in de activatiemail gekregen en krijgt de dag ervoor nog een
-        // eigen bezorgherinnering, dus liever geen mail dan een verkeerde.
-        if ($order->delivery_mode === Order::DELIVERY_BRENG) {
+        // Ritten onder een abonnement krijgen geen bevestigingsmail. De klant
+        // kent zijn schema al uit de activatiemail en krijgt de dag ervoor een
+        // herinnering, toegesneden op brengen of halen. PickupConfirmed heet
+        // bovendien "Ophaalmoment bevestigd", wat bij een bezorging het
+        // omgekeerde zegt van wat er gebeurt.
+        //
+        // Hierdoor is het ook eenduidig wat er op de orderpagina mag staan: bij
+        // een abonnementsrit is er nooit een bevestigingsmail verstuurd.
+        if ($order->isSubscriptionPickup()) {
+            $wat = $order->delivery_mode === Order::DELIVERY_BRENG ? 'Bezorging' : 'Ophaling';
+
             return back()->with('status',
-                "Bezorging gepland met {$driver->name}. Geen mail verstuurd: de klant heeft de bezorgdatum al en krijgt de dag ervoor een herinnering.");
+                "{$wat} gepland met {$driver->name}. Geen bevestigingsmail: de klant krijgt de dag ervoor een herinnering.");
         }
 
         try {
