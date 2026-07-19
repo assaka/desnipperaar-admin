@@ -6,7 +6,7 @@
 
 <div class="flex justify-between items-baseline mb-3">
     <h1 class="text-2xl font-black">Planning</h1>
-    <div class="text-xs text-gray-600">Sleep een bevestigde afspraak. Na handmatige bevestiging van de verplaatsing gaat er een nieuwe bevestigingsmail naar de klant.</div>
+    <div class="text-xs text-gray-600">Sleep een rit om de datum te wijzigen. Klik een rit om een chauffeur toe te wijzen.</div>
 </div>
 
 <div class="flex gap-4 mb-3 text-sm flex-wrap items-center">
@@ -24,6 +24,28 @@
 
 <div id="sx-error" style="display:none;padding:12px;background:#FDECEC;border-left:4px solid #D32F2F;color:#8B1A1A;margin-bottom:12px;font-family:monospace;font-size:12px;white-space:pre-wrap;"></div>
 <div id="sx-calendar" style="height:78vh;min-height:640px;background:#fff;border:1px solid #DDD;"></div>
+
+{{-- Chauffeur toewijzen vanaf het bord, zonder de rit open te klikken. --}}
+<div id="drv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:20px;max-width:420px;width:90%;border:2px solid #0A0A0A;">
+        <div id="drv-title" class="font-black mb-1"></div>
+        <div id="drv-sub" class="text-xs text-gray-600 mb-3"></div>
+        <label class="block text-xs font-bold mb-1">Chauffeur</label>
+        <select id="drv-select" class="w-full border p-2 mb-3">
+            <option value="">— geen chauffeur —</option>
+            @foreach ($drivers as $d)
+                <option value="{{ $d->id }}">{{ $d->name }}@if ($d->license_last4) (****{{ $d->license_last4 }})@endif</option>
+            @endforeach
+        </select>
+        <div class="flex gap-2 justify-between items-center">
+            <a id="drv-open" href="#" class="text-sm underline">Rit openen ›</a>
+            <div class="flex gap-2">
+                <button id="drv-cancel" type="button" class="px-3 py-1 text-sm border border-gray-500">Sluiten</button>
+                <button id="drv-save" type="button" class="px-3 py-1 text-sm font-bold bg-black text-yellow-400">Toewijzen</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- Import map pins one preact + signals@1 across all Schedule-X imports. Prevents esm.sh from pulling @preact/signals@2.x which transitively drags in experimental preact@11 and breaks hooks. --}}
 <script type="importmap">
@@ -98,7 +120,7 @@ try {
         plugins: [eventsService, createDragAndDropPlugin(15), createCurrentTimePlugin()],
         callbacks: {
             onEventClick(ev) {
-                if (ev._orderUrl) window.location.href = ev._orderUrl;
+                openDriverModal(ev);
             },
             async onEventUpdate(ev) {
                 if (ev._type !== 'confirmed') return;
@@ -146,6 +168,51 @@ try {
     });
 
     calendar.render(document.getElementById('sx-calendar'));
+
+    // Chauffeur-toewijzing vanaf het bord. Klikken op een rit opent een keuzelijst
+    // in plaats van meteen door te navigeren; verslepen blijft de datum doen.
+    const modal = document.getElementById('drv-modal');
+    const sel   = document.getElementById('drv-select');
+    let current = null;
+
+    window.openDriverModal = (ev) => {
+        current = ev;
+        document.getElementById('drv-title').textContent = ev.title || ev._customer || '';
+        document.getElementById('drv-sub').textContent = ev._address || '';
+        document.getElementById('drv-open').href = ev._orderUrl || '#';
+        sel.value = ev._driverId ? String(ev._driverId) : '';
+        // Een al gereden rit kan niet meer toegewezen worden.
+        const done = ev._type === 'done';
+        sel.disabled = done;
+        document.getElementById('drv-save').disabled = done;
+        modal.style.display = 'flex';
+    };
+    const closeModal = () => { modal.style.display = 'none'; current = null; };
+    document.getElementById('drv-cancel').onclick = closeModal;
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    document.getElementById('drv-save').onclick = async () => {
+        if (!current) return;
+        const driverId = sel.value ? parseInt(sel.value, 10) : null;
+        try {
+            const r = await fetch(`{{ route('planning.assign-driver') }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                body: JSON.stringify({ kind: current._kind, id: current._moveId, driver_id: driverId }),
+            });
+            if (!r.ok) throw new Error(await r.text());
+            const data = await r.json();
+            // Kleur/lane live bijwerken zodat de toewijzing meteen zichtbaar is.
+            const idx = events.findIndex(e => e.id === current.id);
+            if (idx >= 0) {
+                events[idx] = { ...events[idx], calendarId: data.calendarId, _driverId: data.driverId };
+                eventsService.update(events[idx]);
+            }
+            closeModal();
+        } catch (err) {
+            alert('Fout bij toewijzen: ' + err.message);
+        }
+    };
 } catch (err) {
     showError('Init: ' + (err?.stack || err?.message || err));
 }

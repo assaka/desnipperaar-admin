@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/planning/dag',    [\App\Http\Controllers\PlanningController::class, 'daily'])->name('planning.daily');
     Route::get('/planning/events', [\App\Http\Controllers\PlanningController::class, 'events'])->name('planning.events');
     Route::post('/planning/move',  [\App\Http\Controllers\PlanningController::class, 'move'])->name('planning.move');
+    Route::post('/planning/assign-driver', [\App\Http\Controllers\PlanningController::class, 'assignDriver'])->name('planning.assign-driver');
 
     Route::get('/offertes', [\App\Http\Controllers\OrderController::class, 'offertes'])->name('offertes.index');
     Route::get('/abonnementen', [\App\Http\Controllers\OrderController::class, 'abonnementen'])->name('abonnementen.index');

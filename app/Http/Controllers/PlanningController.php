@@ -201,6 +201,65 @@ class PlanningController extends Controller
         return response()->json(['ok' => true, 'mailed' => $mailed]);
     }
 
+    /**
+     * Wijs een chauffeur toe vanaf het planbord, zonder de rit open te hoeven
+     * klikken. Werkt op een bon (abonnementsrit) of op de bon van een losse
+     * order. Alleen de chauffeur, geen datum of mail: verslepen doet de datum.
+     */
+    public function assignDriver(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'kind'      => 'required|in:order,bon',
+            'id'        => 'required|integer',
+            'driver_id' => 'nullable|integer|exists:drivers,id',
+        ]);
+
+        if ($data['kind'] === 'bon') {
+            $bon = \App\Models\Bon::findOrFail($data['id']);
+            abort_if($bon->picked_up_at !== null, 422, 'Deze rit is al gereden.');
+        } else {
+            $order = Order::findOrFail($data['id']);
+            $bon = $order->bons()->orderBy('id')->first();
+            abort_unless($bon, 422, 'Plan eerst de ophaling voor je een chauffeur toewijst.');
+        }
+
+        $this->applyDriver($bon, $data['driver_id'] ? (int) $data['driver_id'] : null);
+
+        $driver = $bon->fresh()->driver;
+        return response()->json([
+            'ok'         => true,
+            'driverId'   => $driver?->id,
+            'driverName' => $driver?->name,
+            'calendarId' => $driver ? 'driver-' . $driver->id : 'unassigned',
+        ]);
+    }
+
+    /** Zet (of wist) de chauffeur op een bon, met dezelfde snapshot als confirmPickup. */
+    private function applyDriver(\App\Models\Bon $bon, ?int $driverId): void
+    {
+        if ($driverId === null) {
+            $bon->update(['driver_id' => null, 'driver_name_snapshot' => null, 'driver_license_last4' => null]);
+            return;
+        }
+
+        $driver = Driver::findOrFail($driverId);
+        $patch = [
+            'driver_id'            => $driver->id,
+            'driver_name_snapshot' => $driver->name,
+            'driver_license_last4' => $driver->license_last4,
+        ];
+        // Handtekening uit het profiel voorvullen als de bon er nog geen heeft.
+        if ($driver->signature_path && empty($bon->driver_signature_path)) {
+            $copy = "signatures/bon-{$bon->id}-driver.png";
+            \Illuminate\Support\Facades\Storage::disk('local')->put(
+                $copy,
+                \Illuminate\Support\Facades\Storage::disk('local')->get($driver->signature_path)
+            );
+            $patch['driver_signature_path'] = $copy;
+        }
+        $bon->update($patch);
+    }
+
     private function buildCalendars($drivers): array
     {
         $calendars = [];
