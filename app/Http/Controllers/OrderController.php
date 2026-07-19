@@ -583,6 +583,15 @@ class OrderController extends Controller
             'reschedule_notes'            => null,
         ]);
 
+        // PickupConfirmed heet "Ophaalmoment bevestigd" en gaat ervan uit dat wij
+        // iets komen halen. Bij een bezorging klopt dat niet. Die klant heeft de
+        // datum al in de activatiemail gekregen en krijgt de dag ervoor nog een
+        // eigen bezorgherinnering, dus liever geen mail dan een verkeerde.
+        if ($order->delivery_mode === Order::DELIVERY_BRENG) {
+            return back()->with('status',
+                "Bezorging gepland met {$driver->name}. Geen mail verstuurd: de klant heeft de bezorgdatum al en krijgt de dag ervoor een herinnering.");
+        }
+
         try {
             Mail::to($order->customer_email)
                 ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));
