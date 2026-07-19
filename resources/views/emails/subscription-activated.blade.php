@@ -20,6 +20,7 @@
     @if ($pickupDay)
         <tr><td style="background:#F5F5F5;font-weight:700;">Vaste ophaaldag</td><td>{{ ucfirst($pickupDay) }}</td></tr>
     @endif
+    <tr><td style="background:#F5F5F5;font-weight:700;">Bezorgdag container</td><td><strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong></td></tr>
     @if ($next)
         <tr><td style="background:#F5F5F5;font-weight:700;">Eerste ophaling</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
     @endif
@@ -30,14 +31,13 @@
             <span style="color:#666;">€ {{ number_format($order->sub_price_excl_btw * 1.21, 2, ',', '.') }} {{ $per }} incl. 21% btw</span>
         </td></tr>
     @endif
-    @if ($order->sub_active_from)
-        <tr><td style="background:#F5F5F5;font-weight:700;">Actief vanaf</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
-    @endif
 </table>
 
-<p>Wij nemen binnen één werkdag contact met u op om de container te plaatsen. Daarna halen wij
-op volgens dit schema, zonder dat u er verder iets voor hoeft te doen. Valt een ophaaldag op
-een feestdag, dan komen wij de eerstvolgende werkdag en blijft het schema verder ongewijzigd.</p>
+<p>Wij brengen de container op {{ $order->sub_active_from->format('d-m-Y') }}. Vanaf die dag loopt
+uw abonnement. U heeft daarna rustig de tijd om hem te vullen@if ($next), de eerste ophaling is
+pas op {{ $next->format('d-m-Y') }}@endif. Daarna halen wij op volgens dit schema, zonder dat u
+er verder iets voor hoeft te doen. Valt een ophaaldag op een feestdag, dan komen wij de
+eerstvolgende werkdag en blijft het schema verder ongewijzigd.</p>
 
 <p>Bij elke ophaling ontvangt u een vernietigingscertificaat volgens DIN 66399.</p>
 

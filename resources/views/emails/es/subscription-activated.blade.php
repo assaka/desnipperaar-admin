@@ -22,6 +22,7 @@
     @if ($pickupDay)
         <tr><td style="background:#F5F5F5;font-weight:700;">Día de recogida fijo</td><td>{{ ucfirst($pickupDay) }}</td></tr>
     @endif
+    <tr><td style="background:#F5F5F5;font-weight:700;">Entrega del contenedor</td><td><strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong></td></tr>
     @if ($next)
         <tr><td style="background:#F5F5F5;font-weight:700;">Primera recogida</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
     @endif
@@ -32,14 +33,13 @@
             <span style="color:#666;">€ {{ number_format($order->sub_price_excl_btw * 1.21, 2, ',', '.') }} {{ $per }} con 21% de IVA</span>
         </td></tr>
     @endif
-    @if ($order->sub_active_from)
-        <tr><td style="background:#F5F5F5;font-weight:700;">Activa desde</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
-    @endif
 </table>
 
-<p>Nos pondremos en contacto con usted en un día laborable para colocar el contenedor. Después
-recogemos según este calendario, sin que tenga que hacer nada más. Si un día de recogida cae en
-festivo, vamos el siguiente día laborable y el resto del calendario no cambia.</p>
+<p>Entregamos el contenedor el {{ $order->sub_active_from->format('d-m-Y') }}. Su suscripción
+comienza ese día. Después tiene tiempo para llenarlo@if ($next), la primera recogida no es hasta
+el {{ $next->format('d-m-Y') }}@endif. Luego recogemos según este calendario, sin que tenga que
+hacer nada más. Si un día de recogida cae en festivo, vamos el siguiente día laborable y el resto
+del calendario no cambia.</p>
 
 <p>Recibirá un certificado de destrucción según DIN 66399 en cada recogida.</p>
 

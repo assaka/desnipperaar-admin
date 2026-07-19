@@ -22,7 +22,7 @@
                 <th>Ophaaldag</th>
                 <th>Looptijd</th>
                 <th>Prijs</th>
-                <th>Eerste ophaling</th>
+                <th>Container gebracht</th>
                 <th></th>
             </tr>
         </thead>

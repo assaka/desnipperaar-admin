@@ -6,6 +6,7 @@ use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
 use App\Mail\QuoteSent;
 use App\Mail\SubscriptionActivated;
+use App\Mail\SubscriptionPickupDayChanged;
 use App\Mail\SubscriptionTerminated;
 use App\Models\Bon;
 use App\Models\Customer;
@@ -91,15 +92,15 @@ class OrderController extends Controller
         $notBefore = \Carbon\Carbon::parse($data['starts_on'])->startOfDay();
         $weekday   = (int) ($data['pickup_weekday'] ?? min($notBefore->dayOfWeekIso, 5));
 
-        // Het contract begint op de eerste ophaaldag, niet op de dag dat iemand
-        // op goedkeuren klikt. Anders betaalt een klant die op zondag wordt
-        // goedgekeurd vanaf zondag voor een container die dinsdag pas komt.
+        // De opgegeven datum is de bezorgdag: de dag dat wij de container komen
+        // brengen. Daar begint het contract en daar begint de facturatie, want
+        // vanaf dat moment staat de container bij de klant. De eerste ophaling
+        // volgt een cyclus later, zie Order::subFirstScheduledDate().
         //
-        // Dit is bewust de ritmedatum en niet de eventueel verschoven ophaaldag.
-        // Valt die eerste dinsdag op een feestdag, dan rijden we woensdag, maar
-        // het ritme blijft op dinsdag staan. Zou het contract op woensdag
-        // beginnen, dan zou de planner de eerste ophaling overslaan en pas de
-        // dinsdag daarna beginnen.
+        // Dit is bewust de ritmedatum en niet de eventueel verschoven dag. Valt
+        // die op een feestdag, dan rijden we de eerstvolgende werkdag, maar het
+        // ritme blijft staan. Zou het contract op de verschoven dag beginnen,
+        // dan zou de planner een cyclus overslaan.
         $startsOn = $notBefore->copy();
         if ($order->sub_freq === '2pw') {
             while (! in_array($startsOn->dayOfWeekIso, Order::TWICE_WEEKLY_ISO, true)) {
@@ -127,15 +128,12 @@ class OrderController extends Controller
             return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y').', maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
         }
 
-        $actual = $order->nextPickupDate();
-        $shifted = $actual && ! $actual->equalTo($startsOn)
-            ? sprintf(' Die dag is een feestdag of weekenddag, dus de eerste rit is %s.', $actual->format('d-m-Y'))
-            : '';
+        $firstPickup = $order->nextPickupDate();
 
         return back()->with('status', sprintf(
-            'Abonnement geactiveerd per %s, de eerste ophaaldag.%s Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
+            'Abonnement geactiveerd. Container brengen op %s, dan begint ook de facturatie. Eerste ophaling %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
             $startsOn->format('d-m-Y'),
-            $shifted,
+            $firstPickup ? $firstPickup->format('d-m-Y') : 'onbekend',
             $order->customer_email,
             $startsOn->format('d-m-Y'),
             $order->subPeriodEnd($startsOn)->format('d-m-Y'),
@@ -197,6 +195,14 @@ class OrderController extends Controller
             'pickup_weekday' => ['required', \Illuminate\Validation\Rule::in(array_keys(Order::PICKUP_WEEKDAYS))],
         ]);
 
+        // Vóór de wijziging vastleggen, anders staat er in de mail twee keer
+        // dezelfde dag.
+        $previous = $order->subPickupWeekdayLabel();
+
+        if ((int) $data['pickup_weekday'] === $order->subPickupWeekday()) {
+            return back()->with('status', 'Dat was al de ophaaldag, er is niets gewijzigd.');
+        }
+
         $order->update(['sub_pickup_weekday' => (int) $data['pickup_weekday']]);
 
         $dropped = Order::where('subscription_order_id', $order->id)
@@ -206,11 +212,24 @@ class OrderController extends Controller
 
         $order->refresh();
 
-        return back()->with('status', sprintf(
-            'Ophaaldag gewijzigd naar %s. %d nog niet gereden ophaling(en) verwijderd, de planner zet ze vannacht opnieuw klaar.',
+        $message = sprintf(
+            'Ophaaldag gewijzigd van %s naar %s. %d nog niet gereden ophaling(en) verwijderd, de planner zet ze vannacht opnieuw klaar.',
+            $previous,
             $order->subPickupWeekdayLabel(),
             $dropped,
-        ));
+        );
+
+        // De klant zet zijn container klaar op de dag die hij kent. Zonder mail
+        // staat hij op de verkeerde dag buiten, of juist niet.
+        try {
+            Mail::to($order->customer_email)->send(new SubscriptionPickupDayChanged($order, $previous));
+            $message .= ' Klant is gemaild.';
+        } catch (\Throwable $e) {
+            report($e);
+            $message .= ' LET OP: de klant is NIET gemaild, zie de logs.';
+        }
+
+        return back()->with('status', $message);
     }
 
     /**

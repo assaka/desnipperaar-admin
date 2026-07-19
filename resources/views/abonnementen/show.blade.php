@@ -86,7 +86,16 @@
                 </td>
             </tr>
             @if ($order->sub_active_from)
-                <tr><td class="pr-4 text-gray-600">Loopt sinds (eerste ophaling)</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
+                <tr><td class="pr-4 text-gray-600">Container gebracht</td><td>
+                    <strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong>
+                    <span class="text-xs text-gray-600">· hier begint de looptijd en de facturatie</span>
+                </td></tr>
+                @if ($order->nextPickupDate())
+                    <tr><td class="pr-4 text-gray-600">Eerstvolgende ophaling</td><td>
+                        {{ $order->nextPickupDate()->format('d-m-Y') }}
+                        <span class="text-xs text-gray-600">· eerste ophaling is één cyclus na het brengen, zodat de klant kan vullen</span>
+                    </td></tr>
+                @endif
                 <tr><td class="pr-4 text-gray-600">Minimumtermijn</td><td>
                     {{ $order->subMinimumMonths() }} maanden, t/m {{ $order->minimumTermEnd()->format('d-m-Y') }}
                 </td></tr>
@@ -121,17 +130,21 @@
             <div id="goedkeuren" class="mt-3 bg-white border-2 border-green-700 p-4">
                 <p class="font-black text-lg mb-1">Aanvraag goedkeuren</p>
                 <p class="text-xs text-gray-600 mb-3">
-                    Het abonnement gaat lopen op de <strong>eerste ophaaldag</strong>, dus de eerstvolgende
-                    gekozen weekdag op of na de datum hieronder. Daar begint de looptijd en daar begint de
-                    facturatie, met de eerste maand naar rato. De klant betaalt zo niet voor dagen waarop
-                    er nog geen container staat. Hij krijgt direct een bevestiging met die datum erin.
+                    De datum hieronder is de <strong>bezorgdag</strong>: de eerstvolgende gekozen weekdag
+                    waarop wij de container brengen. Daar begint de looptijd en de facturatie, met de eerste
+                    maand naar rato, want vanaf dat moment staat de container bij de klant. De
+                    <strong>eerste ophaling volgt een cyclus later</strong>, zodat er tijd is om te vullen.
+                    Bij 1x per 2 weken brengen wij dus over een week en halen wij over drie weken voor het
+                    eerst op. De klant krijgt direct een bevestiging met beide datums erin.
                 </p>
                 <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
                     @csrf
                     <label class="text-sm">
-                        <span class="block text-gray-600 text-xs mb-1">Eerste ophaling niet vóór</span>
+                        <span class="block text-gray-600 text-xs mb-1">Container brengen niet vóór</span>
+                        {{-- Standaard een week vooruit: er moet nog een rit ingepland
+                             worden en de klant moet weten wanneer wij komen. --}}
                         <input type="date" name="starts_on" required
-                               value="{{ old('starts_on', now()->toDateString()) }}"
+                               value="{{ old('starts_on', now()->addWeek()->toDateString()) }}"
                                class="border px-2 py-1 text-sm">
                     </label>
                     @if ($order->sub_freq === '2pw')

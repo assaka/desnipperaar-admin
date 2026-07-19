@@ -323,13 +323,21 @@ class Order extends Model
      */
     public function subFirstScheduledDate(): ?\Carbon\Carbon
     {
-        if (! $this->sub_active_from) {
+        $delivery = $this->subDeliveryDate();
+
+        if (! $delivery) {
             return null;
         }
 
-        $cursor = $this->sub_active_from->copy()->startOfDay();
-
+        // Eerst brengen, dan pas halen. De klant heeft een volle cyclus nodig om
+        // de container te vullen, dus de eerste ophaling is de bezorgdag plus één
+        // frequentie. Bij 1x per 2 weken staat de container er een week nadat we
+        // hem brengen, en halen we drie weken na goedkeuring voor het eerst op.
+        // Meteen na het brengen ophalen zou een lege container ophalen zijn.
         if ($this->sub_freq === '2pw') {
+            // Twee keer per week vult snel; de eerstvolgende vaste dag na de
+            // bezorging is genoeg wachttijd.
+            $cursor = $delivery->copy()->addDay();
             while (! in_array($cursor->dayOfWeekIso, self::TWICE_WEEKLY_ISO, true)) {
                 $cursor->addDay();
             }
@@ -337,12 +345,33 @@ class Order extends Model
             return $cursor;
         }
 
+        $interval = $this->subIntervalDays();
+        if (! $interval) {
+            return null;
+        }
+
+        $cursor = $delivery->copy()->addDays($interval);
+
+        // De bezorgdag ligt al op de afgesproken weekdag en elk interval is een
+        // veelvoud van zeven, dus dit klopt meestal meteen. De lus is er voor
+        // oudere rijen waar dat niet zo is.
         $weekday = $this->subPickupWeekday() ?? $cursor->dayOfWeekIso;
         while ($cursor->dayOfWeekIso !== $weekday) {
             $cursor->addDay();
         }
 
         return $cursor;
+    }
+
+    /**
+     * De dag waarop wij de container brengen. Dat is ook de dag waarop het
+     * contract en de facturatie beginnen: vanaf dat moment staat de container
+     * bij de klant. sub_active_from is die datum, deze methode is er om dat in
+     * de code leesbaar te houden.
+     */
+    public function subDeliveryDate(): ?\Carbon\Carbon
+    {
+        return $this->sub_active_from?->copy()->startOfDay();
     }
 
     /**

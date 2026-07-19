@@ -22,6 +22,7 @@
     @if ($pickupDay)
         <tr><td style="background:#F5F5F5;font-weight:700;">Jour d'enlèvement fixe</td><td>{{ ucfirst($pickupDay) }}</td></tr>
     @endif
+    <tr><td style="background:#F5F5F5;font-weight:700;">Livraison du conteneur</td><td><strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong></td></tr>
     @if ($next)
         <tr><td style="background:#F5F5F5;font-weight:700;">Premier enlèvement</td><td><strong>{{ $next->format('d-m-Y') }}</strong></td></tr>
     @endif
@@ -32,14 +33,13 @@
             <span style="color:#666;">€ {{ number_format($order->sub_price_excl_btw * 1.21, 2, ',', '.') }} {{ $per }} TVA 21% incluse</span>
         </td></tr>
     @endif
-    @if ($order->sub_active_from)
-        <tr><td style="background:#F5F5F5;font-weight:700;">Actif à partir du</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
-    @endif
 </table>
 
-<p>Nous vous contactons sous un jour ouvré pour installer le conteneur. Ensuite, nous collectons
-selon ce calendrier, sans autre démarche de votre part. Si un jour d'enlèvement tombe un jour
-férié, nous venons le jour ouvré suivant et le reste du calendrier reste inchangé.</p>
+<p>Nous livrons le conteneur le {{ $order->sub_active_from->format('d-m-Y') }}. Votre abonnement
+démarre ce jour-là. Vous avez ensuite le temps de le remplir@if ($next), le premier enlèvement
+n'a lieu que le {{ $next->format('d-m-Y') }}@endif. Ensuite, nous collectons selon ce calendrier,
+sans autre démarche de votre part. Si un jour d'enlèvement tombe un jour férié, nous venons le
+jour ouvré suivant et le reste du calendrier reste inchangé.</p>
 
 <p>Vous recevez un certificat de destruction selon DIN 66399 à chaque enlèvement.</p>
 
