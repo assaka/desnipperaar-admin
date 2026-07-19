@@ -90,7 +90,8 @@ class Invoice extends Model
             : $price;
 
         $label = sprintf(
-            'Abonnement archiefvernietiging 240 L, %s (%s t/m %s)',
+            'Abonnement archiefvernietiging 240 L · %s · %s (%s t/m %s)',
+            $order->subTermShort(),
             $order->subFreqLabel(),
             $periodStart->format('d-m-Y'),
             $periodEnd->format('d-m-Y'),

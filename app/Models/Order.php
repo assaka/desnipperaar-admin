@@ -433,6 +433,17 @@ class Order extends Model
         return self::SUB_TERM_LABELS[$this->sub_term] ?? ($this->sub_term ?: '—');
     }
 
+    /** Korte naam van de looptijd, voor op de factuur: Flex, Vast, Jaarbetaling. */
+    public function subTermShort(): string
+    {
+        return [
+            'flex' => 'Flex',
+            'vast' => 'Vast',
+            'jaar' => 'Jaarbetaling',
+            self::SUB_TERM_MONTHLY => 'Maandelijks',
+        ][$this->sub_term] ?? ucfirst((string) $this->sub_term);
+    }
+
     public function subFreqLabel(): string
     {
         return self::SUB_FREQS[$this->sub_freq] ?? ($this->sub_freq ?: '—');
