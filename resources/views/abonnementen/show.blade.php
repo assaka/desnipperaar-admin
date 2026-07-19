@@ -132,19 +132,19 @@
                 <p class="text-xs text-gray-600 mb-3">
                     De datum hieronder is de <strong>bezorgdag</strong>: de eerstvolgende gekozen weekdag
                     waarop wij de container brengen. Daar begint de looptijd en de facturatie, met de eerste
-                    maand naar rato, want vanaf dat moment staat de container bij de klant. De
-                    <strong>eerste ophaling volgt een cyclus later</strong>, zodat er tijd is om te vullen.
-                    Bij 1x per 2 weken brengen wij dus over een week en halen wij over drie weken voor het
-                    eerst op. De klant krijgt direct een bevestiging met beide datums erin.
+                    maand naar rato, want vanaf dat moment staat de container bij de klant.
+                    <strong>Eerste ophaling is bezorgdag plus de frequentie</strong>, zodat de klant een
+                    volle cyclus heeft om te vullen. De klant krijgt direct een bevestiging met beide
+                    datums erin.
                 </p>
                 <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
                     @csrf
                     <label class="text-sm">
                         <span class="block text-gray-600 text-xs mb-1">Container brengen niet vóór</span>
-                        {{-- Standaard een week vooruit: er moet nog een rit ingepland
-                             worden en de klant moet weten wanneer wij komen. --}}
+                        {{-- Geen vaste week vooruit: de bezorgdag is een keuze, niet een
+                             formule. De eerste ophaling volgt eruit via de frequentie. --}}
                         <input type="date" name="starts_on" required
-                               value="{{ old('starts_on', now()->addWeek()->toDateString()) }}"
+                               value="{{ old('starts_on', now()->toDateString()) }}"
                                class="border px-2 py-1 text-sm">
                     </label>
                     @if ($order->sub_freq === '2pw')

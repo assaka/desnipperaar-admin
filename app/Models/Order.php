@@ -329,11 +329,14 @@ class Order extends Model
             return null;
         }
 
-        // Eerst brengen, dan pas halen. De klant heeft een volle cyclus nodig om
-        // de container te vullen, dus de eerste ophaling is de bezorgdag plus één
-        // frequentie. Bij 1x per 2 weken staat de container er een week nadat we
-        // hem brengen, en halen we drie weken na goedkeuring voor het eerst op.
-        // Meteen na het brengen ophalen zou een lege container ophalen zijn.
+        // Eerst brengen, dan pas halen. De eerste ophaling is de bezorgdag plus
+        // precies één frequentie, dus bij 1x per 2 weken staat de container er
+        // twee weken voordat wij hem voor het eerst legen. Zo heeft de klant een
+        // volle cyclus om te vullen. Meteen na het brengen ophalen zou een lege
+        // container ophalen zijn.
+        //
+        // Er zit geen vaste wachttijd in de formule: de bezorgdag is een keuze
+        // bij het goedkeuren, de rest volgt eruit.
         if ($this->sub_freq === '2pw') {
             // Twee keer per week vult snel; de eerstvolgende vaste dag na de
             // bezorging is genoeg wachttijd.
