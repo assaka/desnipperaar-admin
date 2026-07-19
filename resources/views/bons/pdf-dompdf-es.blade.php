@@ -32,9 +32,9 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    @php $modeLabels = ['ophaal' => 'Recogida', 'breng' => 'Entrega', 'mobiel' => 'Móvil', 'bezorging' => 'Reparto']; @endphp
+    @php $modeLabels = ['ophaal' => 'Recogida', 'breng' => 'Entrega', 'mobiel' => 'Móvil', 'bezorging' => 'Reparto', 'retour' => 'Retorno']; $isBezorg = $bon->mode === 'bezorging'; $isRetour = $bon->mode === 'retour'; $isOphaal = ! $isBezorg && ! $isRetour; $bewijs = $isBezorg ? 'Comprobante de entrega' : ($isRetour ? 'Comprobante de retorno' : 'Comprobante de recogida'); $kolomKop = $isBezorg ? 'Entrega' : ($isRetour ? 'Retorno' : 'Recogida'); @endphp
     <div class="eyebrow">Albarán · {{ $modeLabels[$bon->mode] ?? ucfirst($bon->mode) }}</div>
-    <h1>Comprobante de recogida</h1>
+    <h1>{{ $bewijs }}</h1>
     <span class="num">{{ $bon->bon_number }}</span>
 
     <table class="meta">
@@ -52,8 +52,9 @@
                 <div class="row"><span class="k">N.º de pedido</span><span class="v">{{ $bon->order->order_number }}</span></div>
             </td>
             <td class="meta-col">
-                <h3>Recogida</h3>
+                <h3>{{ $kolomKop }}</h3>
                 <div class="row"><span class="k">Fecha</span><span class="v">{{ $bon->picked_up_at?->format('d-m-Y H:i') ?? '—' }}</span></div>
+                @if ($isOphaal)
                 <div class="row"><span class="k">Peso</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
                 @php
                     $boxes   = $bon->actual_boxes     ?? $bon->order->box_count;
@@ -71,6 +72,9 @@
                             <div class="row"><span class="k">{{ $lbl }}</span><span class="v">{{ $q }}</span></div>
                         @endif
                     @endforeach
+                @endif
+                @else
+                <div class="row"><span class="k">Contenedor</span><span class="v">Contenedor con ruedas precintado de 240 L</span></div>
                 @endif
                 <div class="row"><span class="k">Conductor</span><span class="v">{{ $bon->driver_name_snapshot ?? '—' }}</span></div>
                 <div class="row"><span class="k">Carné</span><span class="v" style="font-family:'Courier New',monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>

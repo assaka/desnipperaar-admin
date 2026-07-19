@@ -32,9 +32,16 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    @php $bonLabels = ['ophaal' => 'Ophaal', 'breng' => 'Breng', 'mobiel' => 'Mobiel', 'bezorging' => 'Bezorg']; @endphp
+    @php
+        $bonLabels = ['ophaal' => 'Ophaal', 'breng' => 'Breng', 'mobiel' => 'Mobiel', 'bezorging' => 'Bezorg', 'retour' => 'Retour'];
+        $isBezorg = $bon->mode === 'bezorging';
+        $isRetour = $bon->mode === 'retour';
+        $isOphaal = ! $isBezorg && ! $isRetour;
+        $bewijs = $isBezorg ? 'Bezorgbewijs' : ($isRetour ? 'Retourbewijs' : 'Afhaalbewijs');
+        $kolomKop = $isBezorg ? 'Bezorging' : ($isRetour ? 'Retour' : 'Aanlevering');
+    @endphp
     <div class="eyebrow">{{ ($bonLabels[$bon->mode] ?? ucfirst($bon->mode)) }}bon</div>
-    <h1>Afhaalbewijs</h1>
+    <h1>{{ $bewijs }}</h1>
     <span class="num">{{ $bon->bon_number }}</span>
 
     <table class="meta">
@@ -52,25 +59,29 @@
                 <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
             </td>
             <td class="meta-col">
-                <h3>Aanlevering</h3>
+                <h3>{{ $kolomKop }}</h3>
                 <div class="row"><span class="k">Datum</span><span class="v">{{ $bon->picked_up_at?->format('d-m-Y H:i') ?? '—' }}</span></div>
-                <div class="row"><span class="k">Gewicht</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
-                @php
-                    $boxes   = $bon->actual_boxes     ?? $bon->order->box_count;
-                    $cntrs   = $bon->actual_containers ?? $bon->order->container_count;
-                    $boxDiff = $bon->actual_boxes     !== null && $bon->actual_boxes     !== $bon->order->box_count;
-                    $cntDiff = $bon->actual_containers !== null && $bon->actual_containers !== $bon->order->container_count;
-                @endphp
-                <div class="row"><span class="k">Dozen</span><span class="v">{{ $boxes }}@if ($boxDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->box_count }})</span>@endif</span></div>
-                <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $cntrs }}@if ($cntDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->container_count }})</span>@endif</span></div>
-                @php $actualMedia = $bon->actual_media ?? $bon->order->media_items ?? []; @endphp
-                @if (!empty($actualMedia))
-                    @foreach ($actualMedia as $k => $q)
-                        @if ((int) $q > 0)
-                            @php $lbl = ['hdd'=>'HDD','ssd'=>'SSD/NVMe','usb'=>'USB/SD','phone'=>'Telefoon','laptop'=>'Laptop'][$k] ?? ucfirst($k); @endphp
-                            <div class="row"><span class="k">{{ $lbl }}</span><span class="v">{{ $q }}</span></div>
-                        @endif
-                    @endforeach
+                @if ($isOphaal)
+                    <div class="row"><span class="k">Gewicht</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
+                    @php
+                        $boxes   = $bon->actual_boxes     ?? $bon->order->box_count;
+                        $cntrs   = $bon->actual_containers ?? $bon->order->container_count;
+                        $boxDiff = $bon->actual_boxes     !== null && $bon->actual_boxes     !== $bon->order->box_count;
+                        $cntDiff = $bon->actual_containers !== null && $bon->actual_containers !== $bon->order->container_count;
+                    @endphp
+                    <div class="row"><span class="k">Dozen</span><span class="v">{{ $boxes }}@if ($boxDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->box_count }})</span>@endif</span></div>
+                    <div class="row"><span class="k">Rolcontainers</span><span class="v">{{ $cntrs }}@if ($cntDiff) <span style="color:#555;font-size:8pt;">(besteld: {{ $bon->order->container_count }})</span>@endif</span></div>
+                    @php $actualMedia = $bon->actual_media ?? $bon->order->media_items ?? []; @endphp
+                    @if (!empty($actualMedia))
+                        @foreach ($actualMedia as $k => $q)
+                            @if ((int) $q > 0)
+                                @php $lbl = ['hdd'=>'HDD','ssd'=>'SSD/NVMe','usb'=>'USB/SD','phone'=>'Telefoon','laptop'=>'Laptop'][$k] ?? ucfirst($k); @endphp
+                                <div class="row"><span class="k">{{ $lbl }}</span><span class="v">{{ $q }}</span></div>
+                            @endif
+                        @endforeach
+                    @endif
+                @else
+                    <div class="row"><span class="k">Container</span><span class="v">240 L verzegelde rolcontainer</span></div>
                 @endif
                 <div class="row"><span class="k">Chauffeur</span><span class="v">{{ $bon->driver_name_snapshot ?? '—' }}</span></div>
                 <div class="row"><span class="k">Rijbewijs</span><span class="v" style="font-family:'Courier New',monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>

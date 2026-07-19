@@ -32,9 +32,9 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    @php $modeLabels = ['ophaal' => 'Enlèvement', 'breng' => 'Dépôt', 'mobiel' => 'Mobile', 'bezorging' => 'Livraison']; @endphp
+    @php $modeLabels = ['ophaal' => 'Enlèvement', 'breng' => 'Dépôt', 'mobiel' => 'Mobile', 'bezorging' => 'Livraison', 'retour' => 'Retour']; $isBezorg = $bon->mode === 'bezorging'; $isRetour = $bon->mode === 'retour'; $isOphaal = ! $isBezorg && ! $isRetour; $bewijs = $isBezorg ? 'Preuve de livraison' : ($isRetour ? 'Preuve de retour' : "Preuve d'enlèvement"); $kolomKop = $isBezorg ? 'Livraison' : ($isRetour ? 'Retour' : 'Enlèvement'); @endphp
     <div class="eyebrow">Bon · {{ $modeLabels[$bon->mode] ?? ucfirst($bon->mode) }}</div>
-    <h1>Preuve d'enlèvement</h1>
+    <h1>{{ $bewijs }}</h1>
     <span class="num">{{ $bon->bon_number }}</span>
 
     <table class="meta">
@@ -52,8 +52,9 @@
                 <div class="row"><span class="k">N° de commande</span><span class="v">{{ $bon->order->order_number }}</span></div>
             </td>
             <td class="meta-col">
-                <h3>Enlèvement</h3>
+                <h3>{{ $kolomKop }}</h3>
                 <div class="row"><span class="k">Date</span><span class="v">{{ $bon->picked_up_at?->format('d-m-Y H:i') ?? '—' }}</span></div>
+                @if ($isOphaal)
                 <div class="row"><span class="k">Poids</span><span class="v">{{ $bon->weight_kg ?? '—' }} kg</span></div>
                 @php
                     $boxes   = $bon->actual_boxes     ?? $bon->order->box_count;
@@ -71,6 +72,9 @@
                             <div class="row"><span class="k">{{ $lbl }}</span><span class="v">{{ $q }}</span></div>
                         @endif
                     @endforeach
+                @endif
+                @else
+                <div class="row"><span class="k">Conteneur</span><span class="v">Conteneur roulant scellé 240 L</span></div>
                 @endif
                 <div class="row"><span class="k">Chauffeur</span><span class="v">{{ $bon->driver_name_snapshot ?? '—' }}</span></div>
                 <div class="row"><span class="k">Permis</span><span class="v" style="font-family:'Courier New',monospace;">****{{ $bon->driver_license_last4 ?? '—' }}</span></div>
