@@ -32,7 +32,8 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    <div class="eyebrow">{{ ucfirst($bon->mode) }}bon</div>
+    @php $bonLabels = ['ophaal' => 'Ophaal', 'breng' => 'Breng', 'mobiel' => 'Mobiel', 'bezorging' => 'Bezorg']; @endphp
+    <div class="eyebrow">{{ ($bonLabels[$bon->mode] ?? ucfirst($bon->mode)) }}bon</div>
     <h1>Afhaalbewijs</h1>
     <span class="num">{{ $bon->bon_number }}</span>
 

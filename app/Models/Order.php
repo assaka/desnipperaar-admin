@@ -14,8 +14,16 @@ class Order extends Model
     const TYPE_QUOTE         = 'quote';
     const TYPE_ABONNEMENT    = 'abonnement';
 
-    /** delivery_mode-waarden. 'breng' betekent dat wij iets komen brengen. */
-    const DELIVERY_BRENG  = 'breng';
+    /**
+     * Wij brengen een container naar de klant. Een eigen type en geen
+     * delivery_mode-waarde, want 'breng' betekent hier al de brengservice,
+     * waarbij de KLANT materiaal bij ons brengt. Dat is de andere richting, en
+     * het stond ook zo op de bon afgedrukt.
+     */
+    const TYPE_BEZORGING     = 'bezorging';
+
+    /** delivery_mode: hoe het materiaal bij ons komt, niet hoe de container komt. */
+    const DELIVERY_BRENG  = 'breng';   // klant brengt zelf (brengservice)
     const DELIVERY_OPHAAL = 'ophaal';
 
     /**
@@ -261,6 +269,12 @@ class Order extends Model
         return $this->type === self::TYPE_ABONNEMENT;
     }
 
+    /** Een rit waarbij wij een container komen brengen. */
+    public function isBezorging(): bool
+    {
+        return $this->type === self::TYPE_BEZORGING;
+    }
+
     /** Het abonnement waar deze ophaling onder valt, als die er is. */
     public function subscription()
     {
@@ -281,7 +295,7 @@ class Order extends Model
     public function pickups()
     {
         return $this->hasMany(self::class, 'subscription_order_id')
-            ->where('delivery_mode', '!=', self::DELIVERY_BRENG)
+            ->where('type', '!=', self::TYPE_BEZORGING)
             ->orderBy('pickup_date');
     }
 
@@ -289,7 +303,7 @@ class Order extends Model
     public function deliveryOrder()
     {
         return $this->hasOne(self::class, 'subscription_order_id')
-            ->where('delivery_mode', self::DELIVERY_BRENG);
+            ->where('type', self::TYPE_BEZORGING);
     }
 
     /**

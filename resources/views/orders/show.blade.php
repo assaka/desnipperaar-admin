@@ -69,9 +69,9 @@
     @if ($order->isSubscriptionPickup())
         <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
             <h2 class="font-black mb-2">
-                {{ $order->delivery_mode === \App\Models\Order::DELIVERY_BRENG ? 'Bezorging onder abonnement' : 'Ophaling onder abonnement' }}
+                {{ $order->isBezorging() ? 'Bezorging onder abonnement' : 'Ophaling onder abonnement' }}
             </h2>
-            @if ($order->delivery_mode === \App\Models\Order::DELIVERY_BRENG)
+            @if ($order->isBezorging())
                 <p class="text-sm font-bold mb-1">Container BRENGEN, niet ophalen.</p>
             @endif
             <p class="text-sm">
@@ -253,7 +253,7 @@
 
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
-            <h2 class="font-black">{{ $order->delivery_mode === \App\Models\Order::DELIVERY_BRENG ? 'Geplande bezorging' : 'Geplande ophaling' }}</h2>
+            <h2 class="font-black">{{ $order->isBezorging() ? 'Geplande bezorging' : 'Geplande ophaling' }}</h2>
             @if ($order->state === 'bevestigd')
                 <button type="button" @click="editing = !editing" class="text-xs underline"
                         x-text="editing ? 'Annuleren' : 'Wijzig planning'"></button>
@@ -274,7 +274,7 @@
                 @if ($order->isSubscriptionPickup())
                     <div class="mt-1 text-xs text-gray-600">
                         Geen bevestigingsmail. De klant krijgt de dag ervoor een
-                        {{ $order->delivery_mode === \App\Models\Order::DELIVERY_BRENG ? 'bezorgherinnering' : 'ophaalherinnering' }}.
+                        {{ $order->isBezorging() ? 'bezorgherinnering' : 'ophaalherinnering' }}.
                     </div>
                 @else
                     <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
@@ -400,7 +400,7 @@
 
     {{-- Geen certificaat bij een bezorging: er is niets meegenomen en dus niets
          vernietigd. CertificateController::generate() weigert het ook. --}}
-    @if (($order->certificate || $hasSignedBon) && $order->delivery_mode !== \App\Models\Order::DELIVERY_BRENG)
+    @if (($order->certificate || $hasSignedBon) && ! $order->isBezorging())
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>
             @if ($order->certificate)

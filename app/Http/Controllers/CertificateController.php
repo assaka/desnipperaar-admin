@@ -31,7 +31,7 @@ class CertificateController extends Controller
         // Bij een bezorging is er niets opgehaald en dus niets vernietigd. Een
         // vernietigingscertificaat daarvoor zou verklaren dat materiaal is
         // vernietigd dat nooit is meegenomen.
-        if ($order->delivery_mode === \App\Models\Order::DELIVERY_BRENG) {
+        if ($order->isBezorging()) {
             return back()->withErrors([
                 'certificate' => 'Dit is een bezorging, er is niets vernietigd. Een certificaat hoort bij de ophaling.'
             ]);

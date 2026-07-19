@@ -136,7 +136,7 @@ class OrderController extends Controller
             ],
             [
                 'order_number'      => Order::generateOrderNumber(),
-                'type'              => Order::TYPE_DIRECT,
+                'type'              => Order::TYPE_BEZORGING,
                 'customer_id'       => $order->customer_id,
                 'customer_name'     => $order->customer_name,
                 'customer_email'    => $order->customer_email,
@@ -145,7 +145,7 @@ class OrderController extends Controller
                 'customer_postcode' => $order->customer_postcode,
                 'customer_city'     => $order->customer_city,
                 'locale'            => $order->locale,
-                'delivery_mode'     => Order::DELIVERY_BRENG,
+                'delivery_mode'     => Order::DELIVERY_OPHAAL,
                 'container_count'   => 1,
                 'box_count'         => 0,
                 'state'             => Order::STATE_BEVESTIGD,
@@ -553,7 +553,7 @@ class OrderController extends Controller
             $bon = Bon::create([
                 'bon_number' => Bon::generateBonNumber(),
                 'order_id'   => $order->id,
-                'mode'       => $order->delivery_mode,
+                'mode'       => $order->isBezorging() ? Bon::MODE_BEZORGING : $order->delivery_mode,
             ]);
         }
 
@@ -592,7 +592,7 @@ class OrderController extends Controller
         // Hierdoor is het ook eenduidig wat er op de orderpagina mag staan: bij
         // een abonnementsrit is er nooit een bevestigingsmail verstuurd.
         if ($order->isSubscriptionPickup()) {
-            $wat = $order->delivery_mode === Order::DELIVERY_BRENG ? 'Bezorging' : 'Ophaling';
+            $wat = $order->isBezorging() ? 'Bezorging' : 'Ophaling';
 
             return back()->with('status',
                 "{$wat} gepland met {$driver->name}. Geen bevestigingsmail: de klant krijgt de dag ervoor een herinnering.");
@@ -725,7 +725,7 @@ class OrderController extends Controller
      */
     private function nextStates(Order $order): array
     {
-        if ($order->delivery_mode === Order::DELIVERY_BRENG) {
+        if ($order->isBezorging()) {
             return match ($order->state) {
                 Order::STATE_BEVESTIGD => [Order::STATE_AFGESLOTEN],
                 default                => [],

@@ -53,7 +53,7 @@ class SendPickupReminders extends Command
                 continue;
             }
 
-            $isDelivery = $pickup->delivery_mode === Order::DELIVERY_BRENG;
+            $isDelivery = $pickup->isBezorging();
 
             if ($dry) {
                 $this->line(sprintf(

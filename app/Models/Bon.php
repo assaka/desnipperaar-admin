@@ -10,8 +10,10 @@ class Bon extends Model
     use HasFactory;
 
     const MODE_OPHAAL   = 'ophaal';
-    const MODE_BRENG    = 'breng';
+    const MODE_BRENG    = 'breng';     // klant brengt zelf (brengservice)
     const MODE_MOBIEL   = 'mobiel';
+    /** Wij brengen een container. Andere richting dan MODE_BRENG. */
+    const MODE_BEZORGING = 'bezorging';
 
     protected $fillable = [
         'bon_number',

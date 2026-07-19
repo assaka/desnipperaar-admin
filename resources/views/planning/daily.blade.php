@@ -68,7 +68,7 @@
                         </thead>
                         <tbody>
                             @foreach ($dag as $o)
-                                @php $brengen = $o->delivery_mode === \App\Models\Order::DELIVERY_BRENG; @endphp
+                                @php $brengen = $o->isBezorging(); @endphp
                                 <tr class="border-b hover:bg-yellow-50">
                                     <td class="py-1">
                                         <span class="inline-block px-2 py-0.5 text-xs font-bold uppercase {{ $brengen ? 'bg-blue-700 text-white' : 'bg-gray-800 text-white' }}">

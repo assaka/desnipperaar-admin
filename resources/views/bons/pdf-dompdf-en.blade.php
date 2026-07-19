@@ -32,7 +32,7 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    @php $modeLabels = ['ophaal' => 'Pickup', 'breng' => 'Drop-off', 'mobiel' => 'Mobile']; @endphp
+    @php $modeLabels = ['ophaal' => 'Pickup', 'breng' => 'Drop-off', 'mobiel' => 'Mobile', 'bezorging' => 'Delivery']; @endphp
     <div class="eyebrow">{{ $modeLabels[$bon->mode] ?? ucfirst($bon->mode) }} receipt</div>
     <h1>Proof of collection</h1>
     <span class="num">{{ $bon->bon_number }}</span>

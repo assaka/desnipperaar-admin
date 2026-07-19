@@ -36,7 +36,8 @@
 
     <section class="hero">
         <div style="font-family:'Courier New',monospace;font-size:9pt;letter-spacing:0.14em;text-transform:uppercase;color:#555;margin-bottom:4px;">
-            {{ ucfirst($bon->mode) }}bon
+            @php $bonLabels = ['ophaal' => 'Ophaal', 'breng' => 'Breng', 'mobiel' => 'Mobiel', 'bezorging' => 'Bezorg']; @endphp
+            {{ ($bonLabels[$bon->mode] ?? ucfirst($bon->mode)) }}bon
         </div>
         <h1 style="font-weight:900;font-size:22pt;margin-bottom:6px;">Afhaalbewijs</h1>
         <div class="num">{{ $bon->bon_number }}</div>
