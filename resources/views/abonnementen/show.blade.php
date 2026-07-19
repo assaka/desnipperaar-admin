@@ -86,9 +86,17 @@
                 </td>
             </tr>
             @if ($order->sub_active_from)
-                <tr><td class="pr-4 text-gray-600">Container gebracht</td><td>
+                <tr><td class="pr-4 text-gray-600">Container brengen</td><td>
                     <strong>{{ $order->sub_active_from->format('d-m-Y') }}</strong>
                     <span class="text-xs text-gray-600">· hier begint de looptijd en de facturatie</span>
+                    @if ($order->deliveryOrder)
+                        <br><span class="text-xs">Bezorgrit
+                            <a href="{{ route('orders.show', $order->deliveryOrder) }}" class="underline font-mono">{{ $order->deliveryOrder->order_number }}</a>
+                            op {{ $order->deliveryOrder->pickup_date->format('d-m-Y') }}
+                            · status {{ $order->deliveryOrder->state }}</span>
+                    @else
+                        <br><span class="text-xs text-red-700">Geen bezorgrit ingepland. Maak een order aan om de container te brengen.</span>
+                    @endif
                 </td></tr>
                 @if ($order->nextPickupDate())
                     <tr><td class="pr-4 text-gray-600">Eerstvolgende ophaling</td><td>

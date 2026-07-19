@@ -121,18 +121,55 @@ class OrderController extends Controller
 
         $order->refresh();
 
+        // De bezorging is een rit als elke andere: iemand moet de container
+        // brengen. Als losse order komt hij op het planbord, krijgt hij een
+        // chauffeur en een bon. Zonder deze order staat er alleen een datum op
+        // het contract en rijdt er niemand.
+        //
+        // Wel op een werkdag: de datum hierboven is het ritme-anker en mag in
+        // een weekend of op een feestdag vallen, de rit zelf niet.
+        $deliveryDate = \App\Support\WorkingDays::next($startsOn);
+        $delivery = Order::firstOrCreate(
+            [
+                'subscription_order_id'      => $order->id,
+                'subscription_scheduled_for' => $startsOn->toDateString(),
+            ],
+            [
+                'order_number'      => Order::generateOrderNumber(),
+                'type'              => Order::TYPE_DIRECT,
+                'customer_id'       => $order->customer_id,
+                'customer_name'     => $order->customer_name,
+                'customer_email'    => $order->customer_email,
+                'customer_phone'    => $order->customer_phone,
+                'customer_address'  => $order->customer_address,
+                'customer_postcode' => $order->customer_postcode,
+                'customer_city'     => $order->customer_city,
+                'locale'            => $order->locale,
+                'delivery_mode'     => Order::DELIVERY_BRENG,
+                'container_count'   => 1,
+                'box_count'         => 0,
+                'state'             => Order::STATE_BEVESTIGD,
+                'pickup_date'       => $deliveryDate->toDateString(),
+                'pickup_window'     => 'flexibel',
+                'notes'             => 'Container BRENGEN voor abonnement '.$order->order_number
+                                        .' ('.$order->subFreqLabel().'). Niet los factureren.',
+            ]
+        );
+
         try {
             Mail::to($order->customer_email)->send(new SubscriptionActivated($order));
         } catch (\Throwable $e) {
             report($e);
-            return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y').', maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
+            return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y')
+                .', bezorgrit '.$delivery->order_number.' ingepland, maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
         }
 
         $firstPickup = $order->nextPickupDate();
 
         return back()->with('status', sprintf(
-            'Abonnement geactiveerd. Container brengen op %s, dan begint ook de facturatie. Eerste ophaling %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
-            $startsOn->format('d-m-Y'),
+            'Abonnement geactiveerd. Bezorgrit %s ingepland op %s, dan begint ook de facturatie. Eerste ophaling %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
+            $delivery->order_number,
+            $deliveryDate->format('d-m-Y'),
             $firstPickup ? $firstPickup->format('d-m-Y') : 'onbekend',
             $order->customer_email,
             $startsOn->format('d-m-Y'),
@@ -205,7 +242,10 @@ class OrderController extends Controller
 
         $order->update(['sub_pickup_weekday' => (int) $data['pickup_weekday']]);
 
-        $dropped = Order::where('subscription_order_id', $order->id)
+        // Alleen ophalingen opnieuw laten inplannen. De bezorgrit blijft staan:
+        // die hangt niet aan het ophaalritme en is misschien al met de klant
+        // afgesproken.
+        $dropped = $order->pickups()
             ->whereDate('pickup_date', '>=', now()->toDateString())
             ->whereDoesntHave('bons')
             ->delete();

@@ -35,6 +35,10 @@ class SendPickupReminders extends Command
         $tomorrow = $today->copy()->addDay();
 
         $pickups = Order::whereNotNull('subscription_order_id')
+            // De bezorgrit hoort hier niet bij. Die mail zou zeggen dat wij morgen
+            // komen ophalen terwijl wij de container juist komen brengen, en de
+            // klant zou een lege container buiten zetten.
+            ->where('delivery_mode', '!=', Order::DELIVERY_BRENG)
             ->whereNull('pickup_reminder_sent_at')
             ->whereDate('pickup_date', $tomorrow->toDateString())
             ->whereIn('state', [Order::STATE_NIEUW, Order::STATE_BEVESTIGD])

@@ -14,6 +14,10 @@ class Order extends Model
     const TYPE_QUOTE         = 'quote';
     const TYPE_ABONNEMENT    = 'abonnement';
 
+    /** delivery_mode-waarden. 'breng' betekent dat wij iets komen brengen. */
+    const DELIVERY_BRENG  = 'breng';
+    const DELIVERY_OPHAAL = 'ophaal';
+
     /**
      * Looptijd en frequentie van een abonnement. De labels staan hier en niet in
      * de views, omdat lijst, detailpagina en mail dezelfde tekst moeten tonen.
@@ -263,10 +267,29 @@ class Order extends Model
         return $this->belongsTo(self::class, 'subscription_order_id');
     }
 
-    /** De losse ophalingen die onder dit abonnement zijn ingepland. */
-    public function pickups()
+    /** Alles wat onder dit abonnement is ingepland: de bezorging en de ophalingen. */
+    public function childOrders()
     {
         return $this->hasMany(self::class, 'subscription_order_id')->orderBy('pickup_date');
+    }
+
+    /**
+     * Alleen de ophalingen. De bezorgrit hoort er bewust niet bij: die telt niet
+     * mee in het ritme, mag niet verdwijnen als de ophaaldag wijzigt, en een
+     * herinnering erover moet andere tekst hebben dan "wij halen morgen op".
+     */
+    public function pickups()
+    {
+        return $this->hasMany(self::class, 'subscription_order_id')
+            ->where('delivery_mode', '!=', self::DELIVERY_BRENG)
+            ->orderBy('pickup_date');
+    }
+
+    /** De rit waarmee de container wordt gebracht. Er is er hooguit één. */
+    public function deliveryOrder()
+    {
+        return $this->hasOne(self::class, 'subscription_order_id')
+            ->where('delivery_mode', self::DELIVERY_BRENG);
     }
 
     /**
@@ -452,7 +475,9 @@ class Order extends Model
             return false;
         }
 
-        return ! $this->pickups()->whereHas('bons')->exists();
+        // Ook de bezorgrit telt mee: is die gereden, dan staat de container bij
+        // de klant en is "nooit geactiveerd" niet meer waar.
+        return ! $this->childOrders()->whereHas('bons')->exists();
     }
 
     /** Opgezegd én de einddatum is voorbij. Tot dan loopt het abonnement door. */

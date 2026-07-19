@@ -68,7 +68,12 @@
 
     @if ($order->isSubscriptionPickup())
         <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
-            <h2 class="font-black mb-2">Ophaling onder abonnement</h2>
+            <h2 class="font-black mb-2">
+                {{ $order->delivery_mode === \App\Models\Order::DELIVERY_BRENG ? 'Bezorging onder abonnement' : 'Ophaling onder abonnement' }}
+            </h2>
+            @if ($order->delivery_mode === \App\Models\Order::DELIVERY_BRENG)
+                <p class="text-sm font-bold mb-1">Container BRENGEN, niet ophalen.</p>
+            @endif
             <p class="text-sm">
                 Hoort bij
                 <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
