@@ -24,7 +24,25 @@ class BonController extends Controller
         $bon->load(['order.customer', 'driver', 'seals']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4']);
 
-        $order        = $bon->order;
+        $order = $bon->order;
+
+        // Een abonnementsrit heeft geen losse prijs: de klant betaalt het
+        // abonnement per 4 weken. De lijstprijs uitrekenen zou € 120 tonen voor
+        // een container die al betaald is, dus dat pad slaan we hier over. De
+        // view verbergt het prijsblok ook (isSubVisit).
+        if ($order->isAbonnement()) {
+            $empty = ['lines' => [], 'subtotal' => 0, 'vat' => 0, 'total' => 0];
+
+            return view('bons.show', [
+                'bon'          => $bon,
+                'drivers'      => $drivers,
+                'orderedQuote' => $empty,
+                'actualQuote'  => null,
+                'qrDataUri'    => $this->qrDataUri(URL::signedRoute('bons.public-pdf', ['bon' => $bon->id])),
+                'publicPdfUrl' => URL::signedRoute('bons.public-pdf', ['bon' => $bon->id]),
+            ]);
+        }
+
         $buildQuote = function ($boxes, $containers, $media) use ($order) {
             $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
             foreach ((array) $media as $k => $qty) {

@@ -6,11 +6,16 @@
     $locale = in_array($bon->order->locale, ['nl', 'en', 'fr', 'es'], true) ? $bon->order->locale : 'nl';
 
     $svc = [
-        'nl' => ['ophaal' => 'Ophaalservice', 'breng' => 'Brengservice'],
-        'en' => ['ophaal' => 'Pickup service', 'breng' => 'Drop-off service'],
-        'fr' => ['ophaal' => 'Service d\'enlèvement', 'breng' => 'Service de dépôt'],
-        'es' => ['ophaal' => 'Servicio de recogida', 'breng' => 'Servicio de entrega'],
+        'nl' => ['ophaal' => 'Ophaalservice', 'breng' => 'Brengservice', 'bezorging' => 'Bezorging container', 'retour' => 'Container retour'],
+        'en' => ['ophaal' => 'Pickup service', 'breng' => 'Drop-off service', 'bezorging' => 'Container delivery', 'retour' => 'Container return'],
+        'fr' => ['ophaal' => 'Service d\'enlèvement', 'breng' => 'Service de dépôt', 'bezorging' => 'Livraison conteneur', 'retour' => 'Retour conteneur'],
+        'es' => ['ophaal' => 'Servicio de recogida', 'breng' => 'Servicio de entrega', 'bezorging' => 'Entrega contenedor', 'retour' => 'Retorno contenedor'],
     ][$locale];
+
+    // Een abonnementsrit is geen losse klus met een prijs. Bezorging en retour
+    // nemen bovendien niets mee, dus daar hoort geen "werkelijk opgehaald" bij.
+    $isSubVisit  = $bon->order->isAbonnement();
+    $isCollecting = ! in_array($bon->mode, ['bezorging', 'retour'], true);
 
     $win = [
         'nl' => ['ochtend' => 'Ochtend', 'middag' => 'Middag', 'avond' => 'Avond'],
@@ -282,6 +287,29 @@
             </select>
         </section>
 
+        @if ($isSubVisit)
+            {{-- Een abonnementsrit. Geen aantallen tellen en geen losse prijs: de
+                 klant betaalt het abonnement per 4 weken. Bezorging en retour
+                 nemen niets mee, een ophaling leegt de vaste container. --}}
+            <section class="bg-blue-50 border-l-4 border-blue-600 p-4">
+                <h2 class="font-black mb-1">
+                    @if ($bon->mode === 'bezorging') Bezorging 240 L container
+                    @elseif ($bon->mode === 'retour') Container ophalen (einde abonnement)
+                    @else Ophaling onder abonnement @endif
+                </h2>
+                <p class="text-sm">
+                    Hoort bij abonnement
+                    <a href="{{ route('abonnementen.show', $bon->order) }}" class="underline font-mono">{{ $bon->order->order_number }}</a>.
+                    @if ($bon->mode === 'bezorging') Wij brengen de verzegelde container. Er wordt niets meegenomen.
+                    @elseif ($bon->mode === 'retour') Wij halen de lege container weer op. Er wordt niets vernietigd.
+                    @else De vaste 240 L container wordt geleegd en vernietigd volgens DIN 66399.
+                    @endif
+                </p>
+                <p class="text-xs text-gray-600 mt-2">Wordt niet los gefactureerd. De klant betaalt het abonnement per 4 weken.</p>
+            </section>
+        @endif
+
+        @unless ($isSubVisit)
         <section>
             <h2 class="font-black mb-3">{{ $T['actual_collected'] }}</h2>
             <div x-show="diff" x-cloak class="bg-orange-100 border-l-4 border-orange-500 text-orange-900 px-3 py-2 mb-3 font-bold text-sm flex items-center gap-2">
@@ -319,8 +347,9 @@
                 @endforeach
             </div>
         </section>
+        @endunless
 
-        @if (count($orderedQuote['lines']))
+        @if (! $isSubVisit && count($orderedQuote['lines']))
         <h2 class="font-black mb-3">{{ $T['overview'] }}</h2>
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h3 class="font-black mb-2">{{ $T['original'] }}
