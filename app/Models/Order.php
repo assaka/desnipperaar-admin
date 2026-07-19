@@ -600,15 +600,23 @@ class Order extends Model
      * is ook de eerlijke prijs: de klant heeft die twaalf maanden gedraaid.
      * Terugzetten naar 'vast' zou hem stilzwijgend een nieuwe termijn in duwen.
      */
-    public function convertToMonthly(): void
+    /**
+     * Reageert de klant niet op de verlengmail, dan gaat het abonnement over naar
+     * Flex. Vast en Jaar zijn de voordeeltarieven met een looptijd; wie zijn
+     * termijn niet verlengt valt terug op het losse Flex-tarief.
+     *
+     * De ankerdatums (sub_active_from, sub_term_started_on) blijven staan. De
+     * klant heeft zijn termijn van twaalf maanden al vervuld, dus er geldt geen
+     * nieuwe minimumtermijn en geen retourkosten: Flex loopt hier maand tot maand
+     * en is altijd opzegbaar, zoals de site belooft. Omdat sub_active_from ouder
+     * is dan twaalf maanden, valt owesReturnCost hier vanzelf weg.
+     */
+    public function convertToFlex(): void
     {
-        $renewal = $this->subRenewalDate();
-
         $this->update([
-            'sub_term'                => self::SUB_TERM_MONTHLY,
-            'sub_price_excl_btw'      => config("desnipperaar.subscription.prices.vast.{$this->sub_freq}")
+            'sub_term'                => 'flex',
+            'sub_price_excl_btw'      => config("desnipperaar.subscription.prices.flex.{$this->sub_freq}")
                                           ?? $this->sub_price_excl_btw,
-            'sub_term_started_on'     => $renewal ? $renewal->copy()->addDay()->toDateString() : null,
             'sub_renewal_notified_at' => null,
         ]);
     }

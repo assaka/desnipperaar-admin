@@ -5,32 +5,33 @@
 
 <p>Uw abonnement <strong style="font-family:monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>
 loopt over ongeveer een maand uit zijn huidige termijn. Uw container blijft gewoon staan
-en wij blijven ophalen. Alleen de voorwaarden veranderen.</p>
+en wij blijven ophalen. U kiest zelf hoe het verdergaat.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>Doet u niets?</strong> Dan gaat uw abonnement vanaf {{ $renewalDate->copy()->addDay()->format('d-m-Y') }}
-    door voor
-    @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw, het voordeeltarief,
-    @endif
-    U kunt op elk moment stoppen. U zit dan nergens meer aan vast.
+    over naar <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} per 4 weken excl. btw@endif.
+    Flex is altijd opzegbaar, u zit nergens meer aan vast. Verlengt u wel, dan houdt u het voordeeltarief.
 </p>
 
-<p>Wilt u iets anders? Antwoord dan op deze email, dan regelen wij het.</p>
+<p><strong>Wilt u iets anders?</strong> Antwoord dan op deze email met een van deze keuzes:</p>
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     @if ($yearlyPrice)
         <tr>
-            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Nog een jaar vooruit</td>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen — nog een jaar vooruit</td>
             <td>€ {{ number_format($yearlyPrice, 2, ',', '.') }} per jaar excl. btw. De voordeligste optie, u betaalt twaalf maanden in één keer.</td>
         </tr>
     @endif
+    @if ($vastPrice)
+        <tr>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen — nog een vaste termijn</td>
+            <td>€ {{ number_format($vastPrice, 2, ',', '.') }} per 4 weken excl. btw, twaalf maanden. Het voordeeltarief.</td>
+        </tr>
+    @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Maandelijks (voordeeltarief)</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Overstappen naar Flex</td>
         <td>
-            @if ($monthlyPrice)
-                € {{ number_format($monthlyPrice, 2, ',', '.') }} per 4 weken excl. btw.
-            @endif
+            @if ($flexPrice) € {{ number_format($flexPrice, 2, ',', '.') }} per 4 weken excl. btw. @endif
             Altijd opzegbaar. Dit gebeurt automatisch als u niet reageert.
         </td>
     </tr>

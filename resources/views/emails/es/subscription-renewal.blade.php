@@ -8,32 +8,33 @@
 
 <p>Su suscripción <strong style="font-family:monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>
 llega al final de su plazo actual dentro de un mes aproximadamente. Su contenedor se queda donde
-está y seguimos recogiendo. Solo cambian las condiciones.</p>
+está y seguimos recogiendo. Usted elige cómo continúa.</p>
 
 <p style="background:#F5F5F5;border-left:4px solid #F5C518;padding:12px 14px;">
     <strong>¿No hace nada?</strong> Desde el {{ $renewalDate->copy()->addDay()->format('d-m-Y') }} su suscripción
-    continúa por
-    @if ($monthlyPrice)
-        € {{ number_format($monthlyPrice, 2, ',', '.') }} cada 4 semanas sin IVA, nuestra tarifa reducida,
-    @endif
-    y puede parar cuando quiera. Sin ningún compromiso.
+    pasa a <strong>Flex</strong>@if ($flexPrice), € {{ number_format($flexPrice, 2, ',', '.') }} cada 4 semanas sin IVA@endif.
+    Flex es cancelable en cualquier momento, sin compromiso. Si renueva, mantiene la tarifa reducida.
 </p>
 
-<p>¿Prefiere otra cosa? Responda a este correo y lo gestionamos.</p>
+<p><strong>¿Prefiere otra cosa?</strong> Responda a este correo con una de estas opciones:</p>
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     @if ($yearlyPrice)
         <tr>
-            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Otro año por adelantado</td>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Renovar — otro año por adelantado</td>
             <td>€ {{ number_format($yearlyPrice, 2, ',', '.') }} al año sin IVA. La opción más económica, doce meses de una vez.</td>
         </tr>
     @endif
+    @if ($vastPrice)
+        <tr>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Renovar — otro plazo fijo</td>
+            <td>€ {{ number_format($vastPrice, 2, ',', '.') }} cada 4 semanas sin IVA, doce meses. La tarifa reducida.</td>
+        </tr>
+    @endif
     <tr>
-        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Mensual (tarifa reducida)</td>
+        <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Cambiar a Flex</td>
         <td>
-            @if ($monthlyPrice)
-                € {{ number_format($monthlyPrice, 2, ',', '.') }} cada 4 semanas sin IVA.
-            @endif
+            @if ($flexPrice) € {{ number_format($flexPrice, 2, ',', '.') }} cada 4 semanas sin IVA. @endif
             Cancelable en cualquier momento. Esto ocurre automáticamente si no responde.
         </td>
     </tr>

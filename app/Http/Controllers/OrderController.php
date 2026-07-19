@@ -285,8 +285,11 @@ class OrderController extends Controller
         abort_unless($order->isRunning(), 422, 'This subscription is not running.');
         abort_if($order->sub_terminated_at !== null, 422, 'This subscription has been terminated.');
 
+        // Drie keuzes die de klant op de verlengmail kan maken: nog een jaar
+        // vooruit, nog een vaste termijn, of overstappen naar Flex. Opzeggen is
+        // de aparte knop. Reageert de klant niet, dan zet de cron hem op Flex.
         $data = $request->validate([
-            'term' => ['required', \Illuminate\Validation\Rule::in(['vast', 'jaar'])],
+            'term' => ['required', \Illuminate\Validation\Rule::in(['vast', 'jaar', 'flex'])],
         ]);
 
         $current = $order->subRenewalDate();

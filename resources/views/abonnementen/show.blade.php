@@ -116,7 +116,7 @@
                     @else
                         <span class="text-xs text-gray-500">· verlengmail gaat automatisch een maand vooraf</span>
                     @endif
-                    <br><span class="text-xs text-gray-600">Daarna maandelijks tegen het voordeeltarief, altijd opzegbaar, tenzij de klant verlengt.</span>
+                    <br><span class="text-xs text-gray-600">Reageert de klant niet, dan gaat het abonnement over naar Flex (los tarief, altijd opzegbaar). Verlengt de klant, dan blijft het voordeeltarief.</span>
                 </td></tr>
             @endif
             @if ($order->sub_terminated_at)
@@ -189,6 +189,7 @@
                 <select name="term" class="border px-2 py-1 text-sm">
                     <option value="jaar">nog een jaar vooruit</option>
                     <option value="vast">nog een vaste termijn van 12 maanden</option>
+                    <option value="flex">overstappen naar Flex</option>
                 </select>
                 <button type="submit" class="px-3 py-1 text-sm border border-gray-600 hover:bg-gray-200">Termijn vastleggen</button>
             </form>

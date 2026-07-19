@@ -66,20 +66,20 @@ class InvoiceSubscriptions extends Command
                 continue;
             }
 
-            // Vast en Jaar lopen na hun termijn maandelijks door, tegen het
-            // maandtarief van Vast. Dat omzetten gebeurt hier, vóór het bepalen
-            // van de volgende periode: anders zou een Jaar na afloop nog een
-            // heel jaar vooruit gefactureerd worden, terwijl de klant is beloofd
-            // dat hij dan maandelijks kan stoppen.
+            // Reageerde de klant niet op de verlengmail, dan valt Vast of Jaar na
+            // de termijn terug op Flex. Dat omzetten gebeurt hier, vóór het
+            // bepalen van de volgende periode: anders zou een Jaar na afloop nog
+            // een heel jaar vooruit gefactureerd worden. Verlengde de klant wel,
+            // dan is sub_term intussen opnieuw vast/jaar en valt dit weg.
             $renewal = $order->subRenewalDate();
             if ($renewal && $today->greaterThan($renewal) && ! $order->sub_terminated_at) {
                 $wasTerm = $order->sub_term;
                 if (! $dry) {
-                    $order->convertToMonthly();
+                    $order->convertToFlex();
                     $order->refresh();
                 }
                 $this->warn(sprintf(
-                    '%s termijn %s afgelopen op %s, omgezet naar maandelijks',
+                    '%s termijn %s afgelopen op %s, omgezet naar Flex',
                     $order->order_number,
                     $wasTerm,
                     $renewal->format('d-m-Y'),

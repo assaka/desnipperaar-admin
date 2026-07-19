@@ -56,17 +56,17 @@ class SubscriptionRenewalNotice extends Mailable
 
     public function content(): Content
     {
-        $monthly = config("desnipperaar.subscription.prices.vast.{$this->order->sub_freq}");
-        $yearly  = config("desnipperaar.subscription.prices.jaar.{$this->order->sub_freq}");
+        $freq = $this->order->sub_freq;
 
         return new Content(
             view: $this->mailLocale === 'nl' ? 'emails.subscription-renewal' : 'emails.'.$this->mailLocale.'.subscription-renewal',
             with: [
-                'order'        => $this->order,
-                'sender'       => $this->sender,
-                'renewalDate'  => $this->order->subRenewalDate(),
-                'monthlyPrice' => $monthly,
-                'yearlyPrice'  => $yearly,
+                'order'       => $this->order,
+                'sender'      => $this->sender,
+                'renewalDate' => $this->order->subRenewalDate(),
+                'vastPrice'   => config("desnipperaar.subscription.prices.vast.{$freq}"),
+                'yearlyPrice' => config("desnipperaar.subscription.prices.jaar.{$freq}"),
+                'flexPrice'   => config("desnipperaar.subscription.prices.flex.{$freq}"),
             ],
         );
     }
