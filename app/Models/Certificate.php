@@ -34,17 +34,9 @@ class Certificate extends Model
 
     public static function generateCertificateNumber(): string
     {
-        $prefix = config('desnipperaar.certificate.prefix');
-        $year   = now()->year;
-
-        $last = self::where('certificate_number', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->certificate_number, -4)) + 1
-            : config('desnipperaar.order.start');
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return \App\Support\NumberSequence::next(
+            config('desnipperaar.certificate.prefix'),
+            (int) config('desnipperaar.order.start'),
+        );
     }
 }

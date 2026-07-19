@@ -57,17 +57,9 @@ class Bon extends Model
 
     public static function generateBonNumber(): string
     {
-        $prefix = config('desnipperaar.bon.prefix');
-        $year   = now()->year;
-
-        $last = self::where('bon_number', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->bon_number, -4)) + 1
-            : config('desnipperaar.order.start');
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return \App\Support\NumberSequence::next(
+            config('desnipperaar.bon.prefix'),
+            (int) config('desnipperaar.order.start'),
+        );
     }
 }

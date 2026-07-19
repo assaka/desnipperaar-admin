@@ -247,32 +247,9 @@ class Order extends Model
         return $this->quote_valid_until && $this->quote_valid_until->isPast();
     }
 
-    /**
-     * Volgend nummer voor een prefix en jaar, uit de teller in plaats van uit de
-     * laatste rij. Zo komt het nummer van een verwijderde order nooit opnieuw
-     * vrij, en kunnen twee gelijktijdige aanvragen niet hetzelfde nummer krijgen.
-     *
-     * $start is alleen de beginstand als de teller nog niet bestaat.
-     */
-    protected static function nextNumber(string $prefix, int $start): string
-    {
-        $year = now()->year;
-        $key  = $prefix.':'.$year;
-
-        $row = \Illuminate\Support\Facades\DB::selectOne(
-            'INSERT INTO number_counters (key, last_value, created_at, updated_at)
-             VALUES (?, ?, now(), now())
-             ON CONFLICT (key) DO UPDATE SET last_value = number_counters.last_value + 1, updated_at = now()
-             RETURNING last_value',
-            [$key, $start]
-        );
-
-        return sprintf('%s-%d-%04d', $prefix, $year, (int) $row->last_value);
-    }
-
     public static function generateOrderNumber(): string
     {
-        return self::nextNumber(config('desnipperaar.order.prefix'), (int) config('desnipperaar.order.start'));
+        return \App\Support\NumberSequence::next(config('desnipperaar.order.prefix'), (int) config('desnipperaar.order.start'));
     }
 
     public function isAbonnement(): bool
@@ -679,11 +656,11 @@ class Order extends Model
 
     public static function generateSubscriptionReference(): string
     {
-        return self::nextNumber(config('desnipperaar.order.sub_prefix'), (int) config('desnipperaar.order.start'));
+        return \App\Support\NumberSequence::next(config('desnipperaar.order.sub_prefix'), (int) config('desnipperaar.order.start'));
     }
 
     public static function generateQuoteReference(): string
     {
-        return self::nextNumber(config('desnipperaar.order.quote_prefix'), (int) config('desnipperaar.order.start'));
+        return \App\Support\NumberSequence::next(config('desnipperaar.order.quote_prefix'), (int) config('desnipperaar.order.start'));
     }
 }

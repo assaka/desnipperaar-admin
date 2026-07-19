@@ -43,19 +43,10 @@ class Invoice extends Model
 
     public static function generateInvoiceNumber(): string
     {
-        $prefix = config('desnipperaar.invoice.prefix');
-        $year   = now()->year;
-        $start  = config('desnipperaar.invoice.start');
-
-        $last = self::where('invoice_number', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->invoice_number, -4)) + 1
-            : $start;
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return \App\Support\NumberSequence::next(
+            config('desnipperaar.invoice.prefix'),
+            (int) config('desnipperaar.invoice.start'),
+        );
     }
 
     /**
