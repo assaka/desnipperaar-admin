@@ -86,7 +86,7 @@
                 </td>
             </tr>
             @if ($order->sub_active_from)
-                <tr><td class="pr-4 text-gray-600">Loopt sinds</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
+                <tr><td class="pr-4 text-gray-600">Loopt sinds (eerste ophaling)</td><td>{{ $order->sub_active_from->format('d-m-Y') }}</td></tr>
                 <tr><td class="pr-4 text-gray-600">Minimumtermijn</td><td>
                     {{ $order->subMinimumMonths() }} maanden, t/m {{ $order->minimumTermEnd()->format('d-m-Y') }}
                 </td></tr>
@@ -121,13 +121,15 @@
             <div id="goedkeuren" class="mt-3 bg-white border-2 border-green-700 p-4">
                 <p class="font-black text-lg mb-1">Aanvraag goedkeuren</p>
                 <p class="text-xs text-gray-600 mb-3">
-                    De klant krijgt direct een bevestiging met looptijd, frequentie, prijs en ingangsdatum.
-                    Vanaf die datum loopt de termijn en start de facturatie, met de eerste maand naar rato.
+                    Het abonnement gaat lopen op de <strong>eerste ophaaldag</strong>, dus de eerstvolgende
+                    gekozen weekdag op of na de datum hieronder. Daar begint de looptijd en daar begint de
+                    facturatie, met de eerste maand naar rato. De klant betaalt zo niet voor dagen waarop
+                    er nog geen container staat. Hij krijgt direct een bevestiging met die datum erin.
                 </p>
                 <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
                     @csrf
                     <label class="text-sm">
-                        <span class="block text-gray-600 text-xs mb-1">Ingangsdatum</span>
+                        <span class="block text-gray-600 text-xs mb-1">Eerste ophaling niet vóór</span>
                         <input type="date" name="starts_on" required
                                value="{{ old('starts_on', now()->toDateString()) }}"
                                class="border px-2 py-1 text-sm">

@@ -88,15 +88,33 @@ class OrderController extends Controller
             'starts_on.required' => 'Kies de ingangsdatum.',
         ]);
 
-        $startsOn = \Carbon\Carbon::parse($data['starts_on'])->startOfDay();
+        $notBefore = \Carbon\Carbon::parse($data['starts_on'])->startOfDay();
+        $weekday   = (int) ($data['pickup_weekday'] ?? min($notBefore->dayOfWeekIso, 5));
+
+        // Het contract begint op de eerste ophaaldag, niet op de dag dat iemand
+        // op goedkeuren klikt. Anders betaalt een klant die op zondag wordt
+        // goedgekeurd vanaf zondag voor een container die dinsdag pas komt.
+        //
+        // Dit is bewust de ritmedatum en niet de eventueel verschoven ophaaldag.
+        // Valt die eerste dinsdag op een feestdag, dan rijden we woensdag, maar
+        // het ritme blijft op dinsdag staan. Zou het contract op woensdag
+        // beginnen, dan zou de planner de eerste ophaling overslaan en pas de
+        // dinsdag daarna beginnen.
+        $startsOn = $notBefore->copy();
+        if ($order->sub_freq === '2pw') {
+            while (! in_array($startsOn->dayOfWeekIso, Order::TWICE_WEEKLY_ISO, true)) {
+                $startsOn->addDay();
+            }
+        } else {
+            while ($startsOn->dayOfWeekIso !== $weekday) {
+                $startsOn->addDay();
+            }
+        }
 
         $order->update([
             'sub_active_from'     => $startsOn->toDateString(),
             'sub_term_started_on' => $startsOn->toDateString(),
-            // Zonder keuze de weekdag van de ingangsdatum, maar nooit een
-            // weekenddag: daar rijden we niet.
-            'sub_pickup_weekday'  => $data['pickup_weekday']
-                ?? min($startsOn->dayOfWeekIso, 5),
+            'sub_pickup_weekday'  => $weekday,
             'state'               => Order::STATE_BEVESTIGD,
         ]);
 
@@ -109,9 +127,15 @@ class OrderController extends Controller
             return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y').', maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
         }
 
+        $actual = $order->nextPickupDate();
+        $shifted = $actual && ! $actual->equalTo($startsOn)
+            ? sprintf(' Die dag is een feestdag of weekenddag, dus de eerste rit is %s.', $actual->format('d-m-Y'))
+            : '';
+
         return back()->with('status', sprintf(
-            'Abonnement geactiveerd per %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
+            'Abonnement geactiveerd per %s, de eerste ophaaldag.%s Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
             $startsOn->format('d-m-Y'),
+            $shifted,
             $order->customer_email,
             $startsOn->format('d-m-Y'),
             $order->subPeriodEnd($startsOn)->format('d-m-Y'),

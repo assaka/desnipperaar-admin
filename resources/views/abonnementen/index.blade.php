@@ -19,9 +19,10 @@
                 <th>Aangevraagd</th>
                 <th>Status</th>
                 <th>Frequentie</th>
+                <th>Ophaaldag</th>
                 <th>Looptijd</th>
                 <th>Prijs</th>
-                <th>Loopt sinds</th>
+                <th>Eerste ophaling</th>
                 <th></th>
             </tr>
         </thead>
@@ -56,6 +57,7 @@
                         <span class="inline-block px-2 py-1 text-xs font-bold uppercase {{ $statusClass }}">{{ $statusLabel }}</span>
                     </td>
                     <td class="text-sm">{{ $abo->subFreqLabel() }}</td>
+                    <td class="text-sm">{{ $abo->sub_active_from ? $abo->subPickupWeekdayLabel() : '—' }}</td>
                     <td class="text-sm">{{ $abo->subTermLabel() }}</td>
                     <td class="font-mono">
                         @if ($abo->sub_price_excl_btw)
@@ -78,7 +80,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
+                <tr><td colspan="10" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
             @endforelse
         </tbody>
     </table>
