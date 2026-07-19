@@ -79,7 +79,7 @@
                 <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
                 @if ($order->subscription) · {{ $order->subscription->subFreqLabel() }} @endif
                 @if ($order->subscription_scheduled_for && $order->pickup_date && ! $order->subscription_scheduled_for->equalTo($order->pickup_date))
-                    <br><span class="text-xs text-gray-600">Ritme gaf {{ $order->subscription_scheduled_for->format('d-m-Y') }}, verschoven wegens weekend of feestdag. De reeks loopt gewoon door op het oude ritme.</span>
+                    <br><span class="text-xs text-gray-600">Ritme gaf {{ $order->subscription_scheduled_for->format('d-m-Y') }}, dat is een feestdag of weekenddag. Deze rit schuift een week op; de reeks loopt gewoon door op het oude ritme.</span>
                 @endif
             </p>
             <p class="text-xs text-gray-600 mt-2">

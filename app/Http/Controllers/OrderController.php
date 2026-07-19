@@ -98,7 +98,7 @@ class OrderController extends Controller
         // volgt een cyclus later, zie Order::subFirstScheduledDate().
         //
         // Dit is bewust de ritmedatum en niet de eventueel verschoven dag. Valt
-        // die op een feestdag, dan rijden we de eerstvolgende werkdag, maar het
+        // die op een feestdag, dan schuift die rit een week op, maar het
         // ritme blijft staan. Zou het contract op de verschoven dag beginnen,
         // dan zou de planner een cyclus overslaan.
         $startsOn = $notBefore->copy();
@@ -111,6 +111,12 @@ class OrderController extends Controller
                 $startsOn->addDay();
             }
         }
+
+        // Valt de bezorgdag op een feestdag, dan schuift hij een week op, net als
+        // een ophaling. Contractstart en bezorging schuiven samen: zou alleen de
+        // rit opschuiven, dan betaalt de klant een week voor een container die er
+        // nog niet staat.
+        $startsOn = \App\Support\WorkingDays::nextSameWeekday($startsOn);
 
         $order->update([
             'sub_active_from'     => $startsOn->toDateString(),
@@ -126,9 +132,9 @@ class OrderController extends Controller
         // chauffeur en een bon. Zonder deze order staat er alleen een datum op
         // het contract en rijdt er niemand.
         //
-        // Wel op een werkdag: de datum hierboven is het ritme-anker en mag in
-        // een weekend of op een feestdag vallen, de rit zelf niet.
-        $deliveryDate = \App\Support\WorkingDays::next($startsOn);
+        // $startsOn is hierboven al op een werkdag gezet, dus de rit valt samen
+        // met de contractstart.
+        $deliveryDate = $startsOn->copy();
         $delivery = Order::firstOrCreate(
             [
                 'subscription_order_id'      => $order->id,

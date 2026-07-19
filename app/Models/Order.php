@@ -443,7 +443,9 @@ class Order extends Model
 
         $slot = $this->subFirstScheduledDate();
 
-        return $slot ? \App\Support\WorkingDays::next($slot) : null;
+        // Dezelfde verschuifregel als de planner, anders noemt de mail een datum
+        // waarop geen rit wordt aangemaakt.
+        return $slot ? \App\Support\WorkingDays::nextSameWeekday($slot) : null;
     }
 
     public function subIntervalDays(): ?int

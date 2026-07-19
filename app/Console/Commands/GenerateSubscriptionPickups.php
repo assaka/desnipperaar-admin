@@ -17,7 +17,7 @@ use Illuminate\Database\QueryException;
  * BonController.
  *
  * Het ritme wordt geteld vanaf de ingangsdatum. Valt een ophaling in het weekend
- * of op een feestdag, dan schuift alleen die ene naar de eerstvolgende werkdag.
+ * of op een feestdag, dan schuift alleen die ene een week op, naar dezelfde weekdag.
  * De reeks zelf blijft op de oorspronkelijke data doorlopen, dus één verschuiving
  * sleept de rest niet mee.
  */
@@ -70,7 +70,26 @@ class GenerateSubscriptionPickups extends Command
                     continue;
                 }
 
-                $pickupDate = WorkingDays::next($scheduled);
+                $pickupDate = WorkingDays::nextSameWeekday($scheduled);
+
+                // Bij wekelijks of twee keer per week valt zo'n opgeschoven rit
+                // op een dag waar al een ophaling staat. Twee keer op dezelfde
+                // dag langsrijden heeft geen zin, dus die ene slaan we over: de
+                // eerstvolgende reguliere ophaling vangt het op.
+                if (! $pickupDate->equalTo($scheduled)) {
+                    $bezet = Order::where('subscription_order_id', $sub->id)
+                        ->whereDate('pickup_date', $pickupDate->toDateString())
+                        ->exists();
+                    if ($bezet) {
+                        $this->warn(sprintf(
+                            '%s ophaling %s valt op een feestdag; %s heeft al een rit, deze keer overgeslagen',
+                            $sub->order_number,
+                            $scheduled->format('d-m-Y'),
+                            $pickupDate->format('d-m-Y'),
+                        ));
+                        continue;
+                    }
+                }
 
                 if ($dry) {
                     $shift = $pickupDate->equalTo($scheduled) ? '' : ' (verschoven van '.$scheduled->format('d-m-Y').')';

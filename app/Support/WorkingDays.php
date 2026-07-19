@@ -76,6 +76,30 @@ class WorkingDays
     }
 
     /**
+     * De datum zelf als het een werkdag is, anders dezelfde weekdag een week
+     * later.
+     *
+     * Wij rijden vaste routes per weekdag. Valt zo'n dag op een feestdag, dan is
+     * er die dag geen route, en er is geen ruimte om de rit er de dag erna bij te
+     * proppen. Een week opschuiven houdt de klant op zijn eigen routedag.
+     *
+     * Alleen die ene keer schuift op: het ritme blijft op de oorspronkelijke data
+     * doorlopen, zodat één feestdag de hele reeks niet meesleept.
+     */
+    public static function nextSameWeekday(Carbon $date): Carbon
+    {
+        $d = $date->copy()->startOfDay();
+
+        // Ruime bovengrens; twee opeenvolgende feestdagen op dezelfde weekdag
+        // komt voor (Kerst), meer dan een paar niet.
+        for ($i = 0; $i < 6 && ! self::isWorkingDay($d); $i++) {
+            $d->addWeek();
+        }
+
+        return $d;
+    }
+
+    /**
      * De datum zelf als het een werkdag is, anders de eerstvolgende werkdag.
      * Vooruit en niet achteruit, want eerder ophalen dan afgesproken kan betekenen
      * dat de container nog niet vol is.
