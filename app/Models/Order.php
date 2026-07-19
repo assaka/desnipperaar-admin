@@ -48,7 +48,7 @@ class Order extends Model
     const SUB_TERM_MONTHLY = 'maandelijks';
 
     const SUB_TERM_LABELS = self::SUB_TERMS + [
-        self::SUB_TERM_MONTHLY => 'Maandelijks (na de eerste termijn, altijd opzegbaar)',
+        self::SUB_TERM_MONTHLY => 'Maandelijks (na de eerste termijn, altijd opzegbaar, voordeeltarief)',
     ];
 
     const SUB_FREQS = [

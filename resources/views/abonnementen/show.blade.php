@@ -116,7 +116,7 @@
                     @else
                         <span class="text-xs text-gray-500">· verlengmail gaat automatisch een maand vooraf</span>
                     @endif
-                    <br><span class="text-xs text-gray-600">Daarna maandelijks tegen het Vast-tarief, tenzij de klant verlengt.</span>
+                    <br><span class="text-xs text-gray-600">Daarna maandelijks tegen het voordeeltarief, altijd opzegbaar, tenzij de klant verlengt.</span>
                 </td></tr>
             @endif
             @if ($order->sub_terminated_at)
