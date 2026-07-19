@@ -125,6 +125,33 @@
                 </td></tr>
             </table>
 
+            @if (! $order->sub_active_from)
+                {{-- Aanvraag wacht op goedkeuring. De prijs staat al vast, dus er
+                     valt niets te offreren: alleen een ingangsdatum kiezen. --}}
+                <div class="mt-3 bg-white border-2 border-blue-600 p-3">
+                    <p class="font-bold mb-1">Aanvraag goedkeuren</p>
+                    <p class="text-xs text-gray-600 mb-3">
+                        De klant krijgt direct een bevestiging met looptijd, frequentie, prijs en ingangsdatum.
+                        Vanaf die datum loopt de termijn en start de facturatie, met de eerste maand naar rato.
+                    </p>
+                    <form method="POST" action="{{ route('orders.activate-subscription', $order) }}" class="flex items-end gap-2 flex-wrap">
+                        @csrf
+                        <label class="text-sm">
+                            <span class="block text-gray-600 text-xs mb-1">Eerste ophaaldatum</span>
+                            <input type="date" name="starts_on" required
+                                   value="{{ old('starts_on', now()->toDateString()) }}"
+                                   class="border px-2 py-1 text-sm">
+                        </label>
+                        <button type="submit" class="px-4 py-1.5 text-sm font-bold bg-green-700 text-white hover:bg-green-800">
+                            Activeer abonnement
+                        </button>
+                    </form>
+                    @error('starts_on')
+                        <p class="text-sm text-red-700 mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+
             @if ($order->isRunning() && ! $order->sub_terminated_at)
                 @php $earliest = $order->earliestTerminationDate(); @endphp
                 <p class="text-xs text-gray-600 mt-3">
@@ -163,9 +190,11 @@
         </section>
     @endif
 
-    @if ($order->type === 'quote' || $order->isAbonnement())
+    {{-- Alleen voor maatwerkoffertes. Een abonnement heeft een vaste prijs uit de
+         gepubliceerde tabel en wordt hierboven goedgekeurd, niet geoffreerd. --}}
+    @if ($order->type === 'quote')
         <section class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4">
-            <h2 class="font-black mb-3">{{ $order->isAbonnement() ? 'Bevestiging op maat' : 'Offerte op maat' }}</h2>
+            <h2 class="font-black mb-3">Offerte op maat</h2>
             @if ($order->quote_accepted_at)
                 <div class="bg-green-100 border border-green-400 px-3 py-2 mb-3 text-sm">
                     ✓ Geaccepteerd op {{ $order->quote_accepted_at->format('d-m-Y H:i') }} vanaf IP {{ $order->quote_acceptance_ip }}.

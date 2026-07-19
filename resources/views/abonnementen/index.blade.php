@@ -22,6 +22,7 @@
                 <th>Looptijd</th>
                 <th>Prijs</th>
                 <th>Loopt sinds</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -65,9 +66,15 @@
                         @endif
                     </td>
                     <td class="text-sm">{{ $abo->sub_active_from?->format('Y-m-d') ?? '—' }}</td>
+                    <td class="text-right">
+                        @unless ($abo->sub_active_from)
+                            <a href="{{ route('orders.show', $abo) }}"
+                               class="inline-block px-3 py-1 text-xs font-bold bg-green-700 text-white hover:bg-green-800">Goedkeuren</a>
+                        @endunless
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
+                <tr><td colspan="9" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
             @endforelse
         </tbody>
     </table>

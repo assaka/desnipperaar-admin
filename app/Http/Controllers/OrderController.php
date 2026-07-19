@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
 use App\Mail\QuoteSent;
+use App\Mail\SubscriptionActivated;
 use App\Models\Bon;
 use App\Models\Customer;
 use App\Models\Driver;
@@ -46,6 +47,54 @@ class OrderController extends Controller
             ->orderByDesc('id')
             ->paginate(25);
         return view('abonnementen.index', compact('abonnementen'));
+    }
+
+    /**
+     * Keur een abonnementsaanvraag goed en zet hem live.
+     *
+     * Bewust geen offerte-met-acceptatie zoals bij maatwerk. De prijs staat al
+     * vast bij de aanvraag (die komt uit de gepubliceerde tabel), dus er valt
+     * niets te offreren en niets te accepteren. Het is een aanvraag die wacht op
+     * goedkeuring, meer niet.
+     *
+     * De ingangsdatum is de eerste ophaaldatum. Daar begint de looptijd en daar
+     * begint de facturatie, met de eerste maand naar rato.
+     */
+    public function activateSubscription(Request $request, Order $order)
+    {
+        abort_unless($order->isAbonnement(), 422, 'Only subscriptions can be activated.');
+        abort_if($order->sub_active_from !== null, 422, 'This subscription is already active.');
+
+        $data = $request->validate([
+            'starts_on' => 'required|date',
+        ], [
+            'starts_on.required' => 'Kies de eerste ophaaldatum.',
+        ]);
+
+        $startsOn = \Carbon\Carbon::parse($data['starts_on'])->startOfDay();
+
+        $order->update([
+            'sub_active_from'     => $startsOn->toDateString(),
+            'sub_term_started_on' => $startsOn->toDateString(),
+            'state'               => Order::STATE_BEVESTIGD,
+        ]);
+
+        $order->refresh();
+
+        try {
+            Mail::to($order->customer_email)->send(new SubscriptionActivated($order));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('status', 'Abonnement geactiveerd per '.$startsOn->format('d-m-Y').', maar de bevestigingsmail is NIET verstuurd. Zie de logs.');
+        }
+
+        return back()->with('status', sprintf(
+            'Abonnement geactiveerd per %s. Bevestiging verstuurd naar %s. Eerste factuur loopt van %s t/m %s.',
+            $startsOn->format('d-m-Y'),
+            $order->customer_email,
+            $startsOn->format('d-m-Y'),
+            $order->subPeriodEnd($startsOn)->format('d-m-Y'),
+        ));
     }
 
     /**
