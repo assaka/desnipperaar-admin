@@ -296,7 +296,11 @@
         </section>
     @endif
 
-    @if (count($quote['lines']))
+    {{-- Niet bij een abonnement. Dit blok rekent de losse doos- en containerprijzen
+         via Pricing::quote(), dus het toonde € 120 voor de rolcontainer op een
+         abonnement van € 29,95 per maand. De echte prijs staat in het blauwe
+         abonnementsblok, en de facturen lopen via Invoice::fromSubscription(). --}}
+    @if (! $order->isAbonnement() && count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht
                 @if ($actualQuote) <span class="text-xs font-normal text-gray-500">— op basis van bestelling</span> @endif
@@ -405,6 +409,10 @@
         </section>
     @endif
 
+    {{-- Ook niet bij een abonnement. Een abonnement is een contract, geen bezoek:
+         het heeft geen chauffeur, geen ophaaldatum en geen dagdeel. De losse
+         ophalingen eronder zijn eigen orders en worden daar gepland. --}}
+    @unless ($order->isAbonnement())
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
@@ -485,8 +493,10 @@
             <p class="text-xs text-gray-600 mt-2">Maakt (of werkt bij) de bon met de chauffeur + ophaalmoment, en stuurt een bevestigingsmail naar de klant.</p>
         </form>
     </section>
+    @endunless
 
-    @if ($order->state !== 'nieuw')
+    {{-- Een abonnement krijgt zelf nooit een bon; die horen bij de losse ophalingen. --}}
+    @if ($order->state !== 'nieuw' && ! $order->isAbonnement())
     <section class="mb-6">
         <h2 class="font-black mb-2">Bons</h2>
         @forelse ($order->bons as $bon)
