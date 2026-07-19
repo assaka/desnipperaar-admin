@@ -40,8 +40,11 @@ comienza ese día. Después tiene tiempo para llenarlo.
 @if ($next)
 La primera recogida no es hasta el {{ $next->format('d-m-Y') }}.
 @endif
-Luego recogemos según este calendario, sin que tenga que hacer nada más. Si un día de recogida
-cae en festivo, vamos el siguiente día laborable y el resto del calendario no cambia.</p>
+Luego recogemos según este calendario, sin que tenga que hacer nada más.</p>
+
+<p>Le enviamos un recordatorio un día antes de cada recogida, para que pueda sacar el contenedor a
+tiempo. Si alguna fecha cambia, por ejemplo por un festivo, la fecha correcta figura en ese
+recordatorio.</p>
 
 <p>Recibirá un certificado de destrucción según DIN 66399 en cada recogida.</p>
 

@@ -247,21 +247,32 @@ class Order extends Model
         return $this->quote_valid_until && $this->quote_valid_until->isPast();
     }
 
+    /**
+     * Volgend nummer voor een prefix en jaar, uit de teller in plaats van uit de
+     * laatste rij. Zo komt het nummer van een verwijderde order nooit opnieuw
+     * vrij, en kunnen twee gelijktijdige aanvragen niet hetzelfde nummer krijgen.
+     *
+     * $start is alleen de beginstand als de teller nog niet bestaat.
+     */
+    protected static function nextNumber(string $prefix, int $start): string
+    {
+        $year = now()->year;
+        $key  = $prefix.':'.$year;
+
+        $row = \Illuminate\Support\Facades\DB::selectOne(
+            'INSERT INTO number_counters (key, last_value, created_at, updated_at)
+             VALUES (?, ?, now(), now())
+             ON CONFLICT (key) DO UPDATE SET last_value = number_counters.last_value + 1, updated_at = now()
+             RETURNING last_value',
+            [$key, $start]
+        );
+
+        return sprintf('%s-%d-%04d', $prefix, $year, (int) $row->last_value);
+    }
+
     public static function generateOrderNumber(): string
     {
-        $prefix = config('desnipperaar.order.prefix');
-        $year   = now()->year;
-        $start  = config('desnipperaar.order.start');
-
-        $last = self::where('order_number', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->order_number, -4)) + 1
-            : $start;
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return self::nextNumber(config('desnipperaar.order.prefix'), (int) config('desnipperaar.order.start'));
     }
 
     public function isAbonnement(): bool
@@ -666,35 +677,11 @@ class Order extends Model
 
     public static function generateSubscriptionReference(): string
     {
-        $prefix = config('desnipperaar.order.sub_prefix');
-        $year   = now()->year;
-        $start  = config('desnipperaar.order.start');
-
-        $last = self::where('quote_reference', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->quote_reference, -4)) + 1
-            : $start;
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return self::nextNumber(config('desnipperaar.order.sub_prefix'), (int) config('desnipperaar.order.start'));
     }
 
     public static function generateQuoteReference(): string
     {
-        $prefix = config('desnipperaar.order.quote_prefix');
-        $year   = now()->year;
-        $start  = config('desnipperaar.order.start');
-
-        $last = self::where('quote_reference', 'like', "{$prefix}-{$year}-%")
-            ->orderByDesc('id')
-            ->first();
-
-        $seq = $last
-            ? ((int) substr($last->quote_reference, -4)) + 1
-            : $start;
-
-        return sprintf('%s-%d-%04d', $prefix, $year, $seq);
+        return self::nextNumber(config('desnipperaar.order.quote_prefix'), (int) config('desnipperaar.order.start'));
     }
 }

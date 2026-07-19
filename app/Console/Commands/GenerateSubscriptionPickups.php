@@ -26,6 +26,7 @@ class GenerateSubscriptionPickups extends Command
     protected $signature = 'subscriptions:plan
                             {--days=90 : Hoe ver vooruit inplannen}
                             {--date= : Reken alsof het deze datum is (Y-m-d)}
+                            {--subscription= : Alleen dit abonnement (id), voor direct na goedkeuren}
                             {--dry-run : Toon wat er zou gebeuren, maak niets aan}';
 
     protected $description = 'Plan de komende ophalingen van lopende abonnementen in';
@@ -39,6 +40,7 @@ class GenerateSubscriptionPickups extends Command
 
         $subscriptions = Order::where('type', Order::TYPE_ABONNEMENT)
             ->whereNotNull('sub_active_from')
+            ->when($this->option('subscription'), fn ($q) => $q->whereKey((int) $this->option('subscription')))
             ->orderBy('id')
             ->get();
 

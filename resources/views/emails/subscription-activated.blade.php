@@ -38,9 +38,11 @@ uw abonnement. U heeft daarna rustig de tijd om hem te vullen.
 @if ($next)
 De eerste ophaling is pas op {{ $next->format('d-m-Y') }}.
 @endif
-Daarna halen wij op volgens dit schema, zonder dat u er verder iets voor hoeft te doen. Valt een
-ophaaldag op een feestdag, dan komen wij de eerstvolgende werkdag en blijft het schema verder
-ongewijzigd.</p>
+Daarna halen wij op volgens dit schema, zonder dat u er verder iets voor hoeft te doen.</p>
+
+<p>Wij sturen u telkens één dag voor de ophaling een herinnering, zodat u de container op tijd
+klaar kunt zetten. Wijkt een ophaaldag een keer af, bijvoorbeeld rond een feestdag, dan staat de
+juiste datum in die herinnering.</p>
 
 <p>Bij elke ophaling ontvangt u een vernietigingscertificaat volgens DIN 66399.</p>
 

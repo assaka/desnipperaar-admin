@@ -40,9 +40,11 @@ démarre ce jour-là. Vous avez ensuite le temps de le remplir.
 @if ($next)
 Le premier enlèvement n'a lieu que le {{ $next->format('d-m-Y') }}.
 @endif
-Ensuite, nous collectons selon ce calendrier, sans autre démarche de votre part. Si un jour
-d'enlèvement tombe un jour férié, nous venons le jour ouvré suivant et le reste du calendrier
-reste inchangé.</p>
+Ensuite, nous collectons selon ce calendrier, sans autre démarche de votre part.</p>
+
+<p>Nous vous envoyons un rappel la veille de chaque enlèvement, afin que vous puissiez sortir le
+conteneur à temps. Si une date change, par exemple autour d'un jour férié, la bonne date figure
+dans ce rappel.</p>
 
 <p>Vous recevez un certificat de destruction selon DIN 66399 à chaque enlèvement.</p>
 

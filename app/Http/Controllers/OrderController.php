@@ -156,6 +156,15 @@ class OrderController extends Controller
             ]
         );
 
+        // Meteen inplannen in plaats van wachten op de cron van 02:30. Anders
+        // toont de pagina een eerstvolgende ophaaldatum terwijl er onder
+        // "ingeplande ophalingen" nog niets staat, en dat leest als een fout.
+        try {
+            \Illuminate\Support\Facades\Artisan::call('subscriptions:plan', ['--subscription' => $order->id]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         try {
             Mail::to($order->customer_email)->send(new SubscriptionActivated($order));
         } catch (\Throwable $e) {

@@ -40,9 +40,11 @@ starts on that day. You then have time to fill it.
 @if ($next)
 The first pickup is not until {{ $next->format('d-m-Y') }}.
 @endif
-After that we collect on this schedule, with nothing further needed from you. If a pickup day
-falls on a public holiday we come the next working day, and the rest of the schedule stays
-unchanged.</p>
+After that we collect on this schedule, with nothing further needed from you.</p>
+
+<p>We send you a reminder one day before every pickup, so you can put the container out in time.
+If a pickup day ever differs, around a public holiday for example, the correct date is in that
+reminder.</p>
 
 <p>You receive a certificate of destruction to DIN 66399 at every pickup.</p>
 
