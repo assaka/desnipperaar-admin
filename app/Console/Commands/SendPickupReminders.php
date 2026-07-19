@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\DeliveryReminder;
 use App\Mail\PickupReminder;
 use App\Models\Order;
 use Illuminate\Console\Command;
@@ -34,11 +35,10 @@ class SendPickupReminders extends Command
 
         $tomorrow = $today->copy()->addDay();
 
+        // Bezorgingen én ophalingen, maar elk met hun eigen mail. Eén tekst voor
+        // beide zou bij een bezorging vragen om een container buiten te zetten
+        // die er nog niet staat.
         $pickups = Order::whereNotNull('subscription_order_id')
-            // De bezorgrit hoort hier niet bij. Die mail zou zeggen dat wij morgen
-            // komen ophalen terwijl wij de container juist komen brengen, en de
-            // klant zou een lege container buiten zetten.
-            ->where('delivery_mode', '!=', Order::DELIVERY_BRENG)
             ->whereNull('pickup_reminder_sent_at')
             ->whereDate('pickup_date', $tomorrow->toDateString())
             ->whereIn('state', [Order::STATE_NIEUW, Order::STATE_BEVESTIGD])
@@ -53,10 +53,13 @@ class SendPickupReminders extends Command
                 continue;
             }
 
+            $isDelivery = $pickup->delivery_mode === Order::DELIVERY_BRENG;
+
             if ($dry) {
                 $this->line(sprintf(
-                    '[dry] %s %s → %s op %s',
+                    '[dry] %s %s %s → %s op %s',
                     $pickup->order_number,
+                    $isDelivery ? 'BRENGEN' : 'ophalen',
                     $pickup->customer_name,
                     $pickup->customer_email,
                     $pickup->pickup_date->format('d-m-Y'),
@@ -66,7 +69,9 @@ class SendPickupReminders extends Command
             }
 
             try {
-                Mail::to($pickup->customer_email)->send(new PickupReminder($pickup));
+                Mail::to($pickup->customer_email)->send(
+                    $isDelivery ? new DeliveryReminder($pickup) : new PickupReminder($pickup)
+                );
             } catch (\Throwable $e) {
                 // Niet markeren, dan is er morgenvroeg nog een kans. Daarna is de
                 // ophaaldag zelf en heeft een herinnering geen zin meer.

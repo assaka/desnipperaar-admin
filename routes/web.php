@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pricing/quote', [\App\Http\Controllers\PricingController::class, 'quote'])->name('pricing.quote');
 
     Route::get('/planning',        [\App\Http\Controllers\PlanningController::class, 'index'])->name('planning.index');
+    Route::get('/planning/dag',    [\App\Http\Controllers\PlanningController::class, 'daily'])->name('planning.daily');
     Route::get('/planning/events', [\App\Http\Controllers\PlanningController::class, 'events'])->name('planning.events');
     Route::post('/planning/move',  [\App\Http\Controllers\PlanningController::class, 'move'])->name('planning.move');
 

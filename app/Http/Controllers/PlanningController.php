@@ -35,6 +35,34 @@ class PlanningController extends Controller
         return view('planning.index', compact('drivers', 'calendars'));
     }
 
+    /**
+     * Dagenlijst in plaats van het kalenderbord. Voor de rijdag zelf is een lijst
+     * per dag praktischer dan een agenda: je wilt weten wat er vandaag staat, in
+     * welke volgorde, met adres erbij. Het bord blijft voor het schuiven en
+     * verdelen over chauffeurs.
+     */
+    public function daily(Request $request)
+    {
+        $from = $request->filled('from')
+            ? \Carbon\Carbon::parse($request->query('from'))->startOfDay()
+            : now()->startOfDay();
+
+        $days = min(max((int) $request->query('days', 14), 1), 60);
+        $until = $from->copy()->addDays($days - 1)->endOfDay();
+
+        $orders = Order::where('state', Order::STATE_BEVESTIGD)
+            ->whereNotNull('pickup_date')
+            ->whereBetween('pickup_date', [$from->toDateString(), $until->toDateString()])
+            ->with(['customer', 'bons.driver', 'subscription'])
+            ->orderBy('pickup_date')
+            ->orderBy('pickup_window')
+            ->orderBy('customer_city')
+            ->get()
+            ->groupBy(fn (Order $o) => $o->pickup_date->toDateString());
+
+        return view('planning.daily', compact('orders', 'from', 'until', 'days'));
+    }
+
     public function events(Request $request): JsonResponse
     {
         $start = $request->query('start');
