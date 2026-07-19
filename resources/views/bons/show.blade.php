@@ -167,11 +167,18 @@
             <div class="text-sm">{{ $bon->order->customer_address }}<br>{{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
         </div>
         <div>
-            <h2 class="font-black mb-2">{{ $T['pickup_moment'] }}</h2>
-            @if ($bon->order->pickup_date)
-                <div>{{ ucfirst($bon->order->pickup_date->locale($locale)->translatedFormat('l d F Y')) }}</div>
-                @php $pw = $bon->order->pickup_window; @endphp
-                <div class="text-sm">{{ $pw ? ($win[$pw] ?? ucfirst($pw)) : $T['flexible'] }}@switch($pw)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch</div>
+            @php
+                // Bij een abonnementsrit staat de datum op de bon, niet op de
+                // order. En de kop hangt af van wat we komen doen.
+                $momentDate = $isSubVisit ? $bon->planned_for : $bon->order->pickup_date;
+                $momentWin  = $isSubVisit ? $bon->planned_window : $bon->order->pickup_window;
+                $momentKop  = $bon->mode === 'bezorging' ? 'Bezorgmoment'
+                            : ($bon->mode === 'retour' ? 'Retourmoment' : $T['pickup_moment']);
+            @endphp
+            <h2 class="font-black mb-2">{{ $momentKop }}</h2>
+            @if ($momentDate)
+                <div>{{ ucfirst($momentDate->locale($locale)->translatedFormat('l d F Y')) }}</div>
+                <div class="text-sm">{{ $momentWin ? ($win[$momentWin] ?? ucfirst($momentWin)) : $T['flexible'] }}@switch($momentWin)@case('ochtend') · 08:00–12:00 @break @case('middag') · 12:00–17:00 @break @case('avond') · 17:00–20:00 @break @endswitch</div>
             @else
                 <div class="text-sm text-gray-500">—</div>
             @endif
@@ -432,12 +439,16 @@
         </section>
         @endif
 
+        {{-- Zegels horen bij een gevulde container die wordt opgehaald. Een
+             bezorging (lege container brengen) en een retour hebben er geen. --}}
+        @if ($isCollecting)
         <section>
             <h2 class="font-black mb-3">{{ $T['seal_numbers'] }}</h2>
             <p class="text-xs text-gray-500 mb-2">{{ $T['seal_hint'] }}</p>
             <textarea name="seals" rows="4" class="w-full border p-2 font-mono"
                       placeholder="SEAL-000123&#10;SEAL-000124">{{ old('seals', $bon->seals->pluck('seal_number')->implode("\n")) }}</textarea>
         </section>
+        @endif
 
         <section>
             <h2 class="font-black mb-3">{{ $T['notes'] }}</h2>
