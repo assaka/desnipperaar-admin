@@ -66,6 +66,23 @@
         @endif
     </section>
 
+    @if ($order->isSubscriptionPickup())
+        <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
+            <h2 class="font-black mb-2">Ophaling onder abonnement</h2>
+            <p class="text-sm">
+                Hoort bij
+                <a href="{{ route('orders.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>
+                @if ($order->subscription) · {{ $order->subscription->subFreqLabel() }} @endif
+                @if ($order->subscription_scheduled_for && $order->pickup_date && ! $order->subscription_scheduled_for->equalTo($order->pickup_date))
+                    <br><span class="text-xs text-gray-600">Ritme gaf {{ $order->subscription_scheduled_for->format('d-m-Y') }}, verschoven wegens weekend of feestdag. De reeks loopt gewoon door op het oude ritme.</span>
+                @endif
+            </p>
+            <p class="text-xs text-gray-600 mt-2">
+                Wordt <strong>niet los gefactureerd</strong>. De klant betaalt via het abonnement.
+            </p>
+        </section>
+    @endif
+
     @if ($order->isAbonnement())
         <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
             <div class="flex justify-between items-baseline mb-3">
@@ -181,6 +198,25 @@
                         @endif
                     </span>
                 </form>
+                @php $upcoming = $order->pickups()->whereDate('pickup_date', '>=', now()->toDateString())->limit(8)->get(); @endphp
+                <div class="mt-4">
+                    <p class="font-bold text-sm mb-1">Ingeplande ophalingen</p>
+                    @if ($upcoming->isEmpty())
+                        <p class="text-xs text-gray-600">Nog niets ingepland. De planner draait elke nacht om 02:30 en zet 90 dagen vooruit klaar.</p>
+                    @else
+                        <ul class="text-sm">
+                            @foreach ($upcoming as $p)
+                                <li>
+                                    {{ $p->pickup_date->format('d-m-Y') }} ·
+                                    <a href="{{ route('orders.show', $p) }}" class="underline font-mono text-xs">{{ $p->order_number }}</a>
+                                    @if ($p->subscription_scheduled_for && ! $p->subscription_scheduled_for->equalTo($p->pickup_date))
+                                        <span class="text-xs text-gray-500">verschoven van {{ $p->subscription_scheduled_for->format('d-m-Y') }}</span>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             @elseif ($order->sub_terminated_at && ! $order->hasEnded())
                 <p class="text-sm mt-3 bg-yellow-100 border border-yellow-500 px-3 py-2">
                     Opgezegd. Loopt door tot en met {{ $order->sub_ends_on->format('d-m-Y') }} en wordt tot dan gefactureerd.

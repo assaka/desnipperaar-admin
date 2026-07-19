@@ -105,6 +105,8 @@ class Order extends Model
         'reschedule_requested_window',
         'reschedule_notes',
         'group_deal_id',
+        'subscription_order_id',
+        'subscription_scheduled_for',
         'is_organizer',
         'quote_locked',
         'price_snapshot',
@@ -127,6 +129,7 @@ class Order extends Model
         'sub_terminated_at' => 'datetime',
         'sub_ends_on' => 'date',
         'sub_last_invoiced_period' => 'date',
+        'subscription_scheduled_for' => 'date',
         'pickup_cost' => 'decimal:2',
         'pickup_km' => 'integer',
         'box_count' => 'integer',
@@ -246,6 +249,42 @@ class Order extends Model
     public function isAbonnement(): bool
     {
         return $this->type === self::TYPE_ABONNEMENT;
+    }
+
+    /** Het abonnement waar deze ophaling onder valt, als die er is. */
+    public function subscription()
+    {
+        return $this->belongsTo(self::class, 'subscription_order_id');
+    }
+
+    /** De losse ophalingen die onder dit abonnement zijn ingepland. */
+    public function pickups()
+    {
+        return $this->hasMany(self::class, 'subscription_order_id')->orderBy('pickup_date');
+    }
+
+    /**
+     * Een ophaling onder een abonnement. Die wordt NIET los gefactureerd: de
+     * klant betaalt het abonnement. Zie de guard in Invoice::fromBon().
+     */
+    public function isSubscriptionPickup(): bool
+    {
+        return $this->subscription_order_id !== null;
+    }
+
+    /**
+     * Aantal dagen tussen twee ophalingen. 2x per week heeft geen vast interval
+     * (maandag en donderdag liggen niet even ver uit elkaar) en wordt daarom
+     * apart afgehandeld in de generator.
+     */
+    public function subIntervalDays(): ?int
+    {
+        return match ($this->sub_freq) {
+            '4w' => 28,
+            '2w' => 14,
+            '1w' => 7,
+            default => null,
+        };
     }
 
     public function subTermLabel(): string

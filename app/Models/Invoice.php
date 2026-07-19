@@ -161,6 +161,18 @@ class Invoice extends Model
         $order    = $bon->order;
         $customer = $order->customer;
 
+        // Een ophaling onder een abonnement mag hier nooit langs. Deze methode
+        // herrekent uit de losse doos- en containerprijzen, dus dat zou een
+        // rekening van ruim honderd euro opleveren bovenop het maandbedrag dat
+        // de klant al betaalt. De abonnementsfactuur loopt via fromSubscription().
+        if ($order->isSubscriptionPickup()) {
+            throw new \LogicException(
+                "Order {$order->order_number} is een ophaling onder abonnement "
+                . ($order->subscription?->order_number ?? $order->subscription_order_id)
+                . ' en mag niet los gefactureerd worden.'
+            );
+        }
+
         $boxes      = $bon->actual_boxes      ?? $order->box_count;
         $containers = $bon->actual_containers ?? $order->container_count;
         $media      = !empty($bon->actual_media) ? $bon->actual_media : ($order->media_items ?? []);

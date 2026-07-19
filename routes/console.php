@@ -31,6 +31,15 @@ Schedule::command('subscriptions:invoice')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
 
+// Dagelijks 02:30 Europe/Amsterdam: rollend venster van 90 dagen aan ophalingen
+// voor lopende abonnementen, als losse orders met een datum zodat ze op het
+// planbord staan. Idempotent via de unique index op
+// (subscription_order_id, subscription_scheduled_for).
+Schedule::command('subscriptions:plan')
+    ->dailyAt('02:30')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
+
 // Dagelijks 09:00 Europe/Amsterdam: klanten met een Vast- of Jaartermijn die
 // over ongeveer een maand afloopt krijgen de verlengmail. Draait vóór de
 // omzetting naar maandelijks (die zit in subscriptions:invoice), zodat niemand

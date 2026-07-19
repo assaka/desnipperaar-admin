@@ -176,7 +176,10 @@ class BonController extends Controller
             }
 
             // Auto-generate + auto-send invoice from signed bon's actuals.
-            if (!Invoice::where('bon_id', $bon->id)->exists()) {
+            // Niet bij een ophaling onder een abonnement: die is al betaald via
+            // het maandbedrag. Zonder deze check zou hier automatisch een tweede
+            // rekening de deur uit gaan, en die wordt ook nog direct verstuurd.
+            if (!$bon->order->isSubscriptionPickup() && !Invoice::where('bon_id', $bon->id)->exists()) {
                 try {
                     $invoice = Invoice::fromBon($bon->fresh());
                     Mail::to($invoice->customer_email)
