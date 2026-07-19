@@ -81,7 +81,7 @@
                 <table class="dates" style="width:100%;text-align:right;">
                     <tr><td class="k">Fecha de factura</td><td>{{ $invoice->issued_at->format('d-m-Y') }}</td></tr>
                     <tr><td class="k">Vencimiento</td><td><strong>{{ $invoice->due_at->format('d-m-Y') }}</strong></td></tr>
-                    <tr><td class="k">Referencia de pedido</td><td>{{ $invoice->order->order_number }}</td></tr>
+                    <tr><td class="k">{{ $invoice->order->isAbonnement() ? "Suscripción" : "Referencia de pedido" }}</td><td>{{ $invoice->order->order_number }}</td></tr>
                     @if ($invoice->bon_id) <tr><td class="k">N.º de albarán</td><td>{{ $invoice->bon?->bon_number }}</td></tr> @endif
                 </table>
             </td>

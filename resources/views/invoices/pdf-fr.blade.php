@@ -81,7 +81,7 @@
                 <table class="dates" style="width:100%;text-align:right;">
                     <tr><td class="k">Date de facture</td><td>{{ $invoice->issued_at->format('d-m-Y') }}</td></tr>
                     <tr><td class="k">Échéance</td><td><strong>{{ $invoice->due_at->format('d-m-Y') }}</strong></td></tr>
-                    <tr><td class="k">Référence commande</td><td>{{ $invoice->order->order_number }}</td></tr>
+                    <tr><td class="k">{{ $invoice->order->isAbonnement() ? "Abonnement" : "Référence commande" }}</td><td>{{ $invoice->order->order_number }}</td></tr>
                     @if ($invoice->bon_id) <tr><td class="k">N° de bon</td><td>{{ $invoice->bon?->bon_number }}</td></tr> @endif
                 </table>
             </td>

@@ -6,7 +6,7 @@
         <div>
             <h1 class="text-2xl font-black font-mono">{{ $invoice->invoice_number }}</h1>
             <div class="text-sm text-gray-600">
-                Order: <a href="{{ route('orders.show', $invoice->order_id) }}" class="underline font-mono">{{ $invoice->order->order_number }}</a>
+                @if ($invoice->order->isAbonnement())Abonnement: <a href="{{ route('abonnementen.show', $invoice->order_id) }}" class="underline font-mono">{{ $invoice->order->order_number }}</a>@else Order: <a href="{{ route('orders.show', $invoice->order_id) }}" class="underline font-mono">{{ $invoice->order->order_number }}</a>@endif
                 @if ($invoice->bon_id) · Bon: <a href="{{ route('bons.show', $invoice->bon_id) }}" class="underline font-mono">{{ $invoice->bon?->bon_number }}</a>@endif
                 · Status: <span class="font-bold uppercase">{{ $invoice->status }}</span>
             </div>

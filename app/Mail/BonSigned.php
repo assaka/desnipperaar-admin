@@ -28,12 +28,22 @@ class BonSigned extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = match ($this->mailLocale) {
-            'en' => "Signed pickup receipt {$this->bon->bon_number} — DeSnipperaar",
-            'fr' => "Bon d'enlèvement signé {$this->bon->bon_number} — DeSnipperaar",
-            'es' => "Albarán de recogida firmado {$this->bon->bon_number} — DeSnipperaar",
-            default => "Getekende ophaalbon {$this->bon->bon_number} — DeSnipperaar",
+        // Onderwerp per soort rit: bezorging en retour zijn geen ophaling.
+        $kind = match (true) {
+            $this->bon->mode === 'bezorging' => [
+                'nl' => 'Getekende bezorgbon', 'en' => 'Signed delivery receipt',
+                'fr' => 'Bon de livraison signé', 'es' => 'Albarán de entrega firmado',
+            ],
+            $this->bon->mode === 'retour' => [
+                'nl' => 'Getekende retourbon', 'en' => 'Signed return receipt',
+                'fr' => 'Bon de retour signé', 'es' => 'Albarán de retorno firmado',
+            ],
+            default => [
+                'nl' => 'Getekende ophaalbon', 'en' => 'Signed pickup receipt',
+                'fr' => "Bon d'enlèvement signé", 'es' => 'Albarán de recogida firmado',
+            ],
         };
+        $subject = ($kind[$this->mailLocale] ?? $kind['nl'])." {$this->bon->bon_number} — DeSnipperaar";
 
         return new Envelope(
             subject: $subject,
