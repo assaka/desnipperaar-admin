@@ -204,6 +204,23 @@
                     </ul>
                 @endif
             </div>
+
+            @if ($order->canResetToPending())
+                <form method="POST" action="{{ route('orders.reset-subscription', $order) }}" class="mt-4 pt-3 border-t border-blue-200"
+                      onsubmit="return confirm('Abonnement {{ $order->order_number }} terugzetten naar aanvraag? Ingeplande ophalingen worden verwijderd.');">
+                    @csrf
+                    <button type="submit" class="px-3 py-1 text-xs border border-red-700 text-red-800 hover:bg-red-50">
+                        Zet terug naar aanvraag
+                    </button>
+                    <span class="text-xs text-gray-600 ml-2">
+                        Voor een verkeerde goedkeuring. De klant krijgt hier geen bericht van.
+                    </span>
+                </form>
+            @else
+                <p class="text-xs text-gray-600 mt-4 pt-3 border-t border-blue-200">
+                    Terugzetten naar aanvraag kan niet meer, er is al gereden of gefactureerd. Opzeggen is dan de juiste weg.
+                </p>
+            @endif
         @elseif ($order->sub_terminated_at && ! $order->hasEnded())
             <p class="text-sm mt-3 bg-yellow-100 border border-yellow-500 px-3 py-2">
                 Opgezegd. Loopt door tot en met {{ $order->sub_ends_on->format('d-m-Y') }} en wordt tot dan gefactureerd.

@@ -402,6 +402,27 @@ class Order extends Model
         return 'te beantwoorden';
     }
 
+    /**
+     * Mag dit abonnement terug naar "aanvraag"?
+     *
+     * Alleen zolang er niets onomkeerbaars is gebeurd. Is er al een ophaling
+     * gereden (die heeft een bon) of is er al een factuur uit, dan zou
+     * terugzetten administratie wissen die ergens anders al is gebruikt. Dan is
+     * opzeggen de juiste weg, niet doen alsof het nooit heeft gelopen.
+     */
+    public function canResetToPending(): bool
+    {
+        if (! $this->isAbonnement() || ! $this->sub_active_from) {
+            return false;
+        }
+
+        if ($this->invoices()->whereNotNull('period_start')->exists()) {
+            return false;
+        }
+
+        return ! $this->pickups()->whereHas('bons')->exists();
+    }
+
     /** Opgezegd én de einddatum is voorbij. Tot dan loopt het abonnement door. */
     public function hasEnded(): bool
     {

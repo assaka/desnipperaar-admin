@@ -143,6 +143,44 @@ class OrderController extends Controller
     }
 
     /**
+     * Zet een geactiveerd abonnement terug naar een openstaande aanvraag.
+     *
+     * Voor een verkeerde goedkeuring, en om te kunnen testen. Weigert zodra er
+     * iets onomkeerbaars is gebeurd: een gereden ophaling heeft een bon, en een
+     * verstuurde factuur staat in de boekhouding. Terugzetten zou dat wissen
+     * terwijl de klant het al heeft gezien. In dat geval is opzeggen de juiste
+     * weg, want dat laat het verleden staan.
+     *
+     * De aanvraaggegevens blijven: looptijd, frequentie, prijs en klant. Alleen
+     * alles wat bij het activeren is ontstaan gaat weg.
+     */
+    public function resetSubscription(Request $request, Order $order)
+    {
+        abort_unless($order->isAbonnement(), 422, 'Only subscriptions can be reset.');
+        abort_unless($order->sub_active_from !== null, 422, 'This subscription is not active.');
+        abort_unless($order->canResetToPending(), 422,
+            'Er is al gereden of gefactureerd op dit abonnement. Zeg het op in plaats van het terug te zetten.');
+
+        $dropped = Order::where('subscription_order_id', $order->id)->delete();
+
+        $order->update([
+            'sub_active_from'          => null,
+            'sub_term_started_on'      => null,
+            'sub_pickup_weekday'       => null,
+            'sub_renewal_notified_at'  => null,
+            'sub_last_invoiced_period' => null,
+            'sub_terminated_at'        => null,
+            'sub_ends_on'              => null,
+            'state'                    => Order::STATE_NIEUW,
+        ]);
+
+        return back()->with('status', sprintf(
+            'Abonnement teruggezet naar aanvraag. %d ingeplande ophaling(en) verwijderd. De klant is hierover niet gemaild.',
+            $dropped,
+        ));
+    }
+
+    /**
      * Wijzig de vaste ophaaldag van een lopend abonnement.
      *
      * Toekomstige ophalingen die nog niet gereden zijn worden weggegooid, zodat
