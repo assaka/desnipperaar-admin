@@ -34,10 +34,13 @@
 </table>
 
 <p>Wij brengen de container op {{ $order->sub_active_from->format('d-m-Y') }}. Vanaf die dag loopt
-uw abonnement. U heeft daarna rustig de tijd om hem te vullen@if ($next), de eerste ophaling is
-pas op {{ $next->format('d-m-Y') }}@endif. Daarna halen wij op volgens dit schema, zonder dat u
-er verder iets voor hoeft te doen. Valt een ophaaldag op een feestdag, dan komen wij de
-eerstvolgende werkdag en blijft het schema verder ongewijzigd.</p>
+uw abonnement. U heeft daarna rustig de tijd om hem te vullen.
+@if ($next)
+De eerste ophaling is pas op {{ $next->format('d-m-Y') }}.
+@endif
+Daarna halen wij op volgens dit schema, zonder dat u er verder iets voor hoeft te doen. Valt een
+ophaaldag op een feestdag, dan komen wij de eerstvolgende werkdag en blijft het schema verder
+ongewijzigd.</p>
 
 <p>Bij elke ophaling ontvangt u een vernietigingscertificaat volgens DIN 66399.</p>
 

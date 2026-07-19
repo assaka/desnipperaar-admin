@@ -137,9 +137,11 @@
             <h2 class="font-black mb-2">Prijs</h2>
             <p class="text-sm">
                 Geen losse prijs. Deze rit valt onder abonnement
-                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>@if ($order->subscription?->sub_price_excl_btw),
-                    € {{ number_format($order->subscription->sub_price_excl_btw, 2, ',', '.') }}
-                    {{ $order->subscription->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw@endif.
+                <a href="{{ route('abonnementen.show', $order->subscription_order_id) }}" class="underline font-mono">{{ $order->subscription?->order_number }}</a>.
+                @if ($order->subscription?->sub_price_excl_btw)
+                    De klant betaalt € {{ number_format($order->subscription->sub_price_excl_btw, 2, ',', '.') }}
+                    {{ $order->subscription->sub_term === 'jaar' ? 'per jaar' : 'per maand' }} excl. btw.
+                @endif
             </p>
         </section>
     @elseif (count($quote['lines']))

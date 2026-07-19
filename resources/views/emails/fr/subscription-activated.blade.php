@@ -36,10 +36,13 @@
 </table>
 
 <p>Nous livrons le conteneur le {{ $order->sub_active_from->format('d-m-Y') }}. Votre abonnement
-démarre ce jour-là. Vous avez ensuite le temps de le remplir@if ($next), le premier enlèvement
-n'a lieu que le {{ $next->format('d-m-Y') }}@endif. Ensuite, nous collectons selon ce calendrier,
-sans autre démarche de votre part. Si un jour d'enlèvement tombe un jour férié, nous venons le
-jour ouvré suivant et le reste du calendrier reste inchangé.</p>
+démarre ce jour-là. Vous avez ensuite le temps de le remplir.
+@if ($next)
+Le premier enlèvement n'a lieu que le {{ $next->format('d-m-Y') }}.
+@endif
+Ensuite, nous collectons selon ce calendrier, sans autre démarche de votre part. Si un jour
+d'enlèvement tombe un jour férié, nous venons le jour ouvré suivant et le reste du calendrier
+reste inchangé.</p>
 
 <p>Vous recevez un certificat de destruction selon DIN 66399 à chaque enlèvement.</p>
 

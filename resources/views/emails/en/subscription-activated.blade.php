@@ -36,10 +36,13 @@
 </table>
 
 <p>We deliver the container on {{ $order->sub_active_from->format('d-m-Y') }}. Your subscription
-starts on that day. You then have time to fill it@if ($next), the first pickup is not until
-{{ $next->format('d-m-Y') }}@endif. After that we collect on this schedule, with nothing further
-needed from you. If a pickup day falls on a public holiday we come the next working day, and the
-rest of the schedule stays unchanged.</p>
+starts on that day. You then have time to fill it.
+@if ($next)
+The first pickup is not until {{ $next->format('d-m-Y') }}.
+@endif
+After that we collect on this schedule, with nothing further needed from you. If a pickup day
+falls on a public holiday we come the next working day, and the rest of the schedule stays
+unchanged.</p>
 
 <p>You receive a certificate of destruction to DIN 66399 at every pickup.</p>
 

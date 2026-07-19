@@ -36,10 +36,12 @@
 </table>
 
 <p>Entregamos el contenedor el {{ $order->sub_active_from->format('d-m-Y') }}. Su suscripción
-comienza ese día. Después tiene tiempo para llenarlo@if ($next), la primera recogida no es hasta
-el {{ $next->format('d-m-Y') }}@endif. Luego recogemos según este calendario, sin que tenga que
-hacer nada más. Si un día de recogida cae en festivo, vamos el siguiente día laborable y el resto
-del calendario no cambia.</p>
+comienza ese día. Después tiene tiempo para llenarlo.
+@if ($next)
+La primera recogida no es hasta el {{ $next->format('d-m-Y') }}.
+@endif
+Luego recogemos según este calendario, sin que tenga que hacer nada más. Si un día de recogida
+cae en festivo, vamos el siguiente día laborable y el resto del calendario no cambia.</p>
 
 <p>Recibirá un certificado de destrucción según DIN 66399 en cada recogida.</p>
 
