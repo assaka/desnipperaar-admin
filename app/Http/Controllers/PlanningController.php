@@ -115,8 +115,13 @@ class PlanningController extends Controller
             'reschedule_notes'            => null,
         ]);
 
+        // Ritten onder een abonnement krijgen geen PickupConfirmed. Die mail heet
+        // "Ophaalmoment bevestigd", wat bij een bezorging het omgekeerde zegt van
+        // wat er gebeurt, en de klant krijgt sowieso de dag ervoor een
+        // herinnering die wel weet of wij komen brengen of halen. Zie ook de
+        // gelijke guard in OrderController::confirmPickup().
         $mailed = false;
-        if ($changed) {
+        if ($changed && ! $order->isSubscriptionPickup()) {
             try {
                 Mail::to($order->customer_email)
                     ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));

@@ -471,7 +471,7 @@ class OrderController extends Controller
 
         $order->load(['customer', 'createdBy', 'bons.driver', 'bons.seals', 'certificate', 'invoices']);
         $drivers = Driver::active()->orderBy('name')->get(['id','name','license_last4','signature_path']);
-        $availableTransitions = $this->nextStates($order->state);
+        $availableTransitions = $this->nextStates($order);
 
         $buildQuote = function ($boxes, $containers, $media) use ($order) {
             $q = \App\Support\Pricing::quote((int) $boxes, (int) $containers, (bool) $order->pilot, (bool) $order->first_box_free);
@@ -611,7 +611,7 @@ class OrderController extends Controller
     public function transition(Request $request, Order $order)
     {
         $to = $request->string('to');
-        abort_unless(in_array($to, $this->nextStates($order->state)), 422, 'Invalid transition');
+        abort_unless(in_array($to, $this->nextStates($order)), 422, 'Invalid transition');
         $order->update(['state' => $to]);
         return back();
     }
@@ -716,9 +716,23 @@ class OrderController extends Controller
         }
     }
 
-    private function nextStates(string $current): array
+    /**
+     * Bij een bezorging halen wij niets op en vernietigen wij niets. Die rit is
+     * klaar zodra de container staat, dus die springt van bevestigd naar
+     * afgesloten. Zonder deze uitzondering zou een bezorging door "opgehaald" en
+     * "vernietigd" moeten, en dat zijn twee statussen die nooit hebben
+     * plaatsgevonden.
+     */
+    private function nextStates(Order $order): array
     {
-        return match ($current) {
+        if ($order->delivery_mode === Order::DELIVERY_BRENG) {
+            return match ($order->state) {
+                Order::STATE_BEVESTIGD => [Order::STATE_AFGESLOTEN],
+                default                => [],
+            };
+        }
+
+        return match ($order->state) {
             Order::STATE_NIEUW       => [],  // use Plan ophaling form instead
             Order::STATE_BEVESTIGD   => [Order::STATE_OPGEHAALD],
             Order::STATE_OPGEHAALD   => [Order::STATE_VERNIETIGD],

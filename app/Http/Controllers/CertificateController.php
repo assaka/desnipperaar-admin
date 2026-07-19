@@ -28,6 +28,15 @@ class CertificateController extends Controller
             return redirect()->route('certificates.show', $order->certificate);
         }
 
+        // Bij een bezorging is er niets opgehaald en dus niets vernietigd. Een
+        // vernietigingscertificaat daarvoor zou verklaren dat materiaal is
+        // vernietigd dat nooit is meegenomen.
+        if ($order->delivery_mode === \App\Models\Order::DELIVERY_BRENG) {
+            return back()->withErrors([
+                'certificate' => 'Dit is een bezorging, er is niets vernietigd. Een certificaat hoort bij de ophaling.'
+            ]);
+        }
+
         $hasSignedBon = $order->bons()->whereNotNull('picked_up_at')->exists();
         if (!$hasSignedBon) {
             return back()->withErrors([
