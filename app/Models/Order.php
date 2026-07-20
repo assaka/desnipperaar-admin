@@ -554,11 +554,6 @@ class Order extends Model
         return $this->sub_term_started_on ?? $this->sub_active_from;
     }
 
-    /** Aantal weken in één factuurperiode. Flex en Vast per 4 weken, Jaar per 52. */
-    public function subPeriodWeeks(): int
-    {
-        return $this->sub_term === 'jaar' ? 52 : 4;
-    }
 
     /**
      * Einde van de factuurperiode die op $start begint.
@@ -571,7 +566,15 @@ class Order extends Model
      */
     public function subPeriodEnd(\Carbon\Carbon $start): \Carbon\Carbon
     {
-        return $start->copy()->addWeeks($this->subPeriodWeeks())->subDay()->startOfDay();
+        // Jaarbetaling is één factuur voor het hele contractjaar, dus de periode
+        // loopt tot het einde van de termijn en niet tot 52 weken. Die twee
+        // schelen elf dagen: met 52 weken zou er vlak voor het termijneinde nog
+        // een tweede jaarfactuur uitgaan.
+        if ($this->sub_term === 'jaar') {
+            return $start->copy()->startOfMonth()->addMonthsNoOverflow(12)->endOfMonth()->startOfDay();
+        }
+
+        return $start->copy()->addWeeks(4)->subDay()->startOfDay();
     }
 
     /**
@@ -581,7 +584,9 @@ class Order extends Model
      */
     public function subPeriodNominalDays(\Carbon\Carbon $start): int
     {
-        return $this->subPeriodWeeks() * 7;
+        // Uit subPeriodEnd afleiden, niet zelf narekenen: bij jaarbetaling is een
+        // periode het contractjaar en niet 52 weken.
+        return $start->copy()->startOfDay()->diffInDays($this->subPeriodEnd($start)) + 1;
     }
 
     /**

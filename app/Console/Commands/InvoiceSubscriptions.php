@@ -171,16 +171,20 @@ class InvoiceSubscriptions extends Command
      */
     private function nextPeriodStart(Order $order): \Carbon\Carbon
     {
-        if (! $order->sub_last_invoiced_period) {
+        // Aansluiten op het einde van de LAATST GEFACTUREERDE periode, zoals die
+        // op de factuur staat. Niet opnieuw uitrekenen met subPeriodEnd: de
+        // looptijd kan intussen zijn gewijzigd (jaar dat naar Flex gaat), en dan
+        // levert dezelfde startdatum ineens een ander periode-einde op. De
+        // factuur is de vastgelegde waarheid.
+        $last = $order->invoices()
+            ->whereNotNull('period_end')
+            ->orderByDesc('period_end')
+            ->first();
+
+        if (! $last) {
             return $order->sub_active_from->copy()->startOfDay();
         }
 
-        // Aansluiten op het einde van de vorige periode, en dat einde uit het
-        // model halen. Zelf nog een keer "plus een maand" of "plus een jaar"
-        // uitrekenen zou een tweede definitie van een periode opleveren, en die
-        // twee lopen vroeg of laat uit elkaar.
-        return $order->subPeriodEnd($order->sub_last_invoiced_period->copy())
-            ->addDay()
-            ->startOfDay();
+        return $last->period_end->copy()->addDay()->startOfDay();
     }
 }
