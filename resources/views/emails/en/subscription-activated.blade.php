@@ -48,6 +48,11 @@ reminder.</p>
 
 <p>You receive a certificate of destruction to DIN 66399 at every pickup.</p>
 
+<p style="font-size:13px;color:#555;">If the container is not out on the pickup day, that
+collection lapses and your subscription simply continues. You lose nothing: at the next pickup we
+take it fuller. If we fail to come through our own fault, we credit that period or collect again
+at no charge.</p>
+
 <p>Any questions, or want to change the schedule? Just reply to this email.</p>
 
 <p>Kind regards,<br>Team DeSnipperaar</p>

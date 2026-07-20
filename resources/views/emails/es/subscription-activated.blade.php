@@ -48,6 +48,11 @@ recordatorio.</p>
 
 <p>Recibirá un certificado de destrucción según DIN 66399 en cada recogida.</p>
 
+<p style="font-size:13px;color:#555;">Si el contenedor no está fuera el día de la recogida, esa
+recogida se pierde y su suscripción continúa con normalidad. No pierde nada: en la siguiente
+recogida lo llevamos más lleno. Si no acudimos por causa nuestra, abonamos ese periodo o volvemos
+a recoger sin coste.</p>
+
 <p>¿Tiene preguntas o quiere cambiar el calendario? Responda a este correo.</p>
 
 <p>Un cordial saludo,<br>Team DeSnipperaar</p>

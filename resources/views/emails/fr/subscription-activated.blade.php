@@ -48,6 +48,11 @@ dans ce rappel.</p>
 
 <p>Vous recevez un certificat de destruction selon DIN 66399 à chaque enlèvement.</p>
 
+<p style="font-size:13px;color:#555;">Si le conteneur n'est pas sorti le jour de l'enlèvement,
+cet enlèvement est perdu et votre abonnement se poursuit normalement. Vous ne perdez rien : au
+prochain passage, nous le prenons plus rempli. Si nous ne venons pas de notre fait, nous créditons
+cette période ou nous repassons sans frais.</p>
+
 <p>Des questions ou une modification du calendrier ? Répondez simplement à cet e-mail.</p>
 
 <p>Cordialement,<br>Team DeSnipperaar</p>

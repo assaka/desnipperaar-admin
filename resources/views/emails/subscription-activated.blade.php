@@ -46,6 +46,11 @@ juiste datum in die herinnering.</p>
 
 <p>Bij elke ophaling ontvangt u een vernietigingscertificaat volgens DIN 66399.</p>
 
+<p style="font-size:13px;color:#555;">Staat de container op de ophaaldag een keer niet klaar, dan
+vervalt die lediging en loopt uw abonnement gewoon door. U verliest niets: bij de volgende
+ophaling nemen wij hem voller mee. Komen wij door onze schuld niet langs, dan crediteren wij die
+periode of halen wij alsnog kosteloos op.</p>
+
 <p>Heeft u vragen of wilt u het schema wijzigen? Reply dan op deze email.</p>
 
 <p>Met vriendelijke groet,<br>Team DeSnipperaar</p>
