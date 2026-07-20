@@ -39,7 +39,7 @@
                     };
                 @endphp
                 <tr class="border-b hover:bg-yellow-50">
-                    <td class="py-2 font-mono"><a href="{{ route('invoices.show', $inv) }}" class="underline">{{ $inv->invoice_number }}</a></td>
+                    <td class="py-2 font-mono"><a href="{{ route('invoices.show', $inv) }}" class="underline">{{ $inv->invoice_number }}</a>@if ($inv->isCreditNote()) <span class="bg-red-700 text-white text-xs px-1 font-bold">CREDIT</span>@endif</td>
                     <td>{{ $inv->customer_company ?: $inv->customer_name }}</td>
                     <td><a href="{{ $inv->order->isAbonnement() ? route('abonnementen.show', $inv->order_id) : route('orders.show', $inv->order_id) }}" class="underline font-mono text-xs">{{ $inv->order->order_number }}</a></td>
                     <td class="text-sm">{{ $inv->issued_at->format('Y-m-d') }}</td>

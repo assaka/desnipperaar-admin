@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Facture {{ $invoice->invoice_number }}</title>
+<title>{{ $invoice->isCreditNote() ? "Avoir " : "Facture " }}{{ $invoice->invoice_number }}</title>
 <style>
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
@@ -76,7 +76,7 @@
                 <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>
             </td>
             <td class="doc-info">
-                <h1>FACTURE</h1>
+                <h1>{{ $invoice->isCreditNote() ? "AVOIR" : "FACTURE" }}</h1>
                 <div class="num">{{ $invoice->invoice_number }}</div>
                 <table class="dates" style="width:100%;text-align:right;">
                     <tr><td class="k">Date de facture</td><td>{{ $invoice->issued_at->format('d-m-Y') }}</td></tr>

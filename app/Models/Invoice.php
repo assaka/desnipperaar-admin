@@ -16,6 +16,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_number', 'order_id', 'bon_id', 'period_start', 'period_end',
+        'credits_invoice_id', 'credit_reason',
         'customer_name', 'customer_company', 'customer_email',
         'customer_address', 'customer_postcode', 'customer_city',
         'lines',
@@ -40,6 +41,63 @@ class Invoice extends Model
 
     public function order()  { return $this->belongsTo(Order::class); }
     public function bon()    { return $this->belongsTo(Bon::class); }
+
+    /** De factuur die dit stuk tegenboekt. Gevuld = dit IS een creditfactuur. */
+    public function creditsInvoice() { return $this->belongsTo(self::class, 'credits_invoice_id'); }
+
+    /** De creditfactuur die dit stuk tegenboekt, als die er is. */
+    public function creditNote()     { return $this->hasOne(self::class, 'credits_invoice_id'); }
+
+    public function isCreditNote(): bool
+    {
+        return $this->credits_invoice_id !== null;
+    }
+
+    /** Afgeleid uit het bestaan van een tegenboeking, geen aparte statuskolom. */
+    public function isCredited(): bool
+    {
+        return $this->creditNote()->exists();
+    }
+
+    /**
+     * Boek deze factuur tegen met een creditfactuur.
+     *
+     * Het origineel blijft ongemoeid: de klant heeft hem al en een verstuurd
+     * stuk hoort in de boekhouding te blijven staan. De creditfactuur draait de
+     * regels en bedragen om, zodat het saldo op nul komt.
+     */
+    public function createCreditNote(?string $reason = null): self
+    {
+        $lines = array_map(function ($line) {
+            $line['unit']     = -abs((float) ($line['unit'] ?? 0));
+            $line['subtotal'] = -abs((float) ($line['subtotal'] ?? 0));
+            return $line;
+        }, (array) $this->lines);
+
+        return self::create([
+            'invoice_number'     => self::generateInvoiceNumber(),
+            'credits_invoice_id' => $this->id,
+            'credit_reason'      => $reason,
+            'order_id'           => $this->order_id,
+            'bon_id'             => $this->bon_id,
+            'period_start'       => null,   // een creditfactuur claimt geen periode:
+            'period_end'         => null,   // de unique index blijft zo vrij voor een herfacturatie
+            'customer_name'      => $this->customer_name,
+            'customer_company'   => $this->customer_company,
+            'customer_email'     => $this->customer_email,
+            'customer_address'   => $this->customer_address,
+            'customer_postcode'  => $this->customer_postcode,
+            'customer_city'      => $this->customer_city,
+            'lines'              => $lines,
+            'amount_excl_btw'    => -abs((float) $this->amount_excl_btw),
+            'vat_rate'           => $this->vat_rate,
+            'vat_amount'         => -abs((float) $this->vat_amount),
+            'amount_incl_btw'    => -abs((float) $this->amount_incl_btw),
+            'issued_at'          => now()->toDateString(),
+            'due_at'             => now()->toDateString(),
+            'status'             => self::STATUS_DRAFT,
+        ]);
+    }
 
     public static function generateInvoiceNumber(): string
     {

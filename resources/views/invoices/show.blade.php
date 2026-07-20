@@ -101,4 +101,43 @@
             </form>
         @endif
     </section>
+
+    {{-- Crediteren. Een verstuurde factuur wordt niet aangepast: er komt een
+         tegenboeking bij, zodat het origineel in de boekhouding blijft staan. --}}
+    @if (! $invoice->isCreditNote())
+        <section class="mt-6 border-t pt-4">
+            @if ($invoice->isCredited())
+                @php $note = $invoice->creditNote; @endphp
+                <p class="text-sm">
+                    Gecrediteerd met
+                    <a href="{{ route('invoices.show', $note) }}" class="underline font-mono">{{ $note->invoice_number }}</a>
+                    (€ {{ number_format(abs((float) $note->amount_incl_btw), 2, ',', '.') }})@if ($note->credit_reason) · {{ $note->credit_reason }}@endif.
+                </p>
+            @else
+                <form method="POST" action="{{ route('invoices.credit', $invoice) }}"
+                      onsubmit="return confirm('Creditfactuur aanmaken voor {{ $invoice->invoice_number }}?');">
+                    @csrf
+                    <div class="flex gap-2 items-end flex-wrap">
+                        <label class="text-sm flex-1 min-w-64">
+                            <span class="block text-xs font-bold mb-1">Reden (komt op de creditfactuur)</span>
+                            <input type="text" name="reason" maxlength="300" class="w-full border p-2 text-sm"
+                                   placeholder="Bijv. ophaling niet uitgevoerd door DeSnipperaar">
+                        </label>
+                        <button class="bg-red-700 text-white px-4 py-2 text-xs uppercase font-bold">Crediteer factuur</button>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-2">
+                        Maakt een creditfactuur met negatieve bedragen die deze factuur tegenboekt. Het origineel
+                        blijft staan. De creditfactuur komt als concept klaar, je verstuurt hem daarna zelf.
+                    </p>
+                </form>
+            @endif
+        </section>
+    @else
+        <section class="mt-6 border-t pt-4">
+            <p class="text-sm">
+                Dit is een <strong>creditfactuur</strong> op
+                <a href="{{ route('invoices.show', $invoice->creditsInvoice) }}" class="underline font-mono">{{ $invoice->creditsInvoice?->invoice_number }}</a>@if ($invoice->credit_reason) · {{ $invoice->credit_reason }}@endif.
+            </p>
+        </section>
+    @endif
 @endsection
