@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
 use App\Mail\QuoteSent;
+use App\Mail\QuoteValidityUpdated;
 use App\Mail\SubscriptionActivated;
 use App\Mail\SubscriptionPickupDayChanged;
 use App\Mail\SubscriptionTerminated;
@@ -746,11 +747,29 @@ class OrderController extends Controller
         $order->update(['quote_valid_until' => $data['quote_valid_until']]);
         $order->refresh();
 
-        return back()->with('status', sprintf(
-            'Vervaldatum offerte gewijzigd van %s naar %s. De klant is niet gemaild.',
+        $message = sprintf(
+            'Vervaldatum offerte gewijzigd van %s naar %s.',
             $previous,
             $order->quote_valid_until->format('d-m-Y'),
-        ));
+        );
+
+        // De klant mailen zodat hij de nieuwe deadline kent en de offerte alsnog
+        // kan accepteren. Alleen bij een echte offerte (met bedrag) die nog niet
+        // geaccepteerd is: een los bericht heeft geen acceptatielink, en na
+        // acceptatie is de geldigheid niet meer relevant.
+        if ($order->quoted_amount_excl_btw !== null && $order->quote_accepted_at === null) {
+            try {
+                Mail::to($order->customer_email)->send(new QuoteValidityUpdated($order));
+                $message .= ' Klant is gemaild.';
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' LET OP: de klant is NIET gemaild, zie de logs.';
+            }
+        } else {
+            $message .= ' Klant is niet gemaild.';
+        }
+
+        return back()->with('status', $message);
     }
 
     public function mail(Request $request, Order $order)
