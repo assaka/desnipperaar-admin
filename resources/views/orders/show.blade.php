@@ -92,6 +92,20 @@
                             @php $publicQuoteUrl = rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$order->quote_token; @endphp
                             <br>Publieke offertelink: <a href="{{ $publicQuoteUrl }}" target="_blank" class="underline font-mono text-xs">{{ $publicQuoteUrl }}</a>
                         </div>
+                        <form method="POST" action="{{ route('orders.quote-valid-until', $order) }}" class="flex flex-wrap items-end gap-2 mb-3">
+                            @csrf
+                            <label class="text-sm">
+                                <span class="block text-gray-600 mb-1">Vervaldatum aanpassen</span>
+                                <input type="date" name="quote_valid_until"
+                                       value="{{ optional($order->quote_valid_until)->format('Y-m-d') }}"
+                                       min="{{ now()->addDay()->format('Y-m-d') }}"
+                                       class="border px-2 py-1 text-sm" required>
+                            </label>
+                            <button type="submit" class="bg-gray-800 text-white px-3 py-1 text-sm font-bold">Opslaan</button>
+                            @error('quote_valid_until')
+                                <span class="w-full text-red-700 text-xs">{{ $message }}</span>
+                            @enderror
+                        </form>
                     @endif
                 @endif
                 @include('orders._quote_form')

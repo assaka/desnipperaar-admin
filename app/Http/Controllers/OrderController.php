@@ -722,6 +722,37 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Zet de vervaldatum van een reeds verzonden offerte op een andere datum,
+     * zonder de hele offerte opnieuw te versturen. Handig om een verlopen (of
+     * bijna verlopen) offerte te verlengen als de klant later reageert. De
+     * publieke offertepagina leest dezelfde datum, dus de wijziging werkt
+     * meteen door. De klant wordt niet gemaild.
+     */
+    public function updateQuoteValidUntil(Request $request, Order $order)
+    {
+        abort_unless(
+            in_array($order->type, [Order::TYPE_QUOTE, Order::TYPE_ABONNEMENT], true),
+            422,
+            'Only quote or subscription orders have a quote validity date.'
+        );
+        abort_unless($order->quote_sent_at !== null, 422, 'Er is nog geen offerte verzonden.');
+
+        $data = $request->validate([
+            'quote_valid_until' => 'required|date|after:today',
+        ]);
+
+        $previous = $order->quote_valid_until?->format('d-m-Y') ?? '—';
+        $order->update(['quote_valid_until' => $data['quote_valid_until']]);
+        $order->refresh();
+
+        return back()->with('status', sprintf(
+            'Vervaldatum offerte gewijzigd van %s naar %s. De klant is niet gemaild.',
+            $previous,
+            $order->quote_valid_until->format('d-m-Y'),
+        ));
+    }
+
     public function mail(Request $request, Order $order)
     {
         $data = $request->validate([
