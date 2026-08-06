@@ -14,6 +14,7 @@
                 <th>Klant</th>
                 <th>Postcode</th>
                 <th>Modus</th>
+                <th>Ophaaldatum</th>
                 <th>Status</th>
                 <th>Aangemaakt</th>
             </tr>
@@ -31,6 +32,16 @@
                     <td>{{ $order->customer_postcode }}</td>
                     <td>{{ $order->delivery_mode }}</td>
                     <td>
+                        @if ($order->pickup_date)
+                            {{ $order->pickup_date->format('d-m-Y') }}
+                            @if ($order->pickup_window)
+                                <span class="block text-xs text-gray-500">{{ $order->pickup_window }}</span>
+                            @endif
+                        @else
+                            <span class="text-gray-400">nog niet gepland</span>
+                        @endif
+                    </td>
+                    <td>
                         <span class="inline-block px-2 py-1 text-xs font-bold bg-black text-yellow-400 uppercase">
                             {{ $order->state }}
                         </span>
@@ -38,7 +49,7 @@
                     <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="py-6 text-center text-gray-500">Nog geen orders.</td></tr>
+                <tr><td colspan="7" class="py-6 text-center text-gray-500">Nog geen orders.</td></tr>
             @endforelse
         </tbody>
     </table>
