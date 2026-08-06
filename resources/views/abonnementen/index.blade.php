@@ -20,7 +20,7 @@
                 <th>Status</th>
                 <th>Frequentie</th>
                 <th>Ophaaldag</th>
-                <th>Ophaaldatum</th>
+                <th>Volgende ophaling</th>
                 <th>Looptijd</th>
                 <th>Prijs</th>
                 <th>Container gebracht</th>
@@ -71,7 +71,6 @@
                     <td class="text-sm">
                         @if ($nextPickup)
                             {{ $nextPickup->format('d-m-Y') }}
-                            <span class="block text-xs text-gray-500">eerstvolgende</span>
                         @else
                             <span class="text-gray-400">—</span>
                         @endif
