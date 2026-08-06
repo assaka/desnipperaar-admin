@@ -20,6 +20,7 @@
                 <th>Status</th>
                 <th>Frequentie</th>
                 <th>Ophaaldag</th>
+                <th>Ophaaldatum</th>
                 <th>Looptijd</th>
                 <th>Prijs</th>
                 <th>Container gebracht</th>
@@ -43,6 +44,15 @@
                         'beeindigd'       => 'bg-gray-500 text-white',
                         default           => 'bg-orange-500 text-white',
                     };
+
+                    // Een abonnement heeft geen ophaaldatum maar een ritme, dus hier
+                    // staat de eerstvolgende ophaling. Alleen zolang het abonnement
+                    // loopt: een beëindigd contract heeft geen volgende rit, en
+                    // nextPickupDate() zou anders alsnog een datum uitrekenen uit het
+                    // oude ritme.
+                    $nextPickup = ($abo->sub_active_from && $status !== 'beeindigd')
+                        ? $abo->nextPickupDate()
+                        : null;
                 @endphp
                 <tr class="border-b hover:bg-yellow-50 {{ $status === 'beeindigd' ? 'opacity-60' : '' }}">
                     <td class="py-2 font-mono">
@@ -58,6 +68,14 @@
                     </td>
                     <td class="text-sm">{{ $abo->subFreqLabel() }}</td>
                     <td class="text-sm">{{ $abo->sub_active_from ? $abo->subPickupWeekdayLabel() : '—' }}</td>
+                    <td class="text-sm">
+                        @if ($nextPickup)
+                            {{ $nextPickup->format('d-m-Y') }}
+                            <span class="block text-xs text-gray-500">eerstvolgende</span>
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
+                    </td>
                     <td class="text-sm">{{ $abo->subTermLabel() }}</td>
                     <td class="font-mono">
                         @if ($abo->sub_price_excl_btw)
@@ -80,7 +98,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="10" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
+                <tr><td colspan="11" class="py-6 text-center text-gray-500">Nog geen abonnementen.</td></tr>
             @endforelse
         </tbody>
     </table>

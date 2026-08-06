@@ -13,6 +13,7 @@
                 <th class="py-2">Ref</th>
                 <th>Klant</th>
                 <th>Aangevraagd</th>
+                <th>Ophaaldatum</th>
                 <th>Status</th>
                 <th>Bedrag</th>
                 <th>Geldig t/m</th>
@@ -41,6 +42,19 @@
                         @if ($offerte->customer?->company) <span class="text-xs text-gray-500">— {{ $offerte->customer->company }}</span>@endif
                     </td>
                     <td class="text-sm">{{ $offerte->created_at->format('Y-m-d H:i') }}</td>
+                    {{-- Een offerte krijgt pas een ophaaldatum als er een ophaling voor is
+                         ingepland. Meestal gebeurt dat na acceptatie, en dan is het geen
+                         offerte meer maar een order. Deze kolom staat er dus vooral leeg. --}}
+                    <td class="text-sm">
+                        @if ($offerte->pickup_date)
+                            {{ $offerte->pickup_date->format('d-m-Y') }}
+                            @if ($offerte->pickup_window)
+                                <span class="block text-xs text-gray-500">{{ $offerte->pickup_window }}</span>
+                            @endif
+                        @else
+                            <span class="text-gray-400">nog niet gepland</span>
+                        @endif
+                    </td>
                     <td>
                         <span class="inline-block px-2 py-1 text-xs font-bold uppercase {{ $statusClass }}">{{ $statusLabel }}</span>
                     </td>
@@ -56,7 +70,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="py-6 text-center text-gray-500">Nog geen offertes.</td></tr>
+                <tr><td colspan="7" class="py-6 text-center text-gray-500">Nog geen offertes.</td></tr>
             @endforelse
         </tbody>
     </table>
