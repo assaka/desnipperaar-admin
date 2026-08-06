@@ -38,6 +38,80 @@ return [
         'prefix' => env('DESNIPPERAAR_CERT_PREFIX', 'C'),
     ],
 
+    /**
+     * Ophaalplanning. Bepaalt welke momenten wij kunnen aanbieden en wanneer een
+     * rit "gratis" is omdat wij die dag toch al in de buurt zijn.
+     *
+     * Dit is geen routeoptimalisatie. Wij rijden een handvol stops per dag; wat
+     * telt is of er nog ruimte in een dagdeel is en of de nieuwe stop bij de
+     * stops van die dag in de buurt ligt. Beide vragen zijn met een afstand en
+     * een optelsom te beantwoorden, en dat is precies wat SlotFinder doet.
+     */
+    'planning' => [
+        // Vertrekpunt, 1034DN Amsterdam. Zelfde punt als api/distance.js op de
+        // publieke site gebruikt; wijk je hier af dan rekenen site en admin
+        // verschillende kilometers voor dezelfde klant.
+        'depot' => [
+            'lat' => (float) env('PLANNING_DEPOT_LAT', 52.388),
+            'lon' => (float) env('PLANNING_DEPOT_LON', 4.945),
+        ],
+
+        // Welke dagdelen wij per ISO-weekdag (1 = maandag) rijden. Een dag die
+        // hier niet staat wordt nooit aangeboden. Dit is de plek waar je de
+        // planning krimpt of uitbreidt als de rijdagen veranderen.
+        'week' => [
+            1 => ['ochtend', 'middag'],
+            2 => ['ochtend', 'middag'],
+            3 => ['ochtend', 'middag'],
+            4 => ['ochtend', 'middag'],
+            5 => ['ochtend', 'middag'],
+        ],
+
+        // Netto rijtijd per dagdeel, in minuten. Bewust lager dan de klok: de
+        // vensters lopen 08:00-12:00 en 12:00-17:00, maar niemand rijdt vier
+        // uur aaneen zonder laden, lossen of koffie.
+        'capacity_minutes' => [
+            'ochtend' => (int) env('PLANNING_CAPACITY_OCHTEND', 180),
+            'middag'  => (int) env('PLANNING_CAPACITY_MIDDAG', 210),
+            'avond'   => (int) env('PLANNING_CAPACITY_AVOND', 120),
+        ],
+
+        // Duur van een stop als de order er zelf geen heeft staan.
+        'default_duration' => (int) env('PLANNING_DEFAULT_DURATION', 30),
+
+        // Reistijd die een stop bovenop zijn eigen duur kost. Ligt de stop bij
+        // een al geplande stop in de buurt (binnen cluster_km) dan rijden wij er
+        // toch al langs en kost hij alleen de korte variant.
+        'travel_minutes'        => (int) env('PLANNING_TRAVEL_MINUTES', 25),
+        'travel_minutes_nearby' => (int) env('PLANNING_TRAVEL_MINUTES_NEARBY', 10),
+
+        // Hoe ver vooruit wij momenten aanbieden, en hoeveel dagen wij minimaal
+        // nodig hebben. Morgen aanbieden kan niet: de dag ervoor gaat de
+        // herinnering uit en de bus wordt geladen.
+        'horizon_days' => (int) env('PLANNING_HORIZON_DAYS', 28),
+        'lead_days'    => (int) env('PLANNING_LEAD_DAYS', 2),
+
+        // Binnen deze straal van een al geplande stop rijden wij "toch al
+        // langs". Dat maakt het moment gratis, ook buiten regio Amsterdam.
+        'cluster_km' => (float) env('PLANNING_CLUSTER_KM', 12),
+
+        // Regio Amsterdam: altijd gratis ophalen, ongeacht de dag. Gelijk aan
+        // de 20 km op /werkgebied en in api/distance.js.
+        'free_radius_km' => (float) env('PLANNING_FREE_RADIUS_KM', 20),
+
+        // Tarief voor een rit die wij speciaal voor deze klant maken, per km
+        // boven de eerste free_radius_km. Zelfde bedrag als op /order.
+        'per_km' => (float) env('PLANNING_PER_KM', 0.65),
+
+        // Rechte lijn maal deze factor benadert de wegafstand. Zelfde factor als
+        // de fallback in api/distance.js.
+        'road_factor' => (float) env('PLANNING_ROAD_FACTOR', 1.3),
+
+        // Hoeveel momenten de klant maximaal te zien krijgt. Een lijst van
+        // veertig velden kiest niemand uit.
+        'max_offered' => (int) env('PLANNING_MAX_OFFERED', 12),
+    ],
+
     'pilot' => [
         // Master switch for the Amsterdam pilot. When false, no new order,
         // group-deal participant, or customer is ever flagged as pilot, so the

@@ -59,3 +59,13 @@ Route::get('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleControlle
     ->middleware('throttle:120,1');
 Route::post('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleController::class, 'store'])
     ->middleware('throttle:20,1');
+
+// Customer self-service pickup planning (token-gated) — UI lives on
+// desnipperaar.nl at /plan/{token}. Anders dan herplannen kiest de klant hier
+// uit momenten die wij zelf hebben doorgerekend, dus de keuze staat meteen vast.
+// Lager getarifeerd dan de andere leesroutes: deze rekent een maand vooruit door
+// en zoekt onderweg ontbrekende coördinaten op, dus hij is duurder dan hij eruitziet.
+Route::get('/plan/{token}', [\App\Http\Controllers\Api\PickupPlanController::class, 'show'])
+    ->middleware('throttle:30,1');
+Route::post('/plan/{token}', [\App\Http\Controllers\Api\PickupPlanController::class, 'store'])
+    ->middleware('throttle:20,1');

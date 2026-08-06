@@ -62,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/send-quote', [\App\Http\Controllers\OrderController::class, 'sendQuote'])->name('orders.send-quote');
     Route::post('/orders/{order}/quote-valid-until', [\App\Http\Controllers\OrderController::class, 'updateQuoteValidUntil'])->name('orders.quote-valid-until');
     Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');
+    Route::get('/orders/{order}/slots', [\App\Http\Controllers\OrderController::class, 'slots'])->name('orders.slots');
 
     Route::get('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'show'])->name('bons.show');
     Route::patch('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'update'])->name('bons.update');

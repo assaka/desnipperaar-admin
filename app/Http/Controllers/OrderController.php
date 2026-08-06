@@ -632,6 +632,31 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * De momenten die wij deze klant kunnen aanbieden, als JSON voor het paneel
+     * op de orderpagina.
+     *
+     * Hier staat alles in, ook de dagdelen die vol zitten, met de reden erbij.
+     * Dat is het verschil met wat de klant straks te zien krijgt: die kiest uit
+     * wat kan, jij wilt kunnen zien waarom een dag niet kan.
+     */
+    public function slots(Request $request, Order $order, \App\Services\SlotFinder $finder)
+    {
+        $duration = $request->integer('duration');
+        $result = $finder->forOrder($order, $duration > 0 ? min($duration, 480) : null);
+
+        // Waar de klantpagina de grens zou leggen, zodat je op de orderpagina
+        // ziet welke momenten hij zelf te zien zou krijgen. Zelfde plafond als
+        // daar: nooit duurder dan wat hij bij het bestellen al accepteerde.
+        $offered = [];
+        foreach ($finder->offer($result['slots'], null, (float) ($order->pickup_cost ?? 0)) as $slot) {
+            $offered[] = $slot['date'].'|'.$slot['window'];
+        }
+        $result['offered'] = $offered;
+
+        return response()->json($result);
+    }
+
     public function transition(Request $request, Order $order)
     {
         $to = $request->string('to');

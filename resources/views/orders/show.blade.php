@@ -229,7 +229,8 @@
         </section>
     @endif
 
-    <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4" x-data="{ editing: {{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }} }">
+    <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
+             x-data="slotPanel({{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
             @if ($order->state === 'bevestigd')
@@ -247,6 +248,12 @@
                     @if ($firstBon?->driver_license_last4) <span class="font-mono text-xs">(****{{ $firstBon->driver_license_last4 }})</span>@endif
                 </div>
                     <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
+                @if ($order->pickup_planned_by_customer_at)
+                    <div class="mt-1 text-xs text-gray-600">
+                        <span class="bg-green-700 text-white px-1 font-bold uppercase">zelf gepland</span>
+                        door de klant op {{ $order->pickup_planned_by_customer_at->format('d-m-Y H:i') }}.
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -272,11 +279,11 @@
                 <div>
                     <label class="block text-sm font-bold">Ophaaldatum *</label>
                     <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
-                           value="{{ $prefillDate }}" class="w-full border p-2">
+                           value="{{ $prefillDate }}" class="w-full border p-2" x-ref="date">
                 </div>
                 <div>
                     <label class="block text-sm font-bold">Dagdeel *</label>
-                    <select name="pickup_window" required class="w-full border p-2">
+                    <select name="pickup_window" required class="w-full border p-2" x-ref="window">
                         <option value="flexibel" @selected($prefillWindow==='flexibel' || !$prefillWindow)>Flexibel</option>
                         <option value="ochtend"  @selected($prefillWindow==='ochtend')>Ochtend (08:00–12:00)</option>
                         <option value="middag"   @selected($prefillWindow==='middag')>Middag (12:00–17:00)</option>
@@ -295,9 +302,87 @@
                     <label class="block text-sm font-bold">Duur (min) <span class="text-xs font-normal text-gray-500">intern — voor planning</span></label>
                     <input type="number" name="duration_minutes" min="5" max="480" step="5"
                            value="{{ old('duration_minutes', $order->duration_minutes ?? 30) }}"
-                           class="w-full border p-2">
+                           class="w-full border p-2" x-ref="duration">
                 </div>
             </div>
+
+            {{-- Beschikbare momenten. Rekent per dagdeel uit of de rit er nog bij
+                 past en of wij die dag toch al in de buurt zijn; klikken vult de
+                 datum en het dagdeel hierboven in. --}}
+            <div class="mt-4 bg-white border border-gray-300 p-3">
+                <div class="flex justify-between items-baseline">
+                    <strong class="text-sm">Beschikbare momenten</strong>
+                    <button type="button" @click="load()" :disabled="loading" class="text-xs underline"
+                            x-text="loading ? 'Zoeken…' : (result ? 'Opnieuw zoeken' : 'Zoek beschikbare momenten')"></button>
+                </div>
+
+                <template x-if="error">
+                    <div class="mt-2 text-sm text-red-700" x-text="error"></div>
+                </template>
+
+                <template x-if="result">
+                    <div class="mt-2">
+                        <div class="text-xs text-gray-600">
+                            <span x-show="result.depot_km !== null">
+                                <strong x-text="result.depot_km"></strong> km van het depot ·
+                            </span>
+                            <span x-text="result.duration_minutes"></span> min per stop ·
+                            <span x-text="result.from"></span> t/m <span x-text="result.until"></span>
+                            <span x-show="!result.point" class="text-red-700">
+                                · postcode niet gevonden, nabijheid en prijs onbekend
+                            </span>
+                        </div>
+
+                        <template x-if="!open.length">
+                            <div class="mt-2 text-sm text-gray-600">Geen vrij moment binnen de horizon.</div>
+                        </template>
+
+                        <div class="mt-2 grid gap-1">
+                            <template x-for="s in (showAll ? result.slots : open)" :key="s.date + s.window">
+                                <button type="button" @click="pick(s)" :disabled="!s.available"
+                                        class="text-left text-sm border px-2 py-1 flex justify-between items-baseline gap-3"
+                                        :class="s.available
+                                            ? (s.on_route ? 'border-green-600 bg-green-50 hover:bg-green-100' : 'border-gray-300 hover:bg-yellow-50')
+                                            : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'">
+                                    <span>
+                                        <span class="font-bold" x-text="s.weekday + ' ' + s.date"></span>
+                                        <span x-text="'· ' + s.window_label"></span>
+                                        <span class="text-xs text-gray-500"
+                                              x-text="'· ' + s.stops + ' stop(s), ' + s.free_minutes + ' van ' + s.capacity_minutes + ' min vrij'"></span>
+                                    </span>
+                                    <span class="whitespace-nowrap text-xs">
+                                        <template x-if="s.nearest_km !== null">
+                                            <span :class="s.on_route ? 'text-green-700 font-bold' : 'text-gray-500'"
+                                                  x-text="s.nearest_km + ' km van ' + s.nearest_label"></span>
+                                        </template>
+                                        <template x-if="s.nearest_km === null && s.available">
+                                            <span class="text-gray-400">niets in de buurt</span>
+                                        </template>
+                                        <span x-show="!s.available" x-text="'· ' + s.reason"></span>
+                                        <template x-if="s.price !== null">
+                                            <span class="ml-2 px-1 font-bold"
+                                                  :class="s.price > 0 ? 'bg-orange-200' : 'bg-green-200'"
+                                                  x-text="s.price > 0 ? ('€ ' + s.price.toFixed(2)) : 'gratis'"></span>
+                                        </template>
+                                        <span x-show="offered.includes(s.date + '|' + s.window)"
+                                              class="ml-1 px-1 bg-black text-yellow-400 font-bold uppercase text-[10px]">klant</span>
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+
+                        <label class="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                            <input type="checkbox" x-model="showAll">
+                            Toon ook volle dagdelen
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Groen = wij rijden die dag toch al binnen {{ (int) config('desnipperaar.planning.cluster_km') }} km langs, dus de rit kost ons een omweg en geen hele rit.
+                            Het zwarte label markeert de momenten die de klant zelf te zien zou krijgen.
+                        </p>
+                    </div>
+                </template>
+            </div>
+
             <div class="mt-3">
                 <label class="block text-sm font-bold">Opmerking voor de klant <span class="text-xs font-normal text-gray-500">optioneel — komt in de bevestigingsmail, bijv. waarom de gevraagde dag niet kon</span></label>
                 <textarea name="pickup_note" rows="3" maxlength="2000" class="w-full border p-2"
@@ -410,4 +495,52 @@
             <p class="text-sm text-gray-500">Nog geen berichten gelogd.</p>
         @endforelse
     </section>
+
+    <script>
+        // Het paneel met beschikbare momenten in de sectie "Geplande ophaling".
+        // Zoekt pas op verzoek: de berekening kijkt vier weken vooruit en zoekt
+        // ontbrekende coördinaten op, en dat hoort niet te hangen aan elke keer
+        // dat iemand een order opent.
+        function slotPanel(editing, url) {
+            return {
+                editing: editing,
+                loading: false,
+                error: '',
+                result: null,
+                offered: [],
+                showAll: false,
+
+                get open() {
+                    return this.result ? this.result.slots.filter(s => s.available) : [];
+                },
+
+                async load() {
+                    this.loading = true;
+                    this.error = '';
+                    try {
+                        // De duur bepaalt of een rit nog in een dagdeel past, dus
+                        // zoeken met het getal dat in het formulier staat en niet
+                        // met het opgeslagen getal.
+                        const minutes = parseInt(this.$refs.duration?.value || '', 10);
+                        const q = minutes > 0 ? ('?duration=' + minutes) : '';
+                        const r = await fetch(url + q, { headers: { Accept: 'application/json' } });
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        this.result = await r.json();
+                        this.offered = this.result.offered || [];
+                    } catch (e) {
+                        this.error = 'Zoeken mislukt: ' + e.message;
+                        this.result = null;
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                pick(slot) {
+                    if (!slot.available) return;
+                    this.$refs.date.value = slot.date;
+                    this.$refs.window.value = slot.window;
+                },
+            };
+        }
+    </script>
 @endsection

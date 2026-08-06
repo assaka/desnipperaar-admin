@@ -77,6 +77,9 @@ class Order extends Model
         'customer_address',
         'customer_postcode',
         'customer_city',
+        'lat',
+        'lon',
+        'geocoded_at',
         'locale',
         'customer_reference',
         'delivery_mode',
@@ -89,6 +92,7 @@ class Order extends Model
         'pickup_date',
         'pickup_window',
         'pickup_note',
+        'pickup_planned_by_customer_at',
         'duration_minutes',
         'first_box_free',
         'pickup_cost',
@@ -150,6 +154,10 @@ class Order extends Model
         'sub_pickup_weekday' => 'integer',
         'pickup_cost' => 'decimal:2',
         'pickup_km' => 'integer',
+        'lat' => 'float',
+        'lon' => 'float',
+        'geocoded_at' => 'datetime',
+        'pickup_planned_by_customer_at' => 'datetime',
         'box_count' => 'integer',
         'container_count' => 'integer',
         'duration_minutes' => 'integer',
@@ -165,6 +173,14 @@ class Order extends Model
         static::creating(function (Order $order) {
             if (empty($order->reply_ref)) {
                 $order->reply_ref = self::generateReplyRef();
+            }
+            // Het token bestond pas zodra de admin een ophaling bevestigde, want
+            // tot dan was de herplanpagina de enige die het gebruikte. De
+            // planpagina zit eerder in de reis: de klant kiest zijn moment
+            // meteen na het bestellen. Daarom krijgt elke order het token bij
+            // het aanmaken, zodat elke mail erover kan linken.
+            if (empty($order->public_token)) {
+                $order->public_token = \Illuminate\Support\Str::random(40);
             }
         });
     }
