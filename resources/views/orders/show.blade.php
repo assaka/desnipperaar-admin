@@ -16,6 +16,16 @@
     $afTeVinkenFactuur = $order->isPickedUp()
         ? $order->invoices->reject->isCreditNote()->firstWhere('status', \App\Models\Invoice::STATUS_SENT)
         : null;
+
+    // Dezelfde voorwaarde als CertificateController::generate(), zodat de knop er
+    // alleen staat als hij ook kan slagen. Losser kijken naar "heeft nog geen
+    // certificaat" zou hem ook laten zien bij een order waarvan alleen een
+    // bezorgrit is getekend, en daar is niets vernietigd om te verklaren.
+    $teCertificerenBon = $order->bons()
+        ->whereNotNull('picked_up_at')
+        ->whereNotIn('mode', \App\Models\Bon::MODES_ZONDER_VERNIETIGING)
+        ->whereDoesntHave('certificate')
+        ->exists();
 @endphp
 {{--
     Twee verschillende dingen, en de balk moet ze uit elkaar houden:
@@ -117,6 +127,22 @@
                                        class="border p-1 text-xs w-56">
                                 <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Aanmaken</button>
                             </div>
+                        </form>
+                    @endif
+
+                    @if ($betaaldeFactuur)
+                        <span class="bg-green-700 text-white px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">
+                            Paid{{ $betaaldeFactuur->paid_at ? ' '.$betaaldeFactuur->paid_at->format('d-m-Y') : '' }}
+                        </span>
+                    @endif
+
+                    @if ($teCertificerenBon)
+                        {{-- Aanmaken en mailen zit in één actie, dus dat moet in de
+                             vraag staan: hierna heeft de klant het certificaat. --}}
+                        <form method="POST" action="{{ route('certificates.generate', $order) }}"
+                              onsubmit="return confirm('Certificaat aanmaken en direct naar {{ $order->customer_email }} mailen?')">
+                            @csrf
+                            <button class="bg-gray-800 text-white px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Certificate</button>
                         </form>
                     @endif
 
