@@ -21,7 +21,19 @@
         <div class="border-l-4 border-green-700 pl-3 py-2 mb-2 flex justify-between items-baseline gap-3">
             <div>
                 <span class="font-mono font-bold">{{ $order->coupon_code }}</span>
-                <span class="ml-2 text-sm">− € {{ number_format($order->coupon_discount, 2, ',', '.') }} excl. btw</span>
+                @if ($order->coupon_type === 'percentage' && $order->coupon_value > 0)
+                    <span class="ml-2 text-sm">
+                        {{ \App\Support\Pricing::formatPercentage((float) $order->coupon_value) }}%
+                        @if ($order->coupon_base > 0)
+                            × € {{ number_format($order->coupon_base, 2, ',', '.') }}
+                        @endif
+                        =
+                    </span>
+                @else
+                    <span class="ml-2 text-sm"></span>
+                @endif
+                <span class="text-sm font-bold">− € {{ number_format($order->coupon_discount, 2, ',', '.') }}</span>
+                <span class="text-sm">excl. btw</span>
                 @if ($order->coupon_applied_at)
                     <div class="text-xs text-gray-500">toegekend {{ $order->coupon_applied_at->format('Y-m-d H:i') }}</div>
                 @endif

@@ -57,7 +57,7 @@
                 @endphp
                 @foreach ($invoice->lines as $line)
                     <tr class="border-b">
-                        <td class="py-2">{{ $line['label'] }}</td>
+                        <td class="py-2">{{ $line['label'] }}@if ($isCoupon($line) && !empty($line['pct']))<span class="text-gray-500"> ({{ \App\Support\Pricing::formatPercentage($line['pct']) }}% × € {{ number_format($line['base'], 2, ',', '.') }})</span>@endif</td>
                         <td class="text-right font-mono">{{ $isCoupon($line) ? '' : $line['qty'] }}</td>
                         <td class="text-right font-mono">
                             @unless ($isCoupon($line))

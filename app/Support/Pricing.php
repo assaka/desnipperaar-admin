@@ -135,13 +135,18 @@ class Pricing
      * de factuur te staan als "Korting Amsterdam-pilot". Als regel blijft
      * sum(subtotal) == amount_excl_btw en klopt elke template zonder aanpassing.
      */
-    public static function couponLine(string $code, float $discount): array
-    {
+    public static function couponLine(
+        string $code,
+        float $discount,
+        ?string $type = null,
+        ?float $value = null,
+        ?float $base = null
+    ): array {
         $amount = -round(abs($discount), 2);
 
         $code = strtoupper(trim($code));
 
-        return [
+        $row = [
             // De code staat ook los in `code`, zodat de anderstalige facturen hun
             // eigen aanhef kunnen zetten zonder het label te moeten uitsplitsen.
             'label'    => 'Kortingscode '.$code,
@@ -151,6 +156,24 @@ class Pricing
             'unit'     => $amount,
             'subtotal' => $amount,
         ];
+
+        // Percentage en grondslag gaan alleen mee als de som ook echt uitkomt.
+        // Is de korting afgetopt op het factuurbedrag, dan zou "25% × € 55,00"
+        // een bedrag beloven dat er niet staat, en dan is de code zonder
+        // rekensom eerlijker dan een kloppend uitziende regel die niet klopt.
+        if ($type === 'percentage' && $value > 0 && $base > 0
+            && round($base * $value / 100, 2) === round(abs($discount), 2)) {
+            $row['pct']  = round($value, 2);
+            $row['base'] = round($base, 2);
+        }
+
+        return $row;
+    }
+
+    /** 25.00 wordt "25", 12.50 wordt "12,5": een percentage leest niet als bedrag. */
+    public static function formatPercentage(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, ',', ''), '0'), ',');
     }
 
     /**

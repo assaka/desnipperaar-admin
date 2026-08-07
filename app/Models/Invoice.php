@@ -62,7 +62,16 @@ class Invoice extends Model
         $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $gross);
 
         if ($order && !empty($order->coupon_code) && $discount > 0) {
-            $lines[] = \App\Support\Pricing::couponLine($order->coupon_code, $discount);
+            // De grondslag is het bedrag van deze factuur, niet wat er bij het
+            // toekennen op de order stond: de klant moet de som kunnen nalopen
+            // met de regels die hij voor zich heeft.
+            $lines[] = \App\Support\Pricing::couponLine(
+                $order->coupon_code,
+                $discount,
+                $order->coupon_type,
+                $order->coupon_value !== null ? (float) $order->coupon_value : null,
+                $gross,
+            );
         }
 
         $subtotal = round(array_sum(array_column($lines, 'subtotal')), 2);

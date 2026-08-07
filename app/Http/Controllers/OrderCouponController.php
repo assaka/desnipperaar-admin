@@ -66,13 +66,20 @@ class OrderCouponController extends Controller
             'coupon_code'       => strtoupper(trim($coupon->code)),
             'coupon_discount'   => $discount,
             'coupon_applied_at' => now(),
+            'coupon_type'       => $coupon->type,
+            'coupon_value'      => $coupon->value,
+            'coupon_base'       => $gross,
         ]);
         $coupon->incrementUsage();
 
         $touched = $this->resync($order);
 
+        $som = $coupon->type === 'percentage'
+            ? \App\Support\Pricing::formatPercentage((float) $coupon->value).'% × € '.number_format($gross, 2, ',', '.').' = '
+            : '';
+
         return back()->with('status', $this->summary(
-            "Kortingscode {$order->coupon_code} toegekend: − € ".number_format($discount, 2, ',', '.'),
+            "Kortingscode {$order->coupon_code} toegekend: {$som}− € ".number_format($discount, 2, ',', '.'),
             $touched,
             $order,
         ));
@@ -89,6 +96,9 @@ class OrderCouponController extends Controller
             'coupon_code'       => null,
             'coupon_discount'   => null,
             'coupon_applied_at' => null,
+            'coupon_type'       => null,
+            'coupon_value'      => null,
+            'coupon_base'       => null,
         ]);
 
         // times_used blijft staan. Dat telt hoe vaak de code is ingezet en niet

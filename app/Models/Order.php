@@ -133,6 +133,9 @@ class Order extends Model
         'coupon_code',
         'coupon_discount',
         'coupon_applied_at',
+        'coupon_type',
+        'coupon_value',
+        'coupon_base',
     ];
 
     protected $casts = [
@@ -159,6 +162,8 @@ class Order extends Model
         'pickup_km' => 'integer',
         'coupon_discount' => 'decimal:2',
         'coupon_applied_at' => 'datetime',
+        'coupon_value' => 'decimal:2',
+        'coupon_base' => 'decimal:2',
         'lat' => 'float',
         'lon' => 'float',
         'geocoded_at' => 'datetime',
