@@ -114,7 +114,7 @@
         // Un código de descuento es una línea con importe negativo: no necesita su
         // propia fila de descuento, y cantidad o precio unitario solo lo repetirían.
         $isCoupon = fn ($l) => \App\Support\Pricing::isCouponLine($l);
-        $money = fn ($v) => ($v < 0 ? '− € ' : '€ ').number_format(abs($v), 2, ',', '.');
+        $money = fn ($v) => ($v < 0 ? '- € ' : '€ ').number_format(abs($v), 2, ',', '.');
         $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
         $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
         $discountStaffel = round(collect($invoice->lines)->sum(fn ($l) => $isStaffel($l) ? $l['was_subtotal'] - $l['subtotal'] : 0), 2);
@@ -155,10 +155,10 @@
     <table class="totals">
         <tr><td class="k">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Subtotal antes de descuento' : 'Subtotal' }} sin IVA</td><td class="v">€ {{ number_format($subtotalRegular - $discountStaffel, 2, ',', '.') }}</td></tr>
         @if ($discountKennismaking > 0)
-            <tr><td class="k">Descuento oferta de bienvenida</td><td class="v">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
+            <tr><td class="k">Descuento oferta de bienvenida</td><td class="v">- € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
         @endif
         @if ($discountPilot > 0)
-            <tr><td class="k">Descuento piloto Ámsterdam</td><td class="v">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
+            <tr><td class="k">Descuento piloto Ámsterdam</td><td class="v">- € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">IVA {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Total con IVA</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
