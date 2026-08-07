@@ -91,6 +91,15 @@ class OrderCouponController extends Controller
             return back()->withErrors(['coupon_code' => 'Op deze order staat geen kortingscode.']);
         }
 
+        // Na de ophaling heeft de klant het bedrag met korting al in handen. Dan is
+        // intrekken geen correctie meer maar een prijsverhoging achteraf.
+        if (!$order->canWithdrawCoupon()) {
+            return back()->withErrors([
+                'coupon_code' => "Order {$order->order_number} is al opgehaald, dus {$order->coupon_code} kan er niet meer af. "
+                    .'Moet er geld terug of bij, boek dat via een creditfactuur.',
+            ]);
+        }
+
         $was = $order->coupon_code;
         $order->update([
             'coupon_code'       => null,

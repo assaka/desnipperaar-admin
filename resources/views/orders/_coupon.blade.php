@@ -38,12 +38,17 @@
                     <div class="text-xs text-gray-500">toegekend {{ $order->coupon_applied_at->format('Y-m-d H:i') }}</div>
                 @endif
             </div>
-            <form method="POST" action="{{ route('orders.coupon.destroy', $order) }}"
-                  onsubmit="return confirm('Kortingscode {{ $order->coupon_code }} intrekken en de facturen herrekenen?')">
-                @csrf
-                @method('DELETE')
-                <button class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold">Intrekken</button>
-            </form>
+            @if ($order->canWithdrawCoupon())
+                <form method="POST" action="{{ route('orders.coupon.destroy', $order) }}"
+                      onsubmit="return confirm('Kortingscode {{ $order->coupon_code }} intrekken en de facturen herrekenen?')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold">Intrekken</button>
+                </form>
+            @else
+                {{-- Opgehaald: de klant heeft het bedrag met korting al gezien. --}}
+                <span class="text-xs text-gray-500 whitespace-nowrap">order is afgehandeld</span>
+            @endif
         </div>
     @elseif ($order->isAbonnement())
         <p class="text-sm text-gray-500">

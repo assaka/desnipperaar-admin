@@ -451,6 +451,8 @@
         </section>
     @endif
 
+    @include('orders._edit')
+
     @include('orders._coupon')
 
     @if ($order->certificate || $hasSignedBon)

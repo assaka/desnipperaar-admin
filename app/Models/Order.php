@@ -299,6 +299,29 @@ class Order extends Model
         return !empty($this->coupon_code) && (float) $this->coupon_discount > 0;
     }
 
+    /** Opgehaald of verder: de rit is gereden en er ligt een bon onder. */
+    public function isPickedUp(): bool
+    {
+        return in_array($this->state, [
+            self::STATE_OPGEHAALD,
+            self::STATE_VERNIETIGD,
+            self::STATE_AFGESLOTEN,
+        ], true);
+    }
+
+    /**
+     * Een korting intrekken kan tot de ophaling.
+     *
+     * Daarna is de order afgehandeld en heeft de klant het bedrag met korting al
+     * gezien, op zijn factuur en in zijn bevestiging. Dat bedrag alsnog omhoog
+     * bijstellen is geen correctie maar een prijsverhoging achteraf. Moet er toch
+     * iets terug, dan hoort dat via een creditfactuur te lopen.
+     */
+    public function canWithdrawCoupon(): bool
+    {
+        return $this->hasCoupon() && ! $this->isPickedUp();
+    }
+
     /** Alle ritten onder dit abonnement: bezorging, ophalingen en retour. */
     public function visits()
     {
