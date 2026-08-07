@@ -491,7 +491,10 @@
                                 <a href="{{ route('invoices.show', $inv->creditNote) }}"
                                    class="underline font-mono">{{ $inv->creditNote->invoice_number }}</a>
                             </span>
-                        @elseif ($inv->status === \App\Models\Invoice::STATUS_SENT)
+                        {{-- Alles wat de deur uit is, dus ook een betaalde factuur:
+                             juist daar moet er geld terug. Een concept niet, dat is
+                             nog niemands papier en kan gewoon opnieuw. --}}
+                        @elseif ($inv->sent_at && $inv->status !== \App\Models\Invoice::STATUS_CANCELED)
                             <form method="POST" action="{{ route('invoices.credit', $inv) }}"
                                   class="flex items-center gap-2"
                                   onsubmit="return confirm('Creditfactuur aanmaken voor {{ $inv->invoice_number }}?')">
