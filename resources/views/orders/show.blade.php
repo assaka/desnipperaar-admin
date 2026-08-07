@@ -9,6 +9,13 @@
     $betaaldeFactuur = $order->invoices->reject->isCreditNote()
         ->firstWhere('status', \App\Models\Invoice::STATUS_PAID);
     $magBewerken = $betaaldeFactuur === null;
+
+    // Een verstuurde factuur op een opgehaalde order: de rit is gereden, de
+    // rekening is de deur uit en het enige dat er nog moet gebeuren is de
+    // betaling afvinken. Dat kon alleen op de factuurpagina.
+    $afTeVinkenFactuur = $order->isPickedUp()
+        ? $order->invoices->reject->isCreditNote()->firstWhere('status', \App\Models\Invoice::STATUS_SENT)
+        : null;
 @endphp
 {{--
     Twee verschillende dingen, en de balk moet ze uit elkaar houden:
@@ -110,6 +117,14 @@
                                        class="border p-1 text-xs w-56">
                                 <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Aanmaken</button>
                             </div>
+                        </form>
+                    @endif
+
+                    @if ($afTeVinkenFactuur)
+                        <form method="POST" action="{{ route('invoices.mark-paid', $afTeVinkenFactuur) }}"
+                              onsubmit="return confirm('Factuur {{ $afTeVinkenFactuur->invoice_number }} van € {{ number_format((float) $afTeVinkenFactuur->amount_incl_btw, 2, ',', '.') }} als betaald markeren?')">
+                            @csrf
+                            <button class="bg-green-700 text-white px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Mark as paid</button>
                         </form>
                     @endif
 
