@@ -136,22 +136,25 @@
             </thead>
             <tbody>
                 @php
-                    // Een kortingscode is een regel met een negatief bedrag; aantal en
-                    // stukprijs zouden dat bedrag alleen herhalen.
+                    // De kortingscode zit als regel in lines, maar hoort onder het
+                    // subtotaal bij de andere kortingen, zoals in het prijsoverzicht
+                    // bij de order. Hier dus uit de regels gefilterd.
                     $isCoupon = fn ($l) => \App\Support\Pricing::isCouponLine($l);
+                    $couponLine = collect($invoice->lines)->first($isCoupon);
+                    $couponAmount = $couponLine ? round(abs((float) $couponLine['subtotal']), 2) : 0.0;
+                    $regels = collect($invoice->lines)->reject($isCoupon)->values();
+                    // Bij een creditfactuur zijn alle regels negatief, dus het teken blijft nodig.
                     $money = fn ($v) => ($v < 0 ? '− € ' : '€ ').number_format(abs($v), 2, ',', '.');
                 @endphp
-                @foreach ($invoice->lines as $line)
+                @foreach ($regels as $line)
                     <tr class="border-b">
-                        <td class="py-2">{{ $line['label'] }}@if ($isCoupon($line) && !empty($line['pct']))<span class="text-gray-500"> ({{ \App\Support\Pricing::formatPercentage($line['pct']) }}% × € {{ number_format($line['base'], 2, ',', '.') }})</span>@endif</td>
-                        <td class="text-right font-mono">{{ $isCoupon($line) ? '' : $line['qty'] }}</td>
+                        <td class="py-2">{{ $line['label'] }}</td>
+                        <td class="text-right font-mono">{{ $line['qty'] }}</td>
                         <td class="text-right font-mono">
-                            @unless ($isCoupon($line))
-                                € {{ number_format($line['unit'], 2, ',', '.') }}
-                                @if (!empty($line['was_unit']))
-                                    <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
-                                @endif
-                            @endunless
+                            {{ $money($line['unit']) }}
+                            @if (!empty($line['was_unit']))
+                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                            @endif
                         </td>
                         <td class="text-right font-mono font-bold">
                             {{ $money($line['was_subtotal'] ?? $line['subtotal']) }}
@@ -159,8 +162,10 @@
                     </tr>
                 @endforeach
                 @php
-                    $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
-                    $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
+                    $subtotalRegular = $regels->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
+                    // amount_excl_btw is al na de kortingscode, dus die moet er weer
+                    // bij om de overige kortingen te bepalen.
+                    $discount = round($subtotalRegular - $couponAmount - (float) $invoice->amount_excl_btw, 2);
                 @endphp
                 <tr><td colspan="3" class="pt-2 text-gray-600">{{ $discount > 0 ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="text-right font-mono pt-2">€ {{ number_format($subtotalRegular, 2, ',', '.') }}</td></tr>
                 @php
@@ -172,6 +177,17 @@
                 @endif
                 @if ($discountPilot > 0)
                     <tr><td colspan="3" class="text-green-700">Korting Amsterdam-pilot</td><td class="text-right font-mono text-green-700">− € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
+                @endif
+                @if ($couponAmount > 0)
+                    <tr>
+                        <td colspan="3" class="text-green-700">
+                            Kortingscode {{ $couponLine['code'] ?? '' }}
+                            @if (!empty($couponLine['pct']))
+                                <span class="text-gray-500">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>
+                            @endif
+                        </td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($couponAmount, 2, ',', '.') }}</td>
+                    </tr>
                 @endif
                 <tr><td colspan="3" class="text-gray-600">BTW {{ number_format($invoice->vat_rate*100, 0) }}%</td><td class="text-right font-mono">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black"><td colspan="3" class="pt-2 font-black">Totaal incl. btw</td><td class="pt-2 text-right font-bold text-lg font-mono">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>

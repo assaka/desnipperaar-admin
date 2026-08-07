@@ -99,33 +99,37 @@
         // in a discount row. Kennismaking (unit 0) and the pilot keep their rows,
         // so both must be excluded from each other's total.
         $isStaffel = fn ($l) => \App\Support\Pricing::isMediaLine($l) && isset($l['was_subtotal']);
-        // Een kortingscode is een regel met een negatief bedrag, dus hij heeft geen
-        // eigen kortingsrij nodig; aantal en stukprijs zouden het bedrag herhalen.
+
+        // De kortingscode zit als regel in lines, maar hoort onder het subtotaal bij
+        // de andere kortingen, net als in het prijsoverzicht bij de order. Hier dus
+        // uit de regels gefilterd en apart opgeteld.
         $isCoupon = fn ($l) => \App\Support\Pricing::isCouponLine($l);
+        $couponLine = collect($invoice->lines)->first($isCoupon);
+        $couponAmount = $couponLine ? round(abs((float) $couponLine['subtotal']), 2) : 0.0;
+        $regels = collect($invoice->lines)->reject($isCoupon)->values();
+
+        // Bij een creditfactuur zijn alle regels negatief, dus het teken blijft nodig.
         $money = fn ($v) => ($v < 0 ? '- € ' : '€ ').number_format(abs($v), 2, ',', '.');
-        $subtotalRegular = collect($invoice->lines)->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
-        $discount = round($subtotalRegular - (float) $invoice->amount_excl_btw, 2);
-        $discountStaffel = round(collect($invoice->lines)->sum(fn ($l) => $isStaffel($l) ? $l['was_subtotal'] - $l['subtotal'] : 0), 2);
-        $discountKennismaking = collect($invoice->lines)->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
+
+        $subtotalRegular = $regels->sum(fn ($l) => $l['was_subtotal'] ?? $l['subtotal']);
+        // amount_excl_btw is al na de kortingscode, dus die moet er weer bij om de
+        // overige kortingen te bepalen. Zonder dat komt het bedrag van de code
+        // terecht bij de Amsterdam-pilot, want dat is de rest-post.
+        $discount = round($subtotalRegular - $couponAmount - (float) $invoice->amount_excl_btw, 2);
+        $discountStaffel = round($regels->sum(fn ($l) => $isStaffel($l) ? $l['was_subtotal'] - $l['subtotal'] : 0), 2);
+        $discountKennismaking = $regels->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
         $discountPilot = max(0, round($discount - $discountKennismaking - $discountStaffel, 2));
     @endphp
         <tbody>
-            @foreach ($invoice->lines as $line)
+            @foreach ($regels as $line)
                 <tr>
-                    <td>{{ $line['label'] }}
-                        @if ($isCoupon($line) && !empty($line['pct']))
-                            <span style="color:#777;">({{ \App\Support\Pricing::formatPercentage($line['pct']) }}% × € {{ number_format($line['base'], 2, ',', '.') }})</span>
-                        @endif
-                        @if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">*</span>@endif
-                    </td>
-                    <td class="r">{{ $isCoupon($line) ? '' : $line['qty'] }}</td>
+                    <td>{{ $line['label'] }}@if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
+                    <td class="r">{{ $line['qty'] }}</td>
                     <td class="r">
-                        @unless ($isCoupon($line))
-                            € {{ number_format($line['unit'], 2, ',', '.') }}
-                            @if (!empty($line['was_unit']))
-                                <span style="text-decoration:line-through;color:#999;margin-left:4px;">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
-                            @endif
-                        @endunless
+                        {{ $money($line['unit']) }}
+                        @if (!empty($line['was_unit']))
+                            <span style="text-decoration:line-through;color:#999;margin-left:4px;">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                        @endif
                     </td>
                     <td class="r">
                         {{ $money($isStaffel($line) ? $line['subtotal'] : ($line['was_subtotal'] ?? $line['subtotal'])) }}
@@ -142,6 +146,9 @@
         @endif
         @if ($discountPilot > 0)
             <tr><td class="k">Korting Amsterdam-pilot</td><td class="v">- € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
+        @endif
+        @if ($couponAmount > 0)
+            <tr><td class="k">Kortingscode {{ $couponLine['code'] ?? '' }}@if (!empty($couponLine['pct'])) <span style="color:#777;">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>@endif</td><td class="v">- € {{ number_format($couponAmount, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
