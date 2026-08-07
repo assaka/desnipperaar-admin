@@ -42,7 +42,12 @@
                 @endif
             </div>
         </div>
-        <a href="{{ route('orders.index') }}" class="text-sm underline">← terug</a>
+        <div class="flex items-center gap-3">
+            <button type="button" @click="editOpen = !editOpen"
+                    class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
+                    x-text="editOpen ? 'Sluiten' : 'Adres en inhoud'">Adres en inhoud</button>
+            <a href="{{ route('orders.index') }}" class="text-sm underline whitespace-nowrap">← terug</a>
+        </div>
     </div>
 
     @if ($errors->any())
@@ -81,12 +86,7 @@
                 </form>
             </div>
             <div>{{ $order->customer_phone }}</div>
-            <div class="mt-2 text-sm flex items-start gap-2">
-                <span>{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</span>
-                <button type="button" @click="editOpen = !editOpen"
-                        class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold whitespace-nowrap"
-                        x-text="editOpen ? 'Sluiten' : 'Adres en inhoud'">Adres en inhoud</button>
-            </div>
+            <div class="mt-2 text-sm">{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</div>
             @if ($order->customer_reference)
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
             @endif
@@ -479,7 +479,35 @@
                             @if ($inv->paid_at) · betaald {{ $inv->paid_at->format('Y-m-d') }}@endif
                         </div>
                     </div>
-                    <a href="{{ route('invoices.pdf', $inv) }}" target="_blank" class="text-xs underline">PDF →</a>
+                    <div class="flex items-center gap-3 whitespace-nowrap" x-data="{ crediteren: false }">
+                        {{-- Een verstuurde factuur wordt niet herschreven: er komt een
+                             tegenboeking bij, zodat het origineel in de boekhouding
+                             blijft staan. Vandaar crediteren en geen wijzigen. --}}
+                        @if ($inv->isCreditNote())
+                            <span class="text-xs text-gray-500">creditfactuur</span>
+                        @elseif ($inv->isCredited())
+                            <span class="text-xs text-gray-500">
+                                gecrediteerd met
+                                <a href="{{ route('invoices.show', $inv->creditNote) }}"
+                                   class="underline font-mono">{{ $inv->creditNote->invoice_number }}</a>
+                            </span>
+                        @elseif ($inv->status === \App\Models\Invoice::STATUS_SENT)
+                            <form method="POST" action="{{ route('invoices.credit', $inv) }}"
+                                  class="flex items-center gap-2"
+                                  onsubmit="return confirm('Creditfactuur aanmaken voor {{ $inv->invoice_number }}?')">
+                                @csrf
+                                <button type="button" @click="crediteren = !crediteren"
+                                        class="bg-red-700 text-white px-2 py-0.5 text-xs uppercase font-bold">Crediteren</button>
+                                <div x-show="crediteren" x-cloak class="flex items-center gap-1">
+                                    <input type="text" name="reason" maxlength="300"
+                                           placeholder="reden op de creditfactuur"
+                                           class="border p-1 text-xs w-56">
+                                    <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Aanmaken</button>
+                                </div>
+                            </form>
+                        @endif
+                        <a href="{{ route('invoices.pdf', $inv) }}" target="_blank" class="text-xs underline">PDF →</a>
+                    </div>
                 </div>
             @endforeach
         </section>
