@@ -17,8 +17,15 @@
     kortingscode. Die tweede komt uit de database, zodat de balk een herlaadde
     pagina overleeft.
 --}}
-<div x-data="{ dirty: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
-     @order-dirty="dirty = true">
+{{--
+    stale is wat de server weet: een wijziging die al is opgeslagen maar nog niet
+    gemaild. Undo zet dirty daarop terug en niet op false, anders zou het weggooien
+    van wat je net typte ook de melding wegpoetsen over een korting die de klant
+    nog steeds niet heeft.
+--}}
+<div x-data="{ dirty: {{ $order->confirmation_stale ? 'true' : 'false' }}, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
+     @order-dirty="dirty = true"
+     @order-clean="dirty = stale">
 
     <div x-show="dirty" x-cloak
          class="sticky top-0 z-30 -mx-4 mb-4 px-4 py-3 bg-yellow-400 border-b-2 border-black flex flex-wrap items-center gap-3">

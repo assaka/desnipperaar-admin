@@ -108,6 +108,17 @@
              knop, en die heet Opslaan en mailen. --}}
         <input type="hidden" name="notify" value="1">
 
+        <div class="flex items-center gap-3 mb-2">
+            {{-- Gooit weg wat je hebt getypt en zet de velden terug op wat er is
+                 opgeslagen. Raakt de order niet aan: er is nog niets bewaard.
+                 form.reset() stuurt geen input-events, dus de balk springt er niet
+                 meteen weer aan. --}}
+            <button type="button"
+                    @click="$el.closest('form').reset(); $dispatch('order-clean')"
+                    class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold">Undo</button>
+            <span class="text-xs text-gray-500">zet de velden terug zoals ze zijn opgeslagen</span>
+        </div>
+
         <p class="text-xs text-gray-500">
             Een gewijzigde postcode zet de pilotkorting opnieuw en laat de planning het adres opnieuw opzoeken.
             Al afgesproken ophaalkosten blijven staan: die worden niet stil herrekend.
