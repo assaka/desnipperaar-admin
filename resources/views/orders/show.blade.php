@@ -286,6 +286,18 @@
                     <tr><td class="text-green-700">Korting Amsterdam-pilot</td><td></td>
                         <td class="text-right font-mono text-green-700">− € {{ number_format($quote['discount_pilot'], 2, ',', '.') }}</td></tr>
                 @endif
+                @if (!empty($quote['coupon']))
+                    <tr>
+                        <td class="text-green-700">
+                            Kortingscode {{ $quote['coupon']['code'] }}
+                            @if (!empty($quote['coupon']['pct']))
+                                <span class="text-gray-500">({{ \App\Support\Pricing::formatPercentage($quote['coupon']['pct']) }}% × € {{ number_format($quote['coupon']['base'], 2, ',', '.') }})</span>
+                            @endif
+                        </td>
+                        <td></td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format($quote['coupon']['amount'], 2, ',', '.') }}</td>
+                    </tr>
+                @endif
                 <tr><td class="text-gray-600">BTW 21%</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($quote['vat'], 2, ',', '.') }}</td></tr>
                 <tr class="border-t-2 border-black">

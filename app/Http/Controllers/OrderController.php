@@ -513,8 +513,59 @@ class OrderController extends Controller
                 $q['lines'][] = ['label' => 'Eerder ophalen (binnen 2 weken)', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
             }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
+
+            // Pricing::quote() rekent subtotal_regular over dozen en containers; de
+            // dragers en de ophaalkosten komen er hierboven pas bij. Zonder deze
+            // herberekening liet de regel Subtotaal een lager bedrag zien dan de
+            // regels erboven, terwijl btw en totaal wel over het volle bedrag gingen.
+            $q['subtotal_regular'] = round(array_sum(array_map(
+                fn ($l) => $l['was_subtotal'] ?? $l['subtotal'],
+                $q['lines']
+            )), 2);
+            $q['discount'] = round($q['subtotal_regular'] - $q['subtotal'], 2);
+
             $q['vat']      = round($q['subtotal'] * 0.21, 2);
             $q['total']    = round($q['subtotal'] + $q['vat'], 2);
+            return $q;
+        };
+
+        /**
+         * De kortingscode in het prijsoverzicht, met btw en totaal over het bedrag
+         * na korting. Buiten buildQuote(), zodat een op maat gemaakte offerte hem
+         * ook krijgt in plaats van hem stil te laten vallen.
+         */
+        $applyCoupon = function (array $q) use ($order) {
+            $q['coupon'] = null;
+            if (! $order->hasCoupon()) {
+                return $q;
+            }
+
+            $bedrag = min(round((float) $order->coupon_discount, 2), (float) $q['subtotal']);
+            if ($bedrag <= 0) {
+                return $q;
+            }
+
+            // Via couponLine(), zodat de controle of "25% × € 219,00" ook echt
+            // uitkomt op één plek staat.
+            $line = \App\Support\Pricing::couponLine(
+                $order->coupon_code,
+                $bedrag,
+                $order->coupon_type,
+                $order->coupon_value !== null ? (float) $order->coupon_value : null,
+                (float) $q['subtotal'],
+            );
+
+            $q['coupon'] = [
+                'code'   => $line['code'],
+                'amount' => $bedrag,
+                'pct'    => $line['pct'] ?? null,
+                'base'   => $line['base'] ?? null,
+            ];
+
+            $net        = round((float) $q['subtotal'] - $bedrag, 2);
+            $q['vat']   = round($net * 0.21, 2);
+            $q['total'] = round($net + $q['vat'], 2);
+
             return $q;
         };
 
@@ -536,6 +587,8 @@ class OrderController extends Controller
                 'total'    => round($qsub * 1.21, 2),
             ];
         }
+        $quote = $applyCoupon($quote);
+
         $hasSignedBon = $order->bons->whereNotNull('picked_up_at')->isNotEmpty();
 
         // If a bon exists with actuals that differ from the order, also compute the actual quote.
@@ -556,7 +609,7 @@ class OrderController extends Controller
             if ((int) $boxes !== (int) $order->box_count
                 || (int) $cntrs !== (int) $order->container_count
                 || $orderedMediaInt !== $actualMediaInt) {
-                $actualQuote = $buildQuote($boxes, $cntrs, $media);
+                $actualQuote = $applyCoupon($buildQuote($boxes, $cntrs, $media));
             }
         }
 
