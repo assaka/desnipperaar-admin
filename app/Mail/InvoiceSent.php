@@ -69,7 +69,7 @@ class InvoiceSent extends Mailable
             'en' => "invoice-{$this->invoice->invoice_number}.pdf",
             'fr' => "facture-{$this->invoice->invoice_number}.pdf",
             'es' => "factura-{$this->invoice->invoice_number}.pdf",
-            default => "factuur-{$this->invoice->invoice_number}.pdf",
+            default => "desnipperaar-{$this->invoice->invoice_number}.pdf",
         };
         $pdf = Pdf::loadView($view, ['invoice' => $this->invoice])->setPaper('a4');
         return [

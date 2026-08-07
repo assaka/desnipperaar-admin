@@ -28,7 +28,9 @@ class InvoiceController extends Controller
     public function pdf(Invoice $invoice)
     {
         $pdf = Pdf::loadView('invoices.pdf', ['invoice' => $invoice])->setPaper('a4');
-        return $pdf->stream("factuur-{$invoice->invoice_number}.pdf");
+        // Op onze naam en niet op soort document: in een map met downloads zegt
+        // "desnipperaar-F-2026-0170" wie het gestuurd heeft, "factuur-..." niet.
+        return $pdf->stream("desnipperaar-{$invoice->invoice_number}.pdf");
     }
 
     /**
