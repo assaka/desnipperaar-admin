@@ -91,9 +91,42 @@ class OrderCreated extends Mailable
                 );
         }
 
+        // Een kortingscode zit niet in Pricing::snapshot(), want die rekent uit
+        // dozen en containers. Zonder deze stap zou de bevestiging het bedrag
+        // van voor de korting noemen en dus een ander bedrag dan de factuur.
+        $coupon = null;
+        if ($this->order->hasCoupon()) {
+            $gross  = (float) $snap['subtotal'];
+            $amount = min(round((float) $this->order->coupon_discount, 2), $gross);
+
+            if ($amount > 0) {
+                // Via couponLine(), zodat de controle of "25% × € 55,00" ook echt
+                // uitkomt op één plek staat en niet hier nog eens.
+                $line = \App\Support\Pricing::couponLine(
+                    $this->order->coupon_code,
+                    $amount,
+                    $this->order->coupon_type,
+                    $this->order->coupon_value !== null ? (float) $this->order->coupon_value : null,
+                    $gross,
+                );
+
+                $coupon = [
+                    'code'   => $line['code'],
+                    'amount' => $amount,
+                    'pct'    => $line['pct'] ?? null,
+                    'base'   => $line['base'] ?? null,
+                ];
+
+                $net           = round($gross - $amount, 2);
+                $snap['vat']   = round($net * \App\Support\Pricing::VAT_RATE, 2);
+                $snap['total'] = round($net + $snap['vat'], 2);
+            }
+        }
+
         return new Content(
             view: $this->mailLocale === 'nl' ? 'emails.order-created' : 'emails.'.$this->mailLocale.'.order-created',
             with: [
+                'coupon'          => $coupon,
                 'order'           => $this->order,
                 'sender'          => $this->sender,
                 'quote'           => [

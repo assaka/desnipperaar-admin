@@ -74,6 +74,17 @@ We will contact you within one business day to confirm the pickup.</p>
             <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountPilot, 2, ',', '.') }}</td>
         </tr>
     @endif
+    @if (!empty($coupon))
+        <tr>
+            <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">
+                Discount code {{ $coupon['code'] }}
+                @if (!empty($coupon['pct']))
+                    ({{ \App\Support\Pricing::formatPercentage($coupon['pct']) }}% × € {{ number_format($coupon['base'], 2, ',', '.') }})
+                @endif
+            </td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($coupon['amount'], 2, ',', '.') }}</td>
+        </tr>
+    @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">VAT 21%</td>
         <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($vat, 2, ',', '.') }}</td>
