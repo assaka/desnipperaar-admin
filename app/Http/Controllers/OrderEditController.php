@@ -118,30 +118,62 @@ class OrderEditController extends Controller
             $notes[] = 'deze order is al opgehaald, de factuur volgt de aantallen van de bon en niet deze';
         }
 
-        // Alleen mailen als er echt iets veranderd is. Een bevestiging die niets
-        // nieuws bevat verwart de klant en zet hem aan het zoeken naar het
-        // verschil, en er is er al een de deur uit.
-        $changed = $order->wasChanged();
+        // Was er al iets dat de klant niet weet, bijvoorbeeld een kortingscode die
+        // los van dit formulier is toegekend, dan is er ook zonder wijziging hier
+        // reden om te mailen.
+        $changed  = $order->wasChanged();
+        $wasStale = (bool) $order->confirmation_stale;
+
+        if ($changed) {
+            $order->update(['confirmation_stale' => true]);
+        }
 
         if ($request->boolean('notify')) {
-            if (! $changed) {
-                $notes[] = 'er was niets gewijzigd, dus er is geen bevestiging gestuurd';
+            if (! $changed && ! $wasStale) {
+                $notes[] = 'er was niets nieuws voor de klant, dus er is geen bevestiging gestuurd';
+            } elseif ($this->sendConfirmation($order)) {
+                $notes[] = 'bijgewerkte bevestiging gestuurd naar '.$order->customer_email;
             } else {
-                try {
-                    \Illuminate\Support\Facades\Mail::to($order->customer_email)
-                        ->send(new \App\Mail\OrderCreated($order->fresh()));
-                    $notes[] = 'bijgewerkte bevestiging gestuurd naar '.$order->customer_email;
-                } catch (\Throwable $e) {
-                    report($e);
-                    $notes[] = 'de bevestiging kon niet worden verstuurd ('.$e->getMessage().')';
-                }
+                $notes[] = 'de bevestiging kon niet worden verstuurd, probeer het opnieuw';
             }
-        } elseif ($changed) {
-            $notes[] = 'de klant heeft nog de oude gegevens, stuur zo nodig de bevestiging opnieuw';
+        } elseif ($changed || $wasStale) {
+            $notes[] = 'de klant heeft nog de oude gegevens, stuur de bevestiging zo nodig na';
         }
 
         return back()->with('status', 'Order '.$order->order_number
             .($changed ? ' bijgewerkt.' : ' ongewijzigd.')
             .($notes ? ' '.ucfirst(implode('. ', $notes)).'.' : ''));
+    }
+
+    /** De bevestiging nasturen zonder verder iets te wijzigen. */
+    public function resendConfirmation(Order $order)
+    {
+        if ($this->sendConfirmation($order)) {
+            return back()->with('status', 'Bevestiging van '.$order->order_number
+                .' opnieuw gestuurd naar '.$order->customer_email.'.');
+        }
+
+        return back()->withErrors(['notify' => 'De bevestiging kon niet worden verstuurd.']);
+    }
+
+    /**
+     * Stuur de bevestiging en zet de vlag om.
+     *
+     * De vlag gaat alleen uit als de mail er echt uit is: mislukt hij, dan moet de
+     * orderpagina blijven zeggen dat de klant nog iets te horen heeft.
+     */
+    private function sendConfirmation(Order $order): bool
+    {
+        try {
+            \Illuminate\Support\Facades\Mail::to($order->customer_email)
+                ->send(new \App\Mail\OrderCreated($order->fresh()));
+        } catch (\Throwable $e) {
+            report($e);
+            return false;
+        }
+
+        $order->update(['confirmation_stale' => false]);
+
+        return true;
     }
 }

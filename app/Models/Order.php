@@ -136,6 +136,7 @@ class Order extends Model
         'coupon_type',
         'coupon_value',
         'coupon_base',
+        'confirmation_stale',
     ];
 
     protected $casts = [
@@ -164,6 +165,7 @@ class Order extends Model
         'coupon_applied_at' => 'datetime',
         'coupon_value' => 'decimal:2',
         'coupon_base' => 'decimal:2',
+        'confirmation_stale' => 'boolean',
         'lat' => 'float',
         'lon' => 'float',
         'geocoded_at' => 'datetime',

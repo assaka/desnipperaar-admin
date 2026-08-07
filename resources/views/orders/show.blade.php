@@ -2,6 +2,31 @@
 @section('title', $order->order_number)
 
 @section('content')
+{{--
+    dirty = de klant weet nog niet wat wij weten. Twee bronnen: onopgeslagen
+    wijzigingen in het adres-en-inhoudformulier (het order-dirty event), en een
+    wijziging die al wel is opgeslagen maar nog niet gemaild, zoals een
+    kortingscode. Die tweede komt uit de database, zodat de balk een herlaadde
+    pagina overleeft.
+--}}
+<div x-data="{ dirty: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
+     @order-dirty="dirty = true">
+
+    <div x-show="dirty" x-cloak
+         class="sticky top-0 z-30 -mx-4 mb-4 px-4 py-3 bg-yellow-400 border-b-2 border-black flex flex-wrap items-center gap-3">
+        <span class="font-bold text-sm">De klant heeft deze gegevens nog niet.</span>
+        <button type="button"
+                @click="const f = document.getElementById('order-edit-form'); if (f) { f.requestSubmit(); }"
+                class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold">
+            Opslaan en mailen
+        </button>
+        <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}" class="inline">
+            @csrf
+            <button class="underline text-xs">alleen mailen, niets wijzigen</button>
+        </form>
+        <span class="text-xs text-gray-800">naar {{ $order->customer_email }}</span>
+    </div>
+
     <div class="flex justify-between items-start mb-4">
         <div>
             <h1 class="text-2xl font-black font-mono">{{ $order->order_number }}</h1>
@@ -56,10 +81,17 @@
                 </form>
             </div>
             <div>{{ $order->customer_phone }}</div>
-            <div class="mt-2 text-sm">{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</div>
+            <div class="mt-2 text-sm flex items-start gap-2">
+                <span>{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</span>
+                <button type="button" @click="editOpen = !editOpen"
+                        class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold whitespace-nowrap"
+                        x-text="editOpen ? 'Sluiten' : 'Adres en inhoud'">Adres en inhoud</button>
+            </div>
             @if ($order->customer_reference)
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
             @endif
+
+            @include('orders._edit')
         </div>
         @if ($order->notes)
             <div class="mt-3 text-sm italic text-gray-700">{{ $order->notes }}</div>
@@ -228,6 +260,8 @@
             </div>
         </section>
     @endif
+
+    @include('orders._coupon')
 
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
              x-data="slotPanel({{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
@@ -451,10 +485,6 @@
         </section>
     @endif
 
-    @include('orders._edit')
-
-    @include('orders._coupon')
-
     @if ($order->certificate || $hasSignedBon)
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>
@@ -499,6 +529,8 @@
             <p class="text-sm text-gray-500">Nog geen berichten gelogd.</p>
         @endforelse
     </section>
+
+</div>{{-- einde dirty/editOpen --}}
 
     <script>
         // Het paneel met beschikbare momenten in de sectie "Geplande ophaling".

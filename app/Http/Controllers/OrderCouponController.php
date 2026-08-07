@@ -63,12 +63,14 @@ class OrderCouponController extends Controller
         }
 
         $order->update([
-            'coupon_code'       => strtoupper(trim($coupon->code)),
-            'coupon_discount'   => $discount,
-            'coupon_applied_at' => now(),
-            'coupon_type'       => $coupon->type,
-            'coupon_value'      => $coupon->value,
-            'coupon_base'       => $gross,
+            'coupon_code'        => strtoupper(trim($coupon->code)),
+            'coupon_discount'    => $discount,
+            'coupon_applied_at'  => now(),
+            'coupon_type'        => $coupon->type,
+            'coupon_value'       => $coupon->value,
+            'coupon_base'        => $gross,
+            // De klant betaalt vanaf nu minder dan in zijn bevestiging staat.
+            'confirmation_stale' => true,
         ]);
         $coupon->incrementUsage();
 
@@ -102,12 +104,13 @@ class OrderCouponController extends Controller
 
         $was = $order->coupon_code;
         $order->update([
-            'coupon_code'       => null,
-            'coupon_discount'   => null,
-            'coupon_applied_at' => null,
-            'coupon_type'       => null,
-            'coupon_value'      => null,
-            'coupon_base'       => null,
+            'coupon_code'        => null,
+            'coupon_discount'    => null,
+            'coupon_applied_at'  => null,
+            'coupon_type'        => null,
+            'coupon_value'       => null,
+            'coupon_base'        => null,
+            'confirmation_stale' => true,
         ]);
 
         // times_used blijft staan. Dat telt hoe vaak de code is ingezet en niet
