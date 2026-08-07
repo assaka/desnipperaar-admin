@@ -35,14 +35,17 @@ class InvoiceSent extends Mailable
             default => "Factuur {$this->invoice->invoice_number} — DeSnipperaar",
         };
 
+        // Antwoorden gaan naar de verkoopmailbox en niet naar een persoonlijk
+        // postvak. Een vraag over een factuur moet ook gelezen worden als degene
+        // die hem verstuurde er even niet is.
+        $salesEmail = config('desnipperaar.notifications.sales_email');
+
         return new Envelope(
             subject: $subject,
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
-            replyTo: $this->sender
-                ? [new Address($this->sender->email, $this->sender->name)]
-                : [],
+            replyTo: [new Address($salesEmail, 'DeSnipperaar')],
         );
     }
 
