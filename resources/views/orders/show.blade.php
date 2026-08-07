@@ -9,6 +9,10 @@
     $betaaldeFactuur = $order->invoices->reject->isCreditNote()
         ->firstWhere('status', \App\Models\Invoice::STATUS_PAID);
     $magBewerken = $betaaldeFactuur === null;
+
+    // Planning staat open zolang er nog iets te plannen valt. Is de order
+    // opgehaald, dan is het naslag en hoeft het de pagina niet te vullen.
+    $planningStaatOpen = ! $order->isPickedUp();
 @endphp
 {{--
     Twee verschillende dingen, en de balk moet ze uit elkaar houden:
@@ -23,7 +27,7 @@
     De balk verschijnt bij beide. Undo alleen bij typed, want Undo op een
     opgeslagen wijziging zou suggereren dat je die kunt terugdraaien.
 --}}
-<div x-data="{ typed: false, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
+<div x-data="{ typed: false, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false, planningOpen: {{ $planningStaatOpen ? 'true' : 'false' }} }"
      @order-dirty="typed = true"
      @order-clean="typed = false">
 
@@ -112,6 +116,12 @@
                             </div>
                         </form>
                     @endif
+
+                    {{-- Klapt de sectie Geplande ophaling in en uit. Die staat verder
+                         op de pagina op zijn eigen plek; dit is de schakelaar. --}}
+                    <button type="button" @click="planningOpen = !planningOpen"
+                            class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
+                            :class="planningOpen ? 'ring-2 ring-black' : ''">Planning</button>
 
                     {{-- Resend hoort bij de andere acties op deze order en niet
                          alleen in de balk: de bevestiging opnieuw sturen kan altijd,
@@ -326,7 +336,10 @@
 
     @include('orders._coupon')
 
+    {{-- x-show en geen @if: het paneel houdt zijn eigen toestand en de gekozen
+         momenten, dus in- en uitklappen mag het niet opnieuw opbouwen. --}}
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
+             x-show="planningOpen" x-cloak
              x-data="slotPanel({{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
