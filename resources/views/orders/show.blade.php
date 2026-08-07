@@ -542,10 +542,11 @@
                             @if ($inv->paid_at) · betaald {{ $inv->paid_at->format('Y-m-d') }}@endif
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 whitespace-nowrap" x-data="{ crediteren: false }">
-                        {{-- Een verstuurde factuur wordt niet herschreven: er komt een
-                             tegenboeking bij, zodat het origineel in de boekhouding
-                             blijft staan. Vandaar crediteren en geen wijzigen. --}}
+                    {{-- Geen crediteerknop in deze regel. Crediteren staat bij de
+                         knoppen naast Klant en op de factuurpagina zelf; hier stond
+                         hij een derde keer, en dat is de plek waar je hem het minst
+                         verwacht als je alleen de factuur opzoekt. --}}
+                    <div class="flex items-center gap-3 whitespace-nowrap">
                         @if ($inv->isCreditNote())
                             <span class="text-xs text-gray-500">creditfactuur</span>
                         @elseif ($inv->isCredited())
@@ -554,23 +555,6 @@
                                 <a href="{{ route('invoices.show', $inv->creditNote) }}"
                                    class="underline font-mono">{{ $inv->creditNote->invoice_number }}</a>
                             </span>
-                        {{-- Alleen een betaalde factuur: daar is geld mee gemoeid dat
-                             terug moet. Staat de factuur nog open, dan pas je de
-                             order aan en wordt hij herrekend. --}}
-                        @elseif ($inv->status === \App\Models\Invoice::STATUS_PAID)
-                            <form method="POST" action="{{ route('invoices.credit', $inv) }}"
-                                  class="flex items-center gap-2"
-                                  onsubmit="return confirm('Creditfactuur aanmaken voor {{ $inv->invoice_number }}?')">
-                                @csrf
-                                <button type="button" @click="crediteren = !crediteren"
-                                        class="bg-red-700 text-white px-2 py-0.5 text-xs uppercase font-bold">Crediteren</button>
-                                <div x-show="crediteren" x-cloak class="flex items-center gap-1">
-                                    <input type="text" name="reason" maxlength="300"
-                                           placeholder="reden op de creditfactuur"
-                                           class="border p-1 text-xs w-56">
-                                    <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Aanmaken</button>
-                                </div>
-                            </form>
                         @endif
                         <a href="{{ route('invoices.pdf', $inv) }}" target="_blank" class="text-xs underline">PDF →</a>
                     </div>
