@@ -196,12 +196,6 @@
         </table>
     </section>
 
-    {{-- Ook hier, en niet alleen op de orderpagina: dit is de plek waar je het
-         bedrag ziet dat een korting verandert. --}}
-    @if ($invoice->order)
-        @include('orders._coupon', ['order' => $invoice->order])
-    @endif
-
     {{-- Alleen toelichting; de knoppen staan bovenaan. --}}
     @if ($invoice->isCreditNote())
         <section class="mt-6 border-t pt-4">
