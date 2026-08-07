@@ -11,15 +11,110 @@
                 · Status: <span class="font-bold uppercase">{{ $invoice->status }}</span>
             </div>
         </div>
-        <div class="flex gap-3 text-sm">
-            <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold">PDF bekijken</a>
-            <a href="{{ route('invoices.index') }}" class="underline">← facturen</a>
-        </div>
+        <a href="{{ route('invoices.index') }}" class="text-sm underline whitespace-nowrap">← facturen</a>
     </div>
 
     @if (session('status'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
     @endif
+    @if ($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 mb-4 text-sm">
+            @foreach ($errors->all() as $err) <div>{{ $err }}</div> @endforeach
+        </div>
+    @endif
+
+    {{-- Alle acties op deze factuur op één regel, zoals bij een order. Ze stonden
+         verspreid over de pagina: versturen bovenaan, crediteren onderaan met een
+         eigen formulier ertussen. --}}
+    <div x-data="{ proef: false, credit: false }" class="mb-6 pb-4 border-b">
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank"
+               class="bg-gray-200 text-black px-3 py-1.5 text-xs uppercase font-bold">PDF</a>
+
+            @unless ($invoice->status === \App\Models\Invoice::STATUS_CANCELED)
+                <form method="POST" action="{{ route('invoices.mail', $invoice) }}"
+                      onsubmit="return confirm('Factuur {{ $invoice->invoice_number }} naar {{ $invoice->customer_email }} sturen?')">
+                    @csrf
+                    <button class="bg-black text-yellow-400 px-3 py-1.5 text-xs uppercase font-bold">
+                        {{ $invoice->sent_at ? 'Resend' : 'Verstuur' }}
+                    </button>
+                </form>
+
+                {{-- Proefzending laat status en sent_at ongemoeid: dit is geen
+                     verzending in de administratie. --}}
+                <button type="button" @click="proef = !proef"
+                        class="bg-gray-200 text-black px-3 py-1.5 text-xs uppercase font-bold">Proefzending</button>
+            @endunless
+
+            @if ($invoice->status === \App\Models\Invoice::STATUS_PAID)
+                <span class="bg-green-700 text-white px-3 py-1.5 text-xs uppercase font-bold whitespace-nowrap">
+                    Betaald{{ $invoice->paid_at ? ' '.$invoice->paid_at->format('d-m-Y') : '' }}
+                </span>
+            @elseif ($invoice->status === \App\Models\Invoice::STATUS_SENT)
+                <form method="POST" action="{{ route('invoices.mark-paid', $invoice) }}">
+                    @csrf
+                    <button class="bg-green-700 text-white px-3 py-1.5 text-xs uppercase font-bold">Mark as paid</button>
+                </form>
+            @endif
+
+            @if ($invoice->isCreditNote())
+                <span class="text-xs text-gray-500 whitespace-nowrap">creditfactuur</span>
+            @elseif ($invoice->isCredited())
+                <span class="text-xs text-gray-500 whitespace-nowrap">
+                    gecrediteerd met
+                    <a href="{{ route('invoices.show', $invoice->creditNote) }}"
+                       class="underline font-mono">{{ $invoice->creditNote->invoice_number }}</a>
+                </span>
+            @else
+                <button type="button" @click="credit = true"
+                        class="bg-red-700 text-white px-3 py-1.5 text-xs uppercase font-bold">Credit</button>
+            @endif
+        </div>
+
+        {{-- Onder de regel, zodat de knoppen op één rij blijven staan. --}}
+        <form method="POST" action="{{ route('invoices.mail', $invoice) }}"
+              x-show="proef" x-cloak class="flex items-end gap-2 mt-3">
+            @csrf
+            <label class="text-sm">
+                <span class="block text-xs text-gray-600 mb-1">Proefzending naar</span>
+                <input type="email" name="to" required placeholder="naar welk adres"
+                       class="border px-2 py-1 text-xs w-64">
+            </label>
+            <button class="bg-gray-800 text-white px-3 py-1.5 text-xs uppercase font-bold">Stuur proef</button>
+            <span class="text-xs text-gray-500">status en verzenddatum blijven ongewijzigd</span>
+        </form>
+
+        {{-- Crediteren vraagt om een reden die op de creditfactuur komt, dus een
+             modal met een textarea in plaats van een confirm() die niets kan
+             opnemen. --}}
+        <div x-show="credit" x-cloak
+             class="fixed inset-0 z-40 bg-black/60 flex items-start justify-center p-6 overflow-y-auto"
+             @click.self="credit = false" @keydown.escape.window="credit = false">
+            <div class="bg-white w-full max-w-xl mt-16 p-5 border-2 border-black">
+                <h3 class="font-black mb-1">Creditfactuur voor {{ $invoice->invoice_number }}</h3>
+                <p class="text-xs text-gray-600 mb-3">
+                    Maakt een creditfactuur van
+                    − € {{ number_format((float) $invoice->amount_incl_btw, 2, ',', '.') }}
+                    die deze factuur tegenboekt. Het origineel blijft staan. De creditfactuur komt als
+                    concept klaar, je verstuurt hem daarna zelf.
+                </p>
+                <form method="POST" action="{{ route('invoices.credit', $invoice) }}">
+                    @csrf
+                    <label class="block text-sm mb-3">
+                        <span class="block text-xs font-bold mb-1">Reden (komt op de creditfactuur)</span>
+                        <textarea name="reason" rows="3" maxlength="300"
+                                  class="w-full border p-2 text-sm"
+                                  placeholder="Bijv. ophaling niet uitgevoerd door DeSnipperaar"></textarea>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <button class="bg-red-700 text-white px-4 py-2 text-xs uppercase font-bold">Crediteer factuur</button>
+                        <button type="button" @click="credit = false"
+                                class="bg-gray-200 text-black px-4 py-2 text-xs uppercase font-bold">Annuleren</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <section class="grid grid-cols-2 gap-6 mb-6">
         <div>
@@ -99,72 +194,21 @@
         @include('orders._coupon', ['order' => $invoice->order])
     @endif
 
-    <section class="flex flex-wrap gap-3 items-start">
-        @if ($invoice->status === 'draft' || $invoice->status === 'sent')
-            <form method="POST" action="{{ route('invoices.mail', $invoice) }}">
-                @csrf
-                <button class="bg-black text-yellow-400 px-4 py-2 text-xs uppercase font-bold">
-                    {{ $invoice->sent_at ? '✉ Opnieuw versturen' : '✉ Verzend factuur naar klant' }}
-                </button>
-            </form>
-
-            {{-- Proefzending: zelf eerst zien wat de klant zou krijgen. Laat status en
-                 sent_at ongemoeid, dus dit is geen verzending in de administratie. --}}
-            <form method="POST" action="{{ route('invoices.mail', $invoice) }}"
-                  class="flex items-end gap-2" x-data="{open:false}">
-                @csrf
-                <button type="button" @click="open=!open"
-                        class="bg-gray-200 text-black px-4 py-2 text-xs uppercase font-bold">Proefzending</button>
-                <div x-show="open" x-cloak class="flex items-end gap-2">
-                    <input type="email" name="to" required placeholder="naar welk adres"
-                           class="border px-2 py-1 text-xs w-52">
-                    <button class="bg-gray-800 text-white px-3 py-2 text-xs uppercase font-bold">Stuur proef</button>
-                </div>
-            </form>
-        @endif
-        @if ($invoice->status === 'sent')
-            <form method="POST" action="{{ route('invoices.mark-paid', $invoice) }}">
-                @csrf
-                <button class="bg-green-700 text-white px-4 py-2 text-xs uppercase font-bold">Markeer als betaald</button>
-            </form>
-        @endif
-    </section>
-
-    {{-- Crediteren. Een verstuurde factuur wordt niet aangepast: er komt een
-         tegenboeking bij, zodat het origineel in de boekhouding blijft staan. --}}
-    @if (! $invoice->isCreditNote())
-        <section class="mt-6 border-t pt-4">
-            @if ($invoice->isCredited())
-                @php $note = $invoice->creditNote; @endphp
-                <p class="text-sm">
-                    Gecrediteerd met
-                    <a href="{{ route('invoices.show', $note) }}" class="underline font-mono">{{ $note->invoice_number }}</a>
-                    (€ {{ number_format(abs((float) $note->amount_incl_btw), 2, ',', '.') }})@if ($note->credit_reason) · {{ $note->credit_reason }}@endif.
-                </p>
-            @else
-                <form method="POST" action="{{ route('invoices.credit', $invoice) }}"
-                      onsubmit="return confirm('Creditfactuur aanmaken voor {{ $invoice->invoice_number }}?');">
-                    @csrf
-                    <div class="flex gap-2 items-end flex-wrap">
-                        <label class="text-sm flex-1 min-w-64">
-                            <span class="block text-xs font-bold mb-1">Reden (komt op de creditfactuur)</span>
-                            <input type="text" name="reason" maxlength="300" class="w-full border p-2 text-sm"
-                                   placeholder="Bijv. ophaling niet uitgevoerd door DeSnipperaar">
-                        </label>
-                        <button class="bg-red-700 text-white px-4 py-2 text-xs uppercase font-bold">Crediteer factuur</button>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-2">
-                        Maakt een creditfactuur met negatieve bedragen die deze factuur tegenboekt. Het origineel
-                        blijft staan. De creditfactuur komt als concept klaar, je verstuurt hem daarna zelf.
-                    </p>
-                </form>
-            @endif
-        </section>
-    @else
+    {{-- Alleen toelichting; de knoppen staan bovenaan. --}}
+    @if ($invoice->isCreditNote())
         <section class="mt-6 border-t pt-4">
             <p class="text-sm">
                 Dit is een <strong>creditfactuur</strong> op
                 <a href="{{ route('invoices.show', $invoice->creditsInvoice) }}" class="underline font-mono">{{ $invoice->creditsInvoice?->invoice_number }}</a>@if ($invoice->credit_reason) · {{ $invoice->credit_reason }}@endif.
+            </p>
+        </section>
+    @elseif ($invoice->isCredited())
+        @php $note = $invoice->creditNote; @endphp
+        <section class="mt-6 border-t pt-4">
+            <p class="text-sm">
+                Gecrediteerd met
+                <a href="{{ route('invoices.show', $note) }}" class="underline font-mono">{{ $note->invoice_number }}</a>
+                (€ {{ number_format(abs((float) $note->amount_incl_btw), 2, ',', '.') }})@if ($note->credit_reason) · {{ $note->credit_reason }}@endif.
             </p>
         </section>
     @endif

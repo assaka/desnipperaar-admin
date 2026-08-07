@@ -58,8 +58,11 @@ class InvoiceController extends Controller
             return back()->with('status', "Proefzending van factuur {$invoice->invoice_number} naar {$to}. Status ongewijzigd.");
         }
 
+        // Een concept wordt verstuurd, al het andere houdt zijn status. Anders zou
+        // een klant die om een kopie vraagt een betaalde factuur terugzetten naar
+        // verstuurd, en dan lijkt hij weer open te staan.
         $invoice->update([
-            'status'  => Invoice::STATUS_SENT,
+            'status'  => $invoice->status === Invoice::STATUS_DRAFT ? Invoice::STATUS_SENT : $invoice->status,
             'sent_at' => now(),
         ]);
 
