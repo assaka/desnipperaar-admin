@@ -57,6 +57,9 @@
                 </form>
             @endif
 
+            {{-- Crediteren is voor geld dat al is overgemaakt. Staat de factuur nog
+                 open, dan is er niets tegen te boeken en pas je de order aan; die
+                 rekent de factuur opnieuw. --}}
             @if ($invoice->isCreditNote())
                 <span class="text-xs text-gray-500 whitespace-nowrap">creditfactuur</span>
             @elseif ($invoice->isCredited())
@@ -65,9 +68,14 @@
                     <a href="{{ route('invoices.show', $invoice->creditNote) }}"
                        class="underline font-mono">{{ $invoice->creditNote->invoice_number }}</a>
                 </span>
-            @else
+            @elseif ($invoice->status === \App\Models\Invoice::STATUS_PAID)
                 <button type="button" @click="credit = true"
                         class="bg-red-700 text-white px-3 py-1.5 text-xs uppercase font-bold">Credit</button>
+            @elseif ($invoice->order)
+                <span class="text-xs text-gray-500">
+                    nog niet betaald, dus
+                    <a href="{{ route('orders.show', $invoice->order_id) }}" class="underline">pas de order aan</a>
+                </span>
             @endif
         </div>
 

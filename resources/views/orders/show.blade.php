@@ -554,10 +554,10 @@
                                 <a href="{{ route('invoices.show', $inv->creditNote) }}"
                                    class="underline font-mono">{{ $inv->creditNote->invoice_number }}</a>
                             </span>
-                        {{-- Alles wat de deur uit is, dus ook een betaalde factuur:
-                             juist daar moet er geld terug. Een concept niet, dat is
-                             nog niemands papier en kan gewoon opnieuw. --}}
-                        @elseif ($inv->sent_at && $inv->status !== \App\Models\Invoice::STATUS_CANCELED)
+                        {{-- Alleen een betaalde factuur: daar is geld mee gemoeid dat
+                             terug moet. Staat de factuur nog open, dan pas je de
+                             order aan en wordt hij herrekend. --}}
+                        @elseif ($inv->status === \App\Models\Invoice::STATUS_PAID)
                             <form method="POST" action="{{ route('invoices.credit', $inv) }}"
                                   class="flex items-center gap-2"
                                   onsubmit="return confirm('Creditfactuur aanmaken voor {{ $inv->invoice_number }}?')">

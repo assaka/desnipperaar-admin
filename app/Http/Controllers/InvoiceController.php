@@ -82,6 +82,16 @@ class InvoiceController extends Controller
         abort_if($invoice->isCreditNote(), 422, 'Een creditfactuur kan niet zelf gecrediteerd worden.');
         abort_if($invoice->isCredited(), 422, 'Deze factuur is al gecrediteerd.');
 
+        // Alleen een betaalde factuur. Staat hij nog open, dan is er niets terug te
+        // boeken: dan pas je de order aan en wordt de factuur herrekend. Een
+        // creditfactuur op een onbetaalde factuur zet twee stukken in de boeken die
+        // elkaar opheffen zonder dat er ooit geld is geweest.
+        abort_unless(
+            $invoice->status === Invoice::STATUS_PAID,
+            422,
+            "Factuur {$invoice->invoice_number} is niet betaald. Pas de order aan in plaats van te crediteren."
+        );
+
         $data = $request->validate([
             'reason' => 'nullable|string|max:300',
         ]);
