@@ -47,9 +47,7 @@ class SubscriptionActivated extends Mailable
         return new Envelope(
             subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
-            replyTo: $this->sender
-                ? [new Address($this->sender->email, $this->sender->name)]
-                : [new Address($salesEmail, 'DeSnipperaar')],
+            replyTo: [new Address($salesEmail, 'DeSnipperaar')],
         );
     }
 

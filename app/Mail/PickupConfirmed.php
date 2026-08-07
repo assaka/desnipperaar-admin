@@ -37,9 +37,7 @@ class PickupConfirmed extends Mailable
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
-            replyTo: $this->sender
-                ? [new Address($this->sender->email, $this->sender->name)]
-                : [],
+            replyTo: [new Address(config('desnipperaar.notifications.sales_email'), 'DeSnipperaar')],
         );
     }
 
