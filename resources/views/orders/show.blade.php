@@ -2,6 +2,14 @@
 @section('title', $order->order_number)
 
 @section('content')
+@php
+    // Is er betaald, dan staat de order vast. Adres en aantallen wijzigen zou dan
+    // een order veranderen waarvan de rekening al vereffend is; wat er dan nog
+    // moet gebeuren is crediteren, niet bijwerken.
+    $betaaldeFactuur = $order->invoices->reject->isCreditNote()
+        ->firstWhere('status', \App\Models\Invoice::STATUS_PAID);
+    $magBewerken = $betaaldeFactuur === null;
+@endphp
 {{--
     dirty = de klant weet nog niet wat wij weten. Twee bronnen: onopgeslagen
     wijzigingen in het adres-en-inhoudformulier (het order-dirty event), en een
@@ -15,14 +23,20 @@
     <div x-show="dirty" x-cloak
          class="sticky top-0 z-30 -mx-4 mb-4 px-4 py-3 bg-yellow-400 border-b-2 border-black flex flex-wrap items-center gap-3">
         <span class="font-bold text-sm">De klant heeft deze gegevens nog niet.</span>
-        <button type="button"
-                @click="const f = document.getElementById('order-edit-form'); if (f) { f.requestSubmit(); }"
-                class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold">
-            Opslaan en mailen
-        </button>
+        @if ($magBewerken)
+            <button type="button"
+                    @click="const f = document.getElementById('order-edit-form'); if (f) { f.requestSubmit(); }"
+                    class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold">
+                Opslaan en mailen
+            </button>
+        @endif
+        {{-- Bij een betaalde order is er niets meer op te slaan, alleen nog te
+             melden wat er buiten dit formulier is veranderd. --}}
         <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}" class="inline">
             @csrf
-            <button class="underline text-xs">alleen mailen, niets wijzigen</button>
+            <button class="{{ $magBewerken ? 'underline text-xs' : 'bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold' }}">
+                {{ $magBewerken ? 'alleen mailen, niets wijzigen' : 'Bevestiging mailen' }}
+            </button>
         </form>
         <span class="text-xs text-gray-800">naar {{ $order->customer_email }}</span>
     </div>
@@ -42,12 +56,7 @@
                 @endif
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button type="button" @click="editOpen = !editOpen"
-                    class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
-                    x-text="editOpen ? 'Sluiten' : 'Adres en inhoud'">Adres en inhoud</button>
-            <a href="{{ route('orders.index') }}" class="text-sm underline whitespace-nowrap">← terug</a>
-        </div>
+        <a href="{{ route('orders.index') }}" class="text-sm underline whitespace-nowrap">← terug</a>
     </div>
 
     @if ($errors->any())
@@ -61,7 +70,37 @@
 
     <section class="mb-6">
         <div>
-            <h2 class="font-black mb-2">Klant</h2>
+            <div class="flex items-baseline justify-between gap-3 mb-2">
+                <h2 class="font-black">Klant</h2>
+                <div class="flex items-center gap-2">
+                    @if ($magBewerken)
+                        <button type="button" @click="editOpen = !editOpen"
+                                class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
+                                x-text="editOpen ? 'Sluiten' : 'Edit'">Edit</button>
+                    @elseif ($betaaldeFactuur->isCredited())
+                        <span class="text-xs text-gray-500 whitespace-nowrap">
+                            betaald en gecrediteerd met
+                            <a href="{{ route('invoices.show', $betaaldeFactuur->creditNote) }}"
+                               class="underline font-mono">{{ $betaaldeFactuur->creditNote->invoice_number }}</a>
+                        </span>
+                    @else
+                        {{-- Betaald: bijwerken kan niet meer, geld terugboeken wel. --}}
+                        <form method="POST" action="{{ route('invoices.credit', $betaaldeFactuur) }}"
+                              class="flex items-center gap-2" x-data="{ crediteren: false }"
+                              onsubmit="return confirm('Creditfactuur aanmaken voor {{ $betaaldeFactuur->invoice_number }}?')">
+                            @csrf
+                            <button type="button" @click="crediteren = !crediteren"
+                                    class="bg-red-700 text-white px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Credit</button>
+                            <div x-show="crediteren" x-cloak class="flex items-center gap-1">
+                                <input type="text" name="reason" maxlength="300"
+                                       placeholder="reden op de creditfactuur"
+                                       class="border p-1 text-xs w-56">
+                                <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Aanmaken</button>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            </div>
             @if ($order->customer?->company)
                 <div class="font-bold">{{ $order->customer->company }}</div>
             @endif
@@ -91,7 +130,9 @@
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
             @endif
 
-            @include('orders._edit')
+            @if ($magBewerken)
+                @include('orders._edit')
+            @endif
         </div>
         @if ($order->notes)
             <div class="mt-3 text-sm italic text-gray-700">{{ $order->notes }}</div>

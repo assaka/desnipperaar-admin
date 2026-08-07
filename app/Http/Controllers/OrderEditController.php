@@ -28,6 +28,14 @@ class OrderEditController extends Controller
 {
     public function update(Request $request, Order $order)
     {
+        // De knop is er dan niet, maar de route moet het zelf ook weigeren.
+        if ($order->hasPaidInvoice()) {
+            return back()->withErrors([
+                'box_count' => "Order {$order->order_number} heeft een betaalde factuur en staat daarmee vast. "
+                    .'Moet er iets terug of bij, boek dat via een creditfactuur.',
+            ]);
+        }
+
         $rules = [
             'customer_name'     => 'required|string|max:150',
             'customer_email'    => 'required|email|max:190',

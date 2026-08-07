@@ -43,6 +43,16 @@ class OrderCouponController extends Controller
             ]);
         }
 
+        // Een betaalde factuur wordt niet herrekend, dus een korting die er nu nog
+        // op komt zou wel op de order staan maar nergens verrekend worden. Dat
+        // levert een order op die een korting belooft die de klant nooit krijgt.
+        if ($order->hasPaidInvoice()) {
+            return back()->withErrors([
+                'coupon_code' => "Order {$order->order_number} is al betaald, dus een kortingscode wordt niet meer verrekend. "
+                    .'Moet er geld terug, boek dat via een creditfactuur.',
+            ]);
+        }
+
         $coupon = Coupon::findByCode($data['coupon_code']);
         if (!$coupon) {
             return back()->withErrors(['coupon_code' => 'Onbekende kortingscode.']);

@@ -301,6 +301,21 @@ class Order extends Model
         return !empty($this->coupon_code) && (float) $this->coupon_discount > 0;
     }
 
+    /**
+     * Er staat een betaalde factuur onder deze order.
+     *
+     * Dan is de rekening vereffend en ligt de order vast: adres en aantallen
+     * wijzigen zou een order veranderen waarvan het geld al binnen is. Wat er dan
+     * nog kan is crediteren.
+     */
+    public function hasPaidInvoice(): bool
+    {
+        return $this->invoices()
+            ->whereNull('credits_invoice_id')
+            ->where('status', Invoice::STATUS_PAID)
+            ->exists();
+    }
+
     /** Opgehaald of verder: de rit is gereden en er ligt een bon onder. */
     public function isPickedUp(): bool
     {

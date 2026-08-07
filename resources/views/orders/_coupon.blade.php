@@ -50,6 +50,12 @@
                 <span class="text-xs text-gray-500 whitespace-nowrap">order is afgehandeld</span>
             @endif
         </div>
+    @elseif ($paidInvoice)
+        {{-- Betaald: een korting die er nu nog op komt wordt nergens verrekend. --}}
+        <p class="text-sm text-gray-500">
+            Factuur {{ $paidInvoice->invoice_number }} is betaald, dus een kortingscode wordt niet meer verrekend.
+            Moet er geld terug, maak dan een creditfactuur.
+        </p>
     @elseif ($order->isAbonnement())
         <p class="text-sm text-gray-500">
             Een abonnement wordt per periode gefactureerd, daar hoort geen kortingscode per order op.
