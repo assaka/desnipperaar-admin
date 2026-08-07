@@ -30,12 +30,15 @@
                 Opslaan en mailen
             </button>
         @endif
-        {{-- Bij een betaalde order is er niets meer op te slaan, alleen nog te
-             melden wat er buiten dit formulier is veranderd. --}}
-        <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}" class="inline">
+        {{-- Resend verstuurt de bevestiging zoals de order nu is, zonder het
+             formulier op te sturen. Een knop en geen link: dit doet iets, en er
+             gaat post naar een klant van uit. Bij een betaalde order is het de
+             enige actie die overblijft, en krijgt hij het volle gewicht. --}}
+        <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}" class="inline"
+              onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
             @csrf
-            <button class="{{ $magBewerken ? 'underline text-xs' : 'bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold' }}">
-                {{ $magBewerken ? 'alleen mailen, niets wijzigen' : 'Bevestiging mailen' }}
+            <button class="px-4 py-1.5 text-xs uppercase font-bold {{ $magBewerken ? 'bg-white text-black border-2 border-black' : 'bg-black text-yellow-400' }}">
+                Resend
             </button>
         </form>
         <span class="text-xs text-gray-800">naar {{ $order->customer_email }}</span>
