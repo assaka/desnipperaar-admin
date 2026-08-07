@@ -106,7 +106,29 @@
                 Al afgesproken ophaalkosten blijven staan: die worden niet stil herrekend.
             </p>
 
+            <label class="flex items-start gap-2 text-sm mb-3">
+                <input type="checkbox" name="notify" value="1" class="mt-0.5" checked>
+                <span>
+                    Klant een bijgewerkte bevestiging mailen
+                    <span class="block text-xs text-gray-500">
+                        Alleen als er iets verandert. De mail rekent de prijs opnieuw, dus een gewijzigd aantal
+                        of een andere pilotkorting staat er meteen goed in.
+                    </span>
+                </span>
+            </label>
+
             <button type="submit" class="bg-black text-yellow-400 px-4 py-2 text-sm font-bold">Opslaan</button>
+        </form>
+
+        {{-- Losse knop voor het geval de order al klopt en alleen de mail nog moet.
+             Gaat via orders.mail, dezelfde route als de knop bij het e-mailadres. --}}
+        <form method="POST" action="{{ route('orders.mail', $order) }}" class="mt-3 pt-3 border-t"
+              onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
+            @csrf
+            <button class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold">
+                ✉ Bevestiging opnieuw sturen
+            </button>
+            <span class="text-xs text-gray-500 ml-2">naar {{ $order->customer_email }}, zonder iets te wijzigen</span>
         </form>
     </div>
 </section>

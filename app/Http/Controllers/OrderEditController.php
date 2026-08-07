@@ -38,6 +38,7 @@ class OrderEditController extends Controller
             'box_count'         => 'required|integer|min:0|max:500',
             'container_count'   => 'required|integer|min:0|max:50',
             'media'             => 'nullable|array',
+            'notify'            => 'nullable|boolean',
         ];
         foreach (array_keys(Pricing::MEDIA_TIERS) as $key) {
             $rules["media.$key"] = 'nullable|integer|min:0|max:10000';
@@ -117,7 +118,30 @@ class OrderEditController extends Controller
             $notes[] = 'deze order is al opgehaald, de factuur volgt de aantallen van de bon en niet deze';
         }
 
-        return back()->with('status', 'Order '.$order->order_number.' bijgewerkt.'
+        // Alleen mailen als er echt iets veranderd is. Een bevestiging die niets
+        // nieuws bevat verwart de klant en zet hem aan het zoeken naar het
+        // verschil, en er is er al een de deur uit.
+        $changed = $order->wasChanged();
+
+        if ($request->boolean('notify')) {
+            if (! $changed) {
+                $notes[] = 'er was niets gewijzigd, dus er is geen bevestiging gestuurd';
+            } else {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($order->customer_email)
+                        ->send(new \App\Mail\OrderCreated($order->fresh()));
+                    $notes[] = 'bijgewerkte bevestiging gestuurd naar '.$order->customer_email;
+                } catch (\Throwable $e) {
+                    report($e);
+                    $notes[] = 'de bevestiging kon niet worden verstuurd ('.$e->getMessage().')';
+                }
+            }
+        } elseif ($changed) {
+            $notes[] = 'de klant heeft nog de oude gegevens, stuur zo nodig de bevestiging opnieuw';
+        }
+
+        return back()->with('status', 'Order '.$order->order_number
+            .($changed ? ' bijgewerkt.' : ' ongewijzigd.')
             .($notes ? ' '.ucfirst(implode('. ', $notes)).'.' : ''));
     }
 }
