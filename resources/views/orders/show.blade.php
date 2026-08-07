@@ -583,16 +583,32 @@
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>
             @if ($order->certificate)
-                <div class="flex gap-3 items-baseline">
-                    <a href="{{ route('certificates.show', $order->certificate) }}" class="underline font-mono">
-                        {{ $order->certificate->certificate_number }}
-                    </a>
-                    @if ($order->certificate->emailed_at)
-                        <span class="text-xs text-green-700">verzonden {{ $order->certificate->emailed_at->format('Y-m-d H:i') }}</span>
-                    @else
-                        <form method="POST" action="{{ route('certificates.mail', $order->certificate) }}" class="inline">
+                {{-- Zelfde vorm als de factuur hierboven: gele streep, nummer op de
+                     eerste regel en de data eronder. --}}
+                <div class="border-l-4 border-yellow-400 pl-3 py-2 flex justify-between items-baseline gap-3">
+                    <div>
+                        <a href="{{ route('certificates.show', $order->certificate) }}" class="font-mono underline">
+                            {{ $order->certificate->certificate_number }}
+                        </a>
+                        @if ($order->certificate->emailed_at)
+                            <span class="ml-2 inline-block px-2 py-0.5 text-xs font-bold uppercase bg-green-700 text-white">verzonden</span>
+                        @endif
+                        <div class="text-sm">
+                            @if ($order->certificate->destroyed_at)
+                                vernietigd {{ $order->certificate->destroyed_at->format('Y-m-d') }}
+                            @endif
+                            @if ($order->certificate->weight_kg_final)
+                                · {{ number_format((float) $order->certificate->weight_kg_final, 1, ',', '.') }} kg
+                            @endif
+                            @if ($order->certificate->emailed_at)
+                                · verzonden {{ $order->certificate->emailed_at->format('Y-m-d H:i') }}
+                            @endif
+                        </div>
+                    </div>
+                    @if (! $order->certificate->emailed_at)
+                        <form method="POST" action="{{ route('certificates.mail', $order->certificate) }}">
                             @csrf
-                            <button class="bg-black text-yellow-400 px-3 py-1 text-xs uppercase font-bold">Mail certificaat naar klant</button>
+                            <button class="bg-black text-yellow-400 px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Mail naar klant</button>
                         </form>
                     @endif
                 </div>
