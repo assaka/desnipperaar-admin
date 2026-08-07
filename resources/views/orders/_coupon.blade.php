@@ -40,7 +40,7 @@
             </div>
             @if ($order->canWithdrawCoupon())
                 <form method="POST" action="{{ route('orders.coupon.destroy', $order) }}"
-                      onsubmit="return confirm('Kortingscode {{ $order->coupon_code }} intrekken en de facturen herrekenen?')">
+                      onsubmit="return confirm('Kortingscode {{ $order->coupon_code }} intrekken en de facturen herrekenen?\n\nEr gaat geen mail naar de klant. Gebruik daarvoor Resend.')">
                     @csrf
                     @method('DELETE')
                     <button class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold">Intrekken</button>
@@ -71,6 +71,11 @@
             </label>
             <button type="submit" class="bg-black text-yellow-400 px-3 py-1 text-sm font-bold">Toekennen</button>
         </form>
+        {{-- Toekennen en intrekken raken alleen de order en de facturen. De klant
+             hoort er pas van als je zelf Resend gebruikt. --}}
+        <p class="text-xs text-gray-500 mt-2">
+            Toekennen verstuurt geen mail. De klant hoort het pas als je Resend gebruikt.
+        </p>
     @endif
 
     @if ($paidInvoice)
