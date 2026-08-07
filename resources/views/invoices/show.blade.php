@@ -26,7 +26,7 @@
     {{-- Alle acties op deze factuur op één regel, zoals bij een order. Ze stonden
          verspreid over de pagina: versturen bovenaan, crediteren onderaan met een
          eigen formulier ertussen. --}}
-    <div x-data="{ proef: false, credit: false }" class="mb-6 pb-4 border-b">
+    <div x-data="{ credit: false }" class="mb-6 pb-4 border-b">
         <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('invoices.pdf', $invoice) }}" target="_blank"
                class="bg-gray-200 text-black px-3 py-1.5 text-xs uppercase font-bold">PDF</a>
@@ -39,11 +39,6 @@
                         {{ $invoice->sent_at ? 'Resend' : 'Verstuur' }}
                     </button>
                 </form>
-
-                {{-- Proefzending laat status en sent_at ongemoeid: dit is geen
-                     verzending in de administratie. --}}
-                <button type="button" @click="proef = !proef"
-                        class="bg-gray-200 text-black px-3 py-1.5 text-xs uppercase font-bold">Proefzending</button>
             @endunless
 
             @if ($invoice->status === \App\Models\Invoice::STATUS_PAID)
@@ -79,18 +74,6 @@
             @endif
         </div>
 
-        {{-- Onder de regel, zodat de knoppen op één rij blijven staan. --}}
-        <form method="POST" action="{{ route('invoices.mail', $invoice) }}"
-              x-show="proef" x-cloak class="flex items-end gap-2 mt-3">
-            @csrf
-            <label class="text-sm">
-                <span class="block text-xs text-gray-600 mb-1">Proefzending naar</span>
-                <input type="email" name="to" required placeholder="naar welk adres"
-                       class="border px-2 py-1 text-xs w-64">
-            </label>
-            <button class="bg-gray-800 text-white px-3 py-1.5 text-xs uppercase font-bold">Stuur proef</button>
-            <span class="text-xs text-gray-500">status en verzenddatum blijven ongewijzigd</span>
-        </form>
 
         {{-- Crediteren vraagt om een reden die op de creditfactuur komt, dus een
              modal met een textarea in plaats van een confirm() die niets kan
