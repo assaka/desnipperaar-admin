@@ -39,6 +39,54 @@ class Invoice extends Model
         'paid_at'         => 'datetime',
     ];
 
+    /**
+     * Zet de kortingsregel van de order op deze factuur en herberekent de bedragen.
+     *
+     * Idempotent: een bestaande kortingsregel gaat er eerst af, zodat opnieuw
+     * toekennen of intrekken niet stapelt. De korting wordt afgetopt op het
+     * factuurbedrag, want een negatieve factuur is geen korting maar een
+     * creditfactuur, en die loopt via createCreditNote().
+     *
+     * Roept bewust geen enkele statuswijziging aan: of een al verstuurde factuur
+     * herrekend mag worden is een besluit van de aanroeper, niet van dit model.
+     */
+    public function syncCouponLine(): self
+    {
+        $lines = array_values(array_filter(
+            $this->lines ?? [],
+            fn ($l) => !\App\Support\Pricing::isCouponLine($l)
+        ));
+
+        $gross    = round(array_sum(array_column($lines, 'subtotal')), 2);
+        $order    = $this->order;
+        $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $gross);
+
+        if ($order && !empty($order->coupon_code) && $discount > 0) {
+            $lines[] = \App\Support\Pricing::couponLine($order->coupon_code, $discount);
+        }
+
+        $subtotal = round(array_sum(array_column($lines, 'subtotal')), 2);
+        $vat      = round($subtotal * (float) $this->vat_rate, 2);
+
+        $this->update([
+            'lines'           => $lines,
+            'amount_excl_btw' => $subtotal,
+            'vat_amount'      => $vat,
+            'amount_incl_btw' => round($subtotal + $vat, 2),
+        ]);
+
+        return $this;
+    }
+
+    /** Het factuurbedrag excl. btw zonder de kortingsregel, de basis voor een korting. */
+    public function grossExclBtw(): float
+    {
+        return round(array_sum(array_map(
+            fn ($l) => \App\Support\Pricing::isCouponLine($l) ? 0 : $l['subtotal'],
+            $this->lines ?? []
+        )), 2);
+    }
+
     public function order()  { return $this->belongsTo(Order::class); }
     public function bon()    { return $this->belongsTo(Bon::class); }
 
@@ -261,7 +309,7 @@ class Invoice extends Model
         $vat      = round($subtotal * 0.21, 2);
         $total    = round($subtotal + $vat, 2);
 
-        return self::create([
+        $invoice = self::create([
             'invoice_number'    => self::generateInvoiceNumber(),
             'order_id'          => $order->id,
             'bon_id'            => $bon->id,
@@ -280,5 +328,11 @@ class Invoice extends Model
             'due_at'            => now()->addDays(config('desnipperaar.invoice.payment_terms_days'))->toDateString(),
             'status'            => self::STATUS_DRAFT,
         ]);
+
+        // Een kortingscode die al op de order staat hoort meteen op de eerste
+        // factuur, niet pas als iemand hem daar later nog eens op zet.
+        $invoice->setRelation('order', $order);
+
+        return $invoice->syncCouponLine();
     }
 }

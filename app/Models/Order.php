@@ -130,6 +130,9 @@ class Order extends Model
         'is_organizer',
         'quote_locked',
         'price_snapshot',
+        'coupon_code',
+        'coupon_discount',
+        'coupon_applied_at',
     ];
 
     protected $casts = [
@@ -154,6 +157,8 @@ class Order extends Model
         'sub_pickup_weekday' => 'integer',
         'pickup_cost' => 'decimal:2',
         'pickup_km' => 'integer',
+        'coupon_discount' => 'decimal:2',
+        'coupon_applied_at' => 'datetime',
         'lat' => 'float',
         'lon' => 'float',
         'geocoded_at' => 'datetime',
@@ -281,6 +286,12 @@ class Order extends Model
     public function isAbonnement(): bool
     {
         return $this->type === self::TYPE_ABONNEMENT;
+    }
+
+    /** Een toegekende kortingscode met een bedrag dat daadwerkelijk iets afhaalt. */
+    public function hasCoupon(): bool
+    {
+        return !empty($this->coupon_code) && (float) $this->coupon_discount > 0;
     }
 
     /** Alle ritten onder dit abonnement: bezorging, ophalingen en retour. */

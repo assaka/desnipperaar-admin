@@ -49,18 +49,26 @@
                 <tr><th class="py-2">Omschrijving</th><th class="text-right">Aantal</th><th class="text-right">Prijs</th><th class="text-right">Subtotaal</th></tr>
             </thead>
             <tbody>
+                @php
+                    // Een kortingscode is een regel met een negatief bedrag; aantal en
+                    // stukprijs zouden dat bedrag alleen herhalen.
+                    $isCoupon = fn ($l) => \App\Support\Pricing::isCouponLine($l);
+                    $money = fn ($v) => ($v < 0 ? '− € ' : '€ ').number_format(abs($v), 2, ',', '.');
+                @endphp
                 @foreach ($invoice->lines as $line)
                     <tr class="border-b">
                         <td class="py-2">{{ $line['label'] }}</td>
-                        <td class="text-right font-mono">{{ $line['qty'] }}</td>
+                        <td class="text-right font-mono">{{ $isCoupon($line) ? '' : $line['qty'] }}</td>
                         <td class="text-right font-mono">
-                            € {{ number_format($line['unit'], 2, ',', '.') }}
-                            @if (!empty($line['was_unit']))
-                                <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
-                            @endif
+                            @unless ($isCoupon($line))
+                                € {{ number_format($line['unit'], 2, ',', '.') }}
+                                @if (!empty($line['was_unit']))
+                                    <span class="line-through text-gray-400 ml-1">€ {{ number_format($line['was_unit'], 2, ',', '.') }}</span>
+                                @endif
+                            @endunless
                         </td>
                         <td class="text-right font-mono font-bold">
-                            € {{ number_format($line['was_subtotal'] ?? $line['subtotal'], 2, ',', '.') }}
+                            {{ $money($line['was_subtotal'] ?? $line['subtotal']) }}
                         </td>
                     </tr>
                 @endforeach
@@ -85,13 +93,33 @@
         </table>
     </section>
 
-    <section class="flex gap-3">
+    {{-- Ook hier, en niet alleen op de orderpagina: dit is de plek waar je het
+         bedrag ziet dat een korting verandert. --}}
+    @if ($invoice->order)
+        @include('orders._coupon', ['order' => $invoice->order])
+    @endif
+
+    <section class="flex flex-wrap gap-3 items-start">
         @if ($invoice->status === 'draft' || $invoice->status === 'sent')
             <form method="POST" action="{{ route('invoices.mail', $invoice) }}">
                 @csrf
                 <button class="bg-black text-yellow-400 px-4 py-2 text-xs uppercase font-bold">
                     {{ $invoice->sent_at ? '✉ Opnieuw versturen' : '✉ Verzend factuur naar klant' }}
                 </button>
+            </form>
+
+            {{-- Proefzending: zelf eerst zien wat de klant zou krijgen. Laat status en
+                 sent_at ongemoeid, dus dit is geen verzending in de administratie. --}}
+            <form method="POST" action="{{ route('invoices.mail', $invoice) }}"
+                  class="flex items-end gap-2" x-data="{open:false}">
+                @csrf
+                <button type="button" @click="open=!open"
+                        class="bg-gray-200 text-black px-4 py-2 text-xs uppercase font-bold">Proefzending</button>
+                <div x-show="open" x-cloak class="flex items-end gap-2">
+                    <input type="email" name="to" required placeholder="naar welk adres"
+                           class="border px-2 py-1 text-xs w-52">
+                    <button class="bg-gray-800 text-white px-3 py-2 text-xs uppercase font-bold">Stuur proef</button>
+                </div>
             </form>
         @endif
         @if ($invoice->status === 'sent')

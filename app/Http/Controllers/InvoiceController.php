@@ -31,14 +31,39 @@ class InvoiceController extends Controller
         return $pdf->stream("factuur-{$invoice->invoice_number}.pdf");
     }
 
+    /**
+     * Verstuur de factuur, standaard naar de klant.
+     *
+     * Met een afwijkend `to` is het een proefzending: dan blijven status en
+     * sent_at staan, want de klant heeft hem nog niet gehad en de factuur zou
+     * anders als verstuurd in de boeken staan zonder dat dat waar is. Zelfde
+     * patroon als de proefzending bij orders.mail.
+     */
     public function mail(Request $request, Invoice $invoice)
     {
-        Mail::to($invoice->customer_email)->send(new InvoiceSent($invoice, $request->user()));
+        $data = $request->validate([
+            'to' => 'nullable|email',
+        ]);
+        $to      = $data['to'] ?? $invoice->customer_email;
+        $isProef = strcasecmp($to, (string) $invoice->customer_email) !== 0;
+
+        try {
+            Mail::to($to)->send(new InvoiceSent($invoice, $request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['mail' => 'Kon factuur niet versturen: '.$e->getMessage()]);
+        }
+
+        if ($isProef) {
+            return back()->with('status', "Proefzending van factuur {$invoice->invoice_number} naar {$to}. Status ongewijzigd.");
+        }
+
         $invoice->update([
             'status'  => Invoice::STATUS_SENT,
             'sent_at' => now(),
         ]);
-        return back()->with('status', "Factuur {$invoice->invoice_number} verzonden naar {$invoice->customer_email}.");
+
+        return back()->with('status', "Factuur {$invoice->invoice_number} verzonden naar {$to}.");
     }
 
     /**

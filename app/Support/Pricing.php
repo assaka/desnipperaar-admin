@@ -119,6 +119,40 @@ class Pricing
             || in_array($label, self::MEDIA_LABELS_INVOICE, true);
     }
 
+    /** True when a priced line is the kortingscode line built by couponLine(). */
+    public static function isCouponLine(array $line): bool
+    {
+        return ($line['kind'] ?? null) === 'coupon';
+    }
+
+    /**
+     * De kortingscode als eigen regel met een negatief bedrag.
+     *
+     * Bewust een regel en geen aparte totaalrij: de factuurtemplates leiden de
+     * kortingen af uit het verschil tussen de regels en amount_excl_btw, en
+     * schrijven wat er dan nog overblijft toe aan de Amsterdam-pilot. Een korting
+     * die alleen in de totalen zou zitten, komt daardoor in alle vier de talen op
+     * de factuur te staan als "Korting Amsterdam-pilot". Als regel blijft
+     * sum(subtotal) == amount_excl_btw en klopt elke template zonder aanpassing.
+     */
+    public static function couponLine(string $code, float $discount): array
+    {
+        $amount = -round(abs($discount), 2);
+
+        $code = strtoupper(trim($code));
+
+        return [
+            // De code staat ook los in `code`, zodat de anderstalige facturen hun
+            // eigen aanhef kunnen zetten zonder het label te moeten uitsplitsen.
+            'label'    => 'Kortingscode '.$code,
+            'kind'     => 'coupon',
+            'code'     => $code,
+            'qty'      => 1,
+            'unit'     => $amount,
+            'subtotal' => $amount,
+        ];
+    }
+
     /**
      * One priced media line with the volume staffel applied. Sets
      * was_unit/was_subtotal when the tiered unit is below the base (tier-0) price,

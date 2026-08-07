@@ -63,6 +63,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/quote-valid-until', [\App\Http\Controllers\OrderController::class, 'updateQuoteValidUntil'])->name('orders.quote-valid-until');
     Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');
     Route::get('/orders/{order}/slots', [\App\Http\Controllers\OrderController::class, 'slots'])->name('orders.slots');
+    Route::post('/orders/{order}/coupon', [\App\Http\Controllers\OrderCouponController::class, 'store'])->name('orders.coupon.store');
+    Route::delete('/orders/{order}/coupon', [\App\Http\Controllers\OrderCouponController::class, 'destroy'])->name('orders.coupon.destroy');
 
     Route::get('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'show'])->name('bons.show');
     Route::patch('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'update'])->name('bons.update');
