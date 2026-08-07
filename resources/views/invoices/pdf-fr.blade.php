@@ -124,7 +124,17 @@
         <tbody>
             @foreach ($invoice->lines as $line)
                 <tr>
-                    <td>@if ($isCoupon($line)){{ 'Code de réduction '.($line['code'] ?? '') }}@if (!empty($line['pct']))<span style="color:#777;">&nbsp;({{ \App\Support\Pricing::formatPercentage($line['pct']) }}% × € {{ number_format($line['base'], 2, ',', '.') }})</span>@endif@else{{ $tr($line['label']) }}@endif@if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
+                    <td>
+                        @if ($isCoupon($line))
+                            {{ 'Code de réduction '.($line['code'] ?? '') }}
+                            @if (!empty($line['pct']))
+                                <span style="color:#777;">({{ \App\Support\Pricing::formatPercentage($line['pct']) }}% × € {{ number_format($line['base'], 2, ',', '.') }})</span>
+                            @endif
+                        @else
+                            {{ $tr($line['label']) }}
+                            @if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">*</span>@endif
+                        @endif
+                    </td>
                     <td class="r">{{ $isCoupon($line) ? '' : $line['qty'] }}</td>
                     <td class="r">
                         @unless ($isCoupon($line))
