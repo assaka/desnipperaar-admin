@@ -30,18 +30,12 @@
                 Opslaan en mailen
             </button>
         @endif
-        {{-- Resend verstuurt de bevestiging zoals de order nu is, zonder het
-             formulier op te sturen. Een knop en geen link: dit doet iets, en er
-             gaat post naar een klant van uit. Bij een betaalde order is het de
-             enige actie die overblijft, en krijgt hij het volle gewicht. --}}
-        <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}" class="inline"
-              onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
-            @csrf
-            <button class="px-4 py-1.5 text-xs uppercase font-bold {{ $magBewerken ? 'bg-white text-black border-2 border-black' : 'bg-black text-yellow-400' }}">
-                Resend
-            </button>
-        </form>
-        <span class="text-xs text-gray-800">naar {{ $order->customer_email }}</span>
+        {{-- Resend staat bij de knoppen naast Klant, dus hier alleen de verwijzing
+             ernaartoe. Bij een betaalde order is er niets op te slaan en is Resend
+             daarboven het enige dat nog kan. --}}
+        <span class="text-xs text-gray-800">
+            {{ $magBewerken ? 'naar '.$order->customer_email : 'Gebruik Resend hieronder om '.$order->customer_email.' bij te praten.' }}
+        </span>
     </div>
 
     <div class="flex justify-between items-start mb-4">
@@ -102,6 +96,15 @@
                             </div>
                         </form>
                     @endif
+
+                    {{-- Resend hoort bij de andere acties op deze order en niet
+                         alleen in de balk: de bevestiging opnieuw sturen kan altijd,
+                         ook als er niets is gewijzigd. --}}
+                    <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}"
+                          onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
+                        @csrf
+                        <button class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Resend</button>
+                    </form>
                 </div>
             </div>
             @if ($order->customer?->company)
