@@ -451,6 +451,8 @@
         </section>
     @endif
 
+    @include('orders._coupon')
+
     @if ($order->certificate || $hasSignedBon)
         <section>
             <h2 class="font-black mb-2">Certificaat</h2>
