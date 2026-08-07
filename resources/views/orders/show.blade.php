@@ -78,7 +78,7 @@
                 <div class="text-xs text-gray-500 font-mono">voortkomend uit offerte {{ $order->quote_reference }}</div>
             @endif
             <div class="text-sm text-gray-600">
-                Status: <span class="font-bold uppercase">{{ $order->state }}</span>
+                @include('orders._status')
                 @if ($order->pilot) · <span class="bg-yellow-400 text-black px-1">Amsterdam-pilot</span> @endif
                 @if ($order->first_box_free) · <span class="bg-yellow-400 text-black px-1">Kennismaking</span> @endif
                 @if ($order->createdBy)

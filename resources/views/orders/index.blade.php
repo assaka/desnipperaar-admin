@@ -41,11 +41,7 @@
                             <span class="text-gray-400">nog niet gepland</span>
                         @endif
                     </td>
-                    <td>
-                        <span class="inline-block px-2 py-1 text-xs font-bold bg-black text-yellow-400 uppercase">
-                            {{ $order->state }}
-                        </span>
-                    </td>
+                    <td>@include('orders._status')</td>
                     <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
             @empty

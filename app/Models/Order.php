@@ -316,6 +316,37 @@ class Order extends Model
             ->exists();
     }
 
+    /**
+     * De fase waarin deze order verkeert, voor het statuslabel.
+     *
+     * Betaling en certificaat zeggen meer over waar een order staat dan de
+     * toestand zelf: "afgesloten" is waar, maar of het geld binnen is en of de
+     * klant zijn certificaat heeft, is wat je wil weten. Die gaan daarom voor.
+     *
+     * Werkt op de geladen relaties en niet met eigen queries, zodat de orderlijst
+     * er niet per regel twee bij krijgt.
+     */
+    public function stage(): string
+    {
+        $betaald = $this->invoices
+            ->reject->isCreditNote()
+            ->contains(fn ($i) => $i->status === Invoice::STATUS_PAID);
+
+        $certificaat = $this->certificates->isNotEmpty();
+
+        if ($betaald && $certificaat) {
+            return 'completed';
+        }
+        if ($betaald) {
+            return 'paid';
+        }
+        if ($certificaat) {
+            return 'certificate';
+        }
+
+        return (string) $this->state;
+    }
+
     /** Opgehaald of verder: de rit is gereden en er ligt een bon onder. */
     public function isPickedUp(): bool
     {

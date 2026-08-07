@@ -22,7 +22,10 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('customer')
+        // invoices en certificates erbij voor het statuslabel: dat kijkt of er is
+        // betaald en of er een certificaat is. Zonder dit haalt de lijst er per
+        // regel twee queries bij.
+        $orders = Order::with(['customer', 'invoices', 'certificates'])
             ->where('type', Order::TYPE_DIRECT)
             ->orderByDesc('id')
             ->paginate(25);
