@@ -11,30 +11,39 @@
     $magBewerken = $betaaldeFactuur === null;
 @endphp
 {{--
-    dirty = de klant weet nog niet wat wij weten. Twee bronnen: onopgeslagen
-    wijzigingen in het adres-en-inhoudformulier (het order-dirty event), en een
-    wijziging die al wel is opgeslagen maar nog niet gemaild, zoals een
-    kortingscode. Die tweede komt uit de database, zodat de balk een herlaadde
-    pagina overleeft.
---}}
-{{--
-    stale is wat de server weet: een wijziging die al is opgeslagen maar nog niet
-    gemaild. Undo zet dirty daarop terug en niet op false, anders zou het weggooien
-    van wat je net typte ook de melding wegpoetsen over een korting die de klant
-    nog steeds niet heeft.
---}}
-<div x-data="{ dirty: {{ $order->confirmation_stale ? 'true' : 'false' }}, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
-     @order-dirty="dirty = true"
-     @order-clean="dirty = stale">
+    Twee verschillende dingen, en de balk moet ze uit elkaar houden:
 
-    <div x-show="dirty" x-cloak
+      typed = je hebt in het formulier getypt en nog niet opgeslagen. Alleen in de
+              browser bekend, verdwijnt bij herladen. Hier valt iets weg te gooien,
+              dus alleen hierbij hoort Undo.
+      stale = al opgeslagen maar nog niet gemaild, bijvoorbeeld een kortingscode.
+              Staat in de database, overleeft een herlaadde pagina. Hier valt niets
+              weg te gooien: het is een feit, en de klant moet het horen.
+
+    De balk verschijnt bij beide. Undo alleen bij typed, want Undo op een
+    opgeslagen wijziging zou suggereren dat je die kunt terugdraaien.
+--}}
+<div x-data="{ typed: false, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
+     @order-dirty="typed = true"
+     @order-clean="typed = false">
+
+    <div x-show="typed || stale" x-cloak
          class="sticky top-0 z-30 -mx-4 mb-4 px-4 py-3 bg-yellow-400 border-b-2 border-black flex flex-wrap items-center gap-3">
-        <span class="font-bold text-sm">De klant heeft deze gegevens nog niet.</span>
+        <span class="font-bold text-sm"
+              x-text="typed ? 'Niet opgeslagen wijzigingen.' : 'De klant heeft deze gegevens nog niet.'">De klant heeft deze gegevens nog niet.</span>
         @if ($magBewerken)
             <button type="button"
                     @click="const f = document.getElementById('order-edit-form'); if (f) { f.requestSubmit(); }"
                     class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold">
                 Opslaan en mailen
+            </button>
+            {{-- Gooit weg wat je hebt getypt. Raakt de order niet aan: er is nog
+                 niets bewaard. form.reset() stuurt geen input-events, dus de balk
+                 springt er niet meteen weer aan. --}}
+            <button type="button" x-show="typed" x-cloak
+                    @click="const f = document.getElementById('order-edit-form'); if (f) { f.reset(); } typed = false"
+                    class="bg-white text-black border-2 border-black px-4 py-1.5 text-xs uppercase font-bold">
+                Undo
             </button>
         @endif
         {{-- Resend staat bij de knoppen naast Klant, dus hier alleen de verwijzing
