@@ -47,9 +47,16 @@ class PickupPlanController extends Controller
             return response()->json(['error' => 'closed', 'status' => $this->status($order)], 403);
         }
 
+        // Het venster is een uurblok, "12:00-13:00". De dagdelen staan er nog bij
+        // voor het geval wij ze ooit weer aanbieden; zelfde vormen als de regex in
+        // OrderController, zodat beide kanten dezelfde waarden accepteren.
+        //
+        // Deze regel stond hier nog op alleen dagdelen en wees daardoor elk
+        // gekozen uur af. De klant kreeg dan "kies een van de momenten hierboven"
+        // te zien terwijl hij er net een had gekozen.
         $validator = Validator::make($request->all(), [
             'date'   => 'required|date_format:Y-m-d',
-            'window' => 'required|in:ochtend,middag,avond',
+            'window' => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
         ]);
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
