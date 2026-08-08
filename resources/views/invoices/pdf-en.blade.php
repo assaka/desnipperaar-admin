@@ -13,8 +13,9 @@
     .wrap { padding: 8mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
-    .top .leverancier { width: 55%; }
-    .top .doc-info { width: 45%; text-align: right; }
+    .top .leverancier { width: 32%; padding-right: 6mm; }
+    .top .ontvanger { width: 30%; padding-right: 6mm; }
+    .top .doc-info { width: 38%; text-align: right; }
     .top h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.08em; color: #555; }
     .top .name { font-weight: 700; font-size: 12pt; margin-bottom: 2mm; }
     h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 26pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
@@ -22,7 +23,7 @@
     .dates { margin-bottom: 6mm; font-size: 9.5pt; }
     .dates td { padding: 0.8mm 0; }
     .dates .k { color: #555; padding-right: 5mm; white-space: nowrap; }
-    .klant { margin-top: 5mm; padding-top: 4mm; border-top: 1px solid #DDD; }
+    .klant { margin-top: 0; }
     .klant h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
     .klant .name { font-weight: 700; font-size: 12pt; }
     table.lines { width: 100%; border-collapse: collapse; margin: 4mm 0; }
@@ -73,7 +74,8 @@
                 <div>{{ $co['country'] }}</div>
                 @if ($co['kvk']) <div style="margin-top:2mm;">CoC: <strong>{{ $co['kvk'] }}</strong></div> @endif
                 @if ($co['btw']) <div>VAT: <strong>{{ $co['btw'] }}</strong></div> @endif
-                <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>
+                <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>            </td>
+            <td class="ontvanger">
         <div class="klant">
             <h3>To</h3>
             @if ($invoice->customer_company) <div class="name">{{ $invoice->customer_company }}</div> @endif
