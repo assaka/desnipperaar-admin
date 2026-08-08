@@ -77,10 +77,21 @@ class OrderController extends Controller
         $choice       = $data['ophaal_keuze'] ?? '';
         $pickupChoice = in_array($choice, ['spoed', 'sooner'], true) ? $choice : 'free';
 
-        // Spoed staat uit tot wij hem verkopen. Wie de keuze toch inzendt krijgt
-        // 'sooner': hij wilde snel geholpen worden en dat kan, alleen rekenen wij
-        // er geen toeslag voor die wij nergens hebben aangeboden.
-        if ($pickupChoice === 'spoed' && ! config('desnipperaar.pickup.rush_enabled')) {
+        // Mag spoed hier verkocht worden? In de regiostand alleen binnen de
+        // gratis straal. Is de afstand onbekend, dan mag het niet: een toeslag
+        // rekenen omdat een geocodering mislukte is de verkeerde kant om.
+        //
+        // Wat niet mag valt terug op 'sooner'. De klant wilde snel geholpen
+        // worden en dat kan, alleen rekenen wij geen toeslag die wij hem daar
+        // nergens hebben aangeboden.
+        $rushMode = config('desnipperaar.pickup.rush_mode');
+        $rushAllowed = match ($rushMode) {
+            'all'    => true,
+            'region' => $pickupKm !== null && $pickupKm <= \App\Support\Pricing::PICKUP_FREE_KM,
+            default  => false,
+        };
+
+        if ($pickupChoice === 'spoed' && ! $rushAllowed) {
             $pickupChoice = 'sooner';
         }
 

@@ -39,16 +39,23 @@ return [
     ],
 
     'pickup' => [
-        // Spoed ophalen: hoofdschakelaar. Staat uit, de dienst is gebouwd maar
-        // wordt nog niet verkocht. Zolang dit false is weigert de intake de keuze
-        // 'spoed' en valt hij terug op 'sooner', dus de klant betaalt wel zijn
-        // kilometers en geen toeslag.
+        // Spoed ophalen. Drie standen, want spoed geldt nu wel in regio Amsterdam
+        // en nog niet daarbuiten:
         //
-        // Aanzetten kost twee schakelaars, hier en showSpoedPickup in
-        // site-config.json op de publieke site. De publieke vlag verbergt de
-        // keuze, deze weigert hem; dat is met opzet twee sloten, want een vlag in
-        // de browser houdt niemand tegen die zelf een formulier post.
-        'rush_enabled' => filter_var(env('PICKUP_RUSH_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        //   off     de keuze bestaat niet
+        //   region  alleen binnen region_km, waar wij zelf rijden
+        //   all      overal
+        //
+        // Buiten wat is toegestaan valt 'spoed' terug op 'sooner': de klant wilde
+        // snel geholpen worden en dat kan, alleen rekenen wij geen toeslag die
+        // wij daar nergens hebben aangeboden.
+        //
+        // Dit is het echte slot. De publieke site heeft zijn eigen schakelaar
+        // (spoedPickup in site-config.json) die dezelfde standen kent, maar die
+        // verbergt alleen; een vlag in de browser houdt niemand tegen die zelf
+        // een formulier post. Zet ze samen om, anders ziet de klant iets anders
+        // dan hij krijgt.
+        'rush_mode' => env('PICKUP_RUSH_MODE', 'off'),
     ],
 
     /**
