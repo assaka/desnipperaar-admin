@@ -97,6 +97,9 @@
     @if (session('status'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
     @endif
+    @if (session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 mb-4 text-sm">{{ session('error') }}</div>
+    @endif
 
     <section class="mb-6">
         <div>
@@ -388,6 +391,40 @@
                         x-text="editing ? 'Annuleren' : 'Wijzig planning'"></button>
             @endif
         </div>
+
+        {{-- De klant zelf laten kiezen. Met de hand, want de knop staat nog niet
+             in de orderbevestiging: zo kunnen wij per klant zien of het werkt
+             voordat iedereen hem krijgt. Alleen als er ook echt iets te kiezen
+             valt, anders stuurt de knop iemand naar een pagina die zegt dat er al
+             een moment staat. --}}
+        @if (! $order->isAbonnement()
+             && ! $order->pickup_date
+             && ! in_array($order->state, ['opgehaald', 'vernietigd', 'afgesloten'], true))
+            <div class="mb-3 pb-3 border-b border-yellow-300 flex flex-wrap items-center gap-2">
+                <form method="POST" action="{{ route('orders.send-plan-link', $order) }}"
+                      onsubmit="return confirm('Planlink mailen naar {{ $order->customer_email }}?')">
+                    @csrf
+                    <button class="bg-black text-yellow-400 px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
+                            @disabled(! $order->customer_email || ! $order->public_token)>
+                        ✉ Stuur planlink
+                    </button>
+                </form>
+                @if ($order->public_token)
+                    <a href="{{ rtrim(config('desnipperaar.public_url'), '/') }}/plan/{{ $order->public_token }}"
+                       target="_blank" rel="noopener" class="text-xs underline">bekijk de pagina</a>
+                @endif
+                @if ($order->pickup_plan_invited_at)
+                    <span class="text-xs text-gray-600">
+                        verstuurd op {{ $order->pickup_plan_invited_at->format('d-m-Y H:i') }}
+                    </span>
+                @else
+                    <span class="text-xs text-gray-500">nog niet verstuurd</span>
+                @endif
+                @if (! $order->public_token)
+                    <span class="text-xs text-red-700">geen planlink op deze order</span>
+                @endif
+            </div>
+        @endif
 
         @if ($order->state !== 'nieuw')
             <div x-show="!editing" x-cloak class="text-sm">

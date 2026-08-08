@@ -696,9 +696,9 @@ class OrderController extends Controller
      * Dat is het verschil met wat de klant straks te zien krijgt: die kiest uit
      * de drie voorstellen, jij wilt kunnen zien waarom een uur niet kan.
      *
-     * De drie voorstellen gaan wel mee, en het zijn dezelfde drie. Zou het paneel
-     * zelf een top drie uitrekenen, dan kon het paneel iets anders tonen dan de
-     * klant te zien krijgt, en dan is het paneel geen voorbeeld meer.
+     * De voorstellen gaan wel mee, en het zijn dezelfde. Zou het paneel zelf een
+     * lijstje uitrekenen, dan kon het iets anders tonen dan de klant te zien
+     * krijgt, en dan is het paneel geen voorbeeld meer.
      */
     public function slots(Request $request, Order $order, \App\Services\SlotFinder $finder)
     {
@@ -707,6 +707,48 @@ class OrderController extends Controller
         $result['best'] = $finder->bestSlots($result['slots'], soonestFirst: $order->pickup_choice === 'spoed');
 
         return response()->json($result);
+    }
+
+    /**
+     * De klant uitnodigen om zelf een ophaalmoment te kiezen.
+     *
+     * Met de hand vanuit de order, want de knop staat nog niet in de
+     * orderbevestiging. Zo kunnen wij per klant kijken of het werkt voordat
+     * iedereen hem krijgt.
+     *
+     * Wij weigeren te sturen als er niets te kiezen valt. Een uitnodiging die
+     * leidt naar "er staat al een moment gepland" of naar een opgehaalde order is
+     * erger dan geen uitnodiging.
+     */
+    public function sendPlanLink(Order $order)
+    {
+        if ($order->isAbonnement()) {
+            return back()->with('error', 'Een abonnement heeft vaste ophaaldagen, daar valt niets los te plannen.');
+        }
+        if (in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
+            return back()->with('error', 'Deze opdracht is al opgehaald of afgerond.');
+        }
+        if ($order->pickup_date) {
+            return back()->with('error', 'Er staat al een ophaalmoment gepland. Maak de datum eerst leeg, of stuur de herplanlink.');
+        }
+        if (! $order->customer_email) {
+            return back()->with('error', 'Deze order heeft geen e-mailadres.');
+        }
+        if (! $order->public_token) {
+            return back()->with('error', 'Deze order heeft geen planlink. Oudere orders missen die soms.');
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new \App\Mail\PickupPlanInvite($order->loadMissing('customer')));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Versturen mislukt: '.$e->getMessage());
+        }
+
+        $order->forceFill(['pickup_plan_invited_at' => now()])->save();
+
+        return back()->with('status', 'Planlink gestuurd naar '.$order->customer_email.'.');
     }
 
     public function transition(Request $request, Order $order)
