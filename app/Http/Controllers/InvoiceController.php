@@ -77,8 +77,8 @@ class InvoiceController extends Controller
      *
      * Bedoeld voor het geval dat wij door onze eigen schuld niet zijn langsgeweest;
      * dat is op de site en in de activatiemail beloofd. Het origineel blijft staan
-     * en de creditfactuur draait de bedragen om. De creditfactuur komt als concept
-     * binnen, zodat er nog naar gekeken wordt voordat hij naar de klant gaat.
+     * en de creditfactuur draait de bedragen om. Hij krijgt status 'credit' en
+     * houdt die ook na het versturen: er valt niets te innen en niets te vervallen.
      */
     public function credit(Request $request, Invoice $invoice)
     {
@@ -104,7 +104,7 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.show', $credit)->with(
             'status',
             "Creditfactuur {$credit->invoice_number} aangemaakt voor {$invoice->invoice_number}. "
-            .'Deze staat als concept klaar, verstuur hem hieronder naar de klant.'
+            .'Verstuur hem hieronder naar de klant.'
         );
     }
 

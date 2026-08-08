@@ -14,6 +14,12 @@ class Invoice extends Model
     const STATUS_PAID     = 'paid';
     const STATUS_CANCELED = 'canceled';
 
+    // Een creditfactuur loopt de gewone reis niet: hij wordt niet betaald en kan
+    // dus niet vervallen. Met 'sent' kreeg hij een dag later OVERDUE in het rood,
+    // terwijl er niets te innen valt. Deze status draagt hij vanaf het aanmaken,
+    // versturen verandert daar niets aan.
+    const STATUS_CREDIT   = 'credit';
+
     protected $fillable = [
         'invoice_number', 'order_id', 'bon_id', 'period_start', 'period_end',
         'credits_invoice_id', 'credit_reason',
@@ -152,7 +158,7 @@ class Invoice extends Model
             'amount_incl_btw'    => -abs((float) $this->amount_incl_btw),
             'issued_at'          => now()->toDateString(),
             'due_at'             => now()->toDateString(),
-            'status'             => self::STATUS_DRAFT,
+            'status'             => self::STATUS_CREDIT,
         ]);
     }
 

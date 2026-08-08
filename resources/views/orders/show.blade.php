@@ -608,6 +608,7 @@
                         'draft' => 'bg-gray-400 text-white',
                         'sent'  => $inv->due_at->isPast() ? 'bg-red-700 text-white' : 'bg-yellow-400 text-black',
                         'paid'  => 'bg-green-700 text-white',
+                        'credit' => 'bg-red-700 text-white',
                         'canceled' => 'bg-gray-700 text-white',
                         default => 'bg-gray-300 text-gray-700',
                     };

@@ -27,6 +27,8 @@
         'certificate' => ['Certificate', 'bg-black text-yellow-400', null],
         'paid'        => ['Paid',        'bg-green-600 text-white', null],
         'completed'   => ['Completed',   'bg-green-800 text-white', null],
+        // Rood, want dit is de enige fase waarin geld de andere kant op gaat.
+        'credit'      => ['Credit',      'bg-red-700 text-white', 'Factuur teruggeboekt met een creditfactuur'],
         default       => [$order->stage(), 'bg-gray-300 text-gray-800', null],
     };
 @endphp

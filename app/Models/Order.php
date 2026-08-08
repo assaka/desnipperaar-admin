@@ -325,6 +325,21 @@ class Order extends Model
      */
     public function stage(): string
     {
+        // Is de rekening teruggeboekt, dan zegt dat meer dan betaald of afgesloten:
+        // het geld is terug. Alleen als er niets blijft staan, dus elke factuur op
+        // deze order heeft zijn creditfactuur. Bij een abonnement met tien perioden
+        // is één teruggeboekte maand geen gecrediteerd abonnement.
+        //
+        // De tegenboeking staat op dezelfde order, dus dit leest mee uit de al
+        // geladen relatie en kost geen query.
+        $tegengeboekt = $this->invoices->filter->isCreditNote()->pluck('credits_invoice_id')->all();
+        $origineel    = $this->invoices->reject->isCreditNote();
+
+        if ($tegengeboekt && $origineel->isNotEmpty()
+            && $origineel->every(fn ($i) => in_array($i->id, $tegengeboekt, true))) {
+            return 'credit';
+        }
+
         $betaald = $this->invoices
             ->reject->isCreditNote()
             ->contains(fn ($i) => $i->status === Invoice::STATUS_PAID);

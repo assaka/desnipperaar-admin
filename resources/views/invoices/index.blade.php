@@ -10,6 +10,7 @@
                 <option value="draft"    @selected($q==='draft')>Concept</option>
                 <option value="sent"     @selected($q==='sent')>Verzonden</option>
                 <option value="paid"     @selected($q==='paid')>Betaald</option>
+                <option value="credit"   @selected($q==='credit')>Credit</option>
                 <option value="canceled" @selected($q==='canceled')>Geannuleerd</option>
             </select>
         </form>
@@ -34,12 +35,16 @@
                         'draft' => 'bg-gray-400 text-white',
                         'sent'  => $inv->due_at->isPast() ? 'bg-red-700 text-white' : 'bg-yellow-400 text-black',
                         'paid'  => 'bg-green-700 text-white',
+                        'credit' => 'bg-red-700 text-white',
                         'canceled' => 'bg-gray-700 text-white',
                         default => 'bg-gray-300 text-gray-700',
                     };
                 @endphp
                 <tr class="border-b hover:bg-yellow-50">
-                    <td class="py-2 font-mono"><a href="{{ route('invoices.show', $inv) }}" class="underline">{{ $inv->invoice_number }}</a>@if ($inv->isCreditNote()) <span class="bg-red-700 text-white text-xs px-1 font-bold">CREDIT</span>@endif</td>
+                    {{-- Geen CREDIT-vlag meer naast het nummer: dat staat nu in de
+                         statuskolom, en twee keer hetzelfde rode blokje op één regel
+                         leest als twee dingen. --}}
+                    <td class="py-2 font-mono"><a href="{{ route('invoices.show', $inv) }}" class="underline">{{ $inv->invoice_number }}</a></td>
                     <td>{{ $inv->customer_company ?: $inv->customer_name }}</td>
                     <td><a href="{{ $inv->order->isAbonnement() ? route('abonnementen.show', $inv->order_id) : route('orders.show', $inv->order_id) }}" class="underline font-mono text-xs">{{ $inv->order->order_number }}</a></td>
                     <td class="text-sm">{{ $inv->issued_at->format('Y-m-d') }}</td>

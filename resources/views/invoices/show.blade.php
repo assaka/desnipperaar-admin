@@ -86,8 +86,8 @@
                 <p class="text-xs text-gray-600 mb-3">
                     Maakt een creditfactuur van
                     − € {{ number_format((float) $invoice->amount_incl_btw, 2, ',', '.') }}
-                    die deze factuur tegenboekt. Het origineel blijft staan. De creditfactuur komt als
-                    concept klaar, je verstuurt hem daarna zelf.
+                    die deze factuur tegenboekt. Het origineel blijft staan. De creditfactuur staat
+                    daarna klaar met status credit, je verstuurt hem zelf.
                 </p>
                 <form method="POST" action="{{ route('invoices.credit', $invoice) }}">
                     @csrf
