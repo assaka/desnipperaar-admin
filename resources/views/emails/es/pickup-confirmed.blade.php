@@ -73,9 +73,9 @@
     ¿No le viene bien esta fecha?
     @if ($order->public_token)
         <a href="{{ config('desnipperaar.public_url') }}/plan/{{ $order->public_token }}" style="color:#0A0A0A;font-weight:700;">Reprograme su recogida en línea</a>
-        o llame al <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — la cambiamos.
+        o llame al <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
     @else
-        Llame al <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — la cambiamos.
+        Llame al <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
     @endif
 </p>
 

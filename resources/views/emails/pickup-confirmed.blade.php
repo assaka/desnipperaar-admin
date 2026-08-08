@@ -69,9 +69,9 @@
     Lukt deze datum niet meer?
     @if ($order->public_token)
         <a href="{{ config('desnipperaar.public_url') }}/plan/{{ $order->public_token }}" style="color:#0A0A0A;font-weight:700;">Wijzig online uw ophaalmoment</a>
-        of bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — dan schuiven we het moment.
+        of bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
     @else
-        Bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — dan schuiven we het moment.
+        Bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
     @endif
 </p>
 
