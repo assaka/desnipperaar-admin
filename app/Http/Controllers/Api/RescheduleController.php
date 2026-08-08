@@ -103,7 +103,18 @@ class RescheduleController extends Controller
         ];
     }
 
-    // Maps order state to a coarse status the public page renders alerts from.
+    /**
+     * Maps order state to a coarse status the public page renders alerts from.
+     *
+     * "Nog niet bevestigd" betekent hier: er staat geen datum. Dat is wat de
+     * klant op de pagina leest en het is het enige dat voor hem telt.
+     *
+     * Bewust niet meer afgaan op de status bevestigd. Een klant die zijn moment
+     * zelf op de planpagina kiest laat de order op nieuw staan, want er moet nog
+     * een chauffeur bij. Hij krijgt wel een bevestiging met een link hierheen, en
+     * die liep dood op "voor deze opdracht is nog geen ophaalmoment bevestigd"
+     * terwijl de afspraak er in diezelfde regel onder stond.
+     */
     private function status(Order $order): string
     {
         if (in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD], true)) {
@@ -112,19 +123,22 @@ class RescheduleController extends Controller
         if ($order->state === Order::STATE_AFGESLOTEN) {
             return 'closed';
         }
-        if ($order->state !== Order::STATE_BEVESTIGD) {
+        if (!$order->pickup_date) {
             return 'not_confirmed';
         }
-        if (!$order->pickup_date || $order->pickup_date->toDateString() <= now()->toDateString()) {
+        if ($order->pickup_date->toDateString() <= now()->toDateString()) {
             return 'too_late';
         }
+
         return 'ok';
     }
 
-    // Customer can reschedule until the pickup day itself.
+    // Customer can reschedule until the pickup day itself, ongeacht of wij de rit
+    // al hebben bevestigd. Wat telt is dat er een moment staat dat nog komen moet
+    // en dat de opdracht niet al is opgehaald of afgesloten.
     private function canReschedule(Order $order): bool
     {
-        return $order->state === Order::STATE_BEVESTIGD
+        return !in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)
             && $order->pickup_date
             && $order->pickup_date->toDateString() > now()->toDateString();
     }
