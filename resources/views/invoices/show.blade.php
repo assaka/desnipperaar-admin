@@ -41,7 +41,22 @@
                 </form>
             @endunless
 
-            @if ($invoice->status === \App\Models\Invoice::STATUS_PAID)
+            {{-- Een creditfactuur wordt niet betaald maar uitbetaald, dus hij heeft
+                 zijn eigen knop. Zonder mail: een betaalbevestiging sturen op geld
+                 dat wij overmaken staat de klant op zijn kop. --}}
+            @if ($invoice->isCreditNote())
+                @if ($invoice->status === \App\Models\Invoice::STATUS_REPAID)
+                    <span class="bg-red-900 text-white px-3 py-1.5 text-xs uppercase font-bold whitespace-nowrap">
+                        Terugbetaald{{ $invoice->paid_at ? ' '.$invoice->paid_at->format('d-m-Y') : '' }}
+                    </span>
+                @else
+                    <form method="POST" action="{{ route('invoices.mark-repaid', $invoice) }}"
+                          onsubmit="return confirm('Creditfactuur {{ $invoice->invoice_number }} als terugbetaald markeren?')">
+                        @csrf
+                        <button class="bg-red-700 text-white px-3 py-1.5 text-xs uppercase font-bold">Mark as repaid</button>
+                    </form>
+                @endif
+            @elseif ($invoice->status === \App\Models\Invoice::STATUS_PAID)
                 <span class="bg-green-700 text-white px-3 py-1.5 text-xs uppercase font-bold whitespace-nowrap">
                     Betaald{{ $invoice->paid_at ? ' '.$invoice->paid_at->format('d-m-Y') : '' }}
                 </span>

@@ -136,4 +136,30 @@ class InvoiceController extends Controller
         return back()->with('status', "Factuur {$invoice->invoice_number} gemarkeerd als betaald. "
             ."Betaalbevestiging gestuurd naar {$invoice->customer_email}.");
     }
+
+    /**
+     * Het geld van een creditfactuur is teruggeboekt.
+     *
+     * De tegenhanger van markPaid(), maar dan geld de andere kant op. Bewust
+     * zonder mail: PaymentReceived bevestigt een ontvangst en dat is hier het
+     * omgekeerde. De klant ziet de terugboeking op zijn rekening, en de
+     * creditfactuur zelf heeft hij al.
+     */
+    public function markRepaid(Invoice $invoice)
+    {
+        abort_unless($invoice->isCreditNote(), 422, 'Alleen een creditfactuur kan terugbetaald worden.');
+
+        // Dubbele klik of een tweede tabblad: niet opnieuw stempelen, want dan
+        // schuift de datum van de terugboeking op naar vandaag.
+        if ($invoice->status === Invoice::STATUS_REPAID) {
+            return back()->with('status', "Creditfactuur {$invoice->invoice_number} stond al als terugbetaald.");
+        }
+
+        $invoice->update([
+            'status'  => Invoice::STATUS_REPAID,
+            'paid_at' => now(),
+        ]);
+
+        return back()->with('status', "Creditfactuur {$invoice->invoice_number} gemarkeerd als terugbetaald.");
+    }
 }

@@ -11,6 +11,7 @@
                 <option value="sent"     @selected($q==='sent')>Verzonden</option>
                 <option value="paid"     @selected($q==='paid')>Betaald</option>
                 <option value="credit"   @selected($q==='credit')>Credit</option>
+                <option value="repaid"   @selected($q==='repaid')>Terugbetaald</option>
                 <option value="canceled" @selected($q==='canceled')>Geannuleerd</option>
             </select>
         </form>
@@ -36,6 +37,7 @@
                         'sent'  => $inv->due_at->isPast() ? 'bg-red-700 text-white' : 'bg-yellow-400 text-black',
                         'paid'  => 'bg-green-700 text-white',
                         'credit' => 'bg-red-700 text-white',
+                        'repaid' => 'bg-red-900 text-white',
                         'canceled' => 'bg-gray-700 text-white',
                         default => 'bg-gray-300 text-gray-700',
                     };

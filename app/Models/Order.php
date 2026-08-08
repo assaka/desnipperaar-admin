@@ -332,12 +332,18 @@ class Order extends Model
         //
         // De tegenboeking staat op dezelfde order, dus dit leest mee uit de al
         // geladen relatie en kost geen query.
-        $tegengeboekt = $this->invoices->filter->isCreditNote()->pluck('credits_invoice_id')->all();
+        $creditnotas  = $this->invoices->filter->isCreditNote();
+        $tegengeboekt = $creditnotas->pluck('credits_invoice_id')->all();
         $origineel    = $this->invoices->reject->isCreditNote();
 
         if ($tegengeboekt && $origineel->isNotEmpty()
             && $origineel->every(fn ($i) => in_array($i->id, $tegengeboekt, true))) {
-            return 'credit';
+            // Staat er nog een creditfactuur open, dan moeten wij nog betalen en
+            // is de order niet klaar. Pas als ze allemaal zijn teruggeboekt is
+            // het geld weg en de order van tafel.
+            return $creditnotas->every(fn ($i) => $i->status === Invoice::STATUS_REPAID)
+                ? 'repaid'
+                : 'credit';
         }
 
         $betaald = $this->invoices

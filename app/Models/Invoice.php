@@ -20,6 +20,11 @@ class Invoice extends Model
     // versturen verandert daar niets aan.
     const STATUS_CREDIT   = 'credit';
 
+    // En hier is het geld daadwerkelijk teruggeboekt. Het verschil met 'credit'
+    // is precies wat je in de lijst wil zien: bij credit staat er nog een bedrag
+    // open naar de klant toe, bij repaid is de order echt van tafel.
+    const STATUS_REPAID   = 'repaid';
+
     protected $fillable = [
         'invoice_number', 'order_id', 'bon_id', 'period_start', 'period_end',
         'credits_invoice_id', 'credit_reason',

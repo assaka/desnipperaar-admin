@@ -609,6 +609,7 @@
                         'sent'  => $inv->due_at->isPast() ? 'bg-red-700 text-white' : 'bg-yellow-400 text-black',
                         'paid'  => 'bg-green-700 text-white',
                         'credit' => 'bg-red-700 text-white',
+                        'repaid' => 'bg-red-900 text-white',
                         'canceled' => 'bg-gray-700 text-white',
                         default => 'bg-gray-300 text-gray-700',
                     };
@@ -621,7 +622,7 @@
                             € {{ number_format($inv->amount_incl_btw, 2, ',', '.') }} incl. btw ·
                             {{ $inv->issued_at->format('Y-m-d') }} · vervalt {{ $inv->due_at->format('Y-m-d') }}
                             @if ($inv->sent_at) · verzonden {{ $inv->sent_at->format('Y-m-d H:i') }}@endif
-                            @if ($inv->paid_at) · betaald {{ $inv->paid_at->format('Y-m-d') }}@endif
+                            @if ($inv->paid_at) · {{ $inv->isCreditNote() ? 'terugbetaald' : 'betaald' }} {{ $inv->paid_at->format('Y-m-d') }}@endif
                         </div>
                     </div>
                     {{-- Geen crediteerknop in deze regel. Crediteren staat bij de

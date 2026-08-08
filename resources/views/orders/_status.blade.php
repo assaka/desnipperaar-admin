@@ -27,8 +27,10 @@
         'certificate' => ['Certificate', 'bg-black text-yellow-400', null],
         'paid'        => ['Paid',        'bg-green-600 text-white', null],
         'completed'   => ['Completed',   'bg-green-800 text-white', null],
-        // Rood, want dit is de enige fase waarin geld de andere kant op gaat.
-        'credit'      => ['Credit',      'bg-red-700 text-white', 'Factuur teruggeboekt met een creditfactuur'],
+        // Rood, want hier gaat geld de andere kant op. Fel rood zolang wij het
+        // nog moeten overmaken, donker als het weg is en er niets meer speelt.
+        'credit'      => ['Credit',      'bg-red-700 text-white', 'Teruggeboekt met een creditfactuur, nog niet uitbetaald'],
+        'repaid'      => ['Repaid',      'bg-red-900 text-white', 'Creditfactuur uitbetaald aan de klant'],
         default       => [$order->stage(), 'bg-gray-300 text-gray-800', null],
     };
 @endphp
