@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\InvoiceSent;
 use App\Mail\PaymentReceived;
+use App\Mail\RefundPaid;
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -140,12 +141,11 @@ class InvoiceController extends Controller
     /**
      * Het geld van een creditfactuur is teruggeboekt.
      *
-     * De tegenhanger van markPaid(), maar dan geld de andere kant op. Bewust
-     * zonder mail: PaymentReceived bevestigt een ontvangst en dat is hier het
-     * omgekeerde. De klant ziet de terugboeking op zijn rekening, en de
-     * creditfactuur zelf heeft hij al.
+     * De tegenhanger van markPaid(), maar dan geld de andere kant op. Vandaar
+     * ook een eigen mail: PaymentReceived bevestigt een ontvangst en dat is hier
+     * het omgekeerde.
      */
-    public function markRepaid(Invoice $invoice)
+    public function markRepaid(Request $request, Invoice $invoice)
     {
         abort_unless($invoice->isCreditNote(), 422, 'Alleen een creditfactuur kan terugbetaald worden.');
 
@@ -160,6 +160,19 @@ class InvoiceController extends Controller
             'paid_at' => now(),
         ]);
 
-        return back()->with('status', "Creditfactuur {$invoice->invoice_number} gemarkeerd als terugbetaald.");
+        // De klant ziet de bijschrijving pas over een paar dagen op zijn rekening.
+        // Tot die tijd is dit het enige bericht dat het geld onderweg is.
+        try {
+            Mail::to($invoice->customer_email)
+                ->send(new RefundPaid($invoice->fresh(), $request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('status', "Creditfactuur {$invoice->invoice_number} gemarkeerd als terugbetaald.")
+                ->withErrors(['mail' => 'De terugbetaalbevestiging kon niet worden verstuurd: '.$e->getMessage()]);
+        }
+
+        return back()->with('status', "Creditfactuur {$invoice->invoice_number} gemarkeerd als terugbetaald. "
+            ."Bevestiging gestuurd naar {$invoice->customer_email}.");
     }
 }
