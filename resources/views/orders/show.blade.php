@@ -487,8 +487,11 @@
                             <div class="mt-2 text-sm text-gray-600">Geen vrij moment binnen de horizon.</div>
                         </template>
 
-                        <div class="mt-2 grid gap-1">
-                            <template x-for="s in (showAll ? result.slots : open)" :key="s.date + s.window">
+                        <div class="mt-2 text-xs font-bold uppercase text-gray-500"
+                             x-text="showAll ? 'Alle uurblokken' : 'Wat wij voorstellen'"></div>
+
+                        <div class="mt-1 grid gap-1">
+                            <template x-for="s in shown" :key="s.date + s.window">
                                 <button type="button" @click="pick(s)" :disabled="!s.available"
                                         class="text-left text-sm border px-2 py-1 flex justify-between items-baseline gap-3"
                                         :class="s.available
@@ -496,11 +499,9 @@
                                             : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'">
                                     <span>
                                         <span class="font-bold" x-text="s.weekday + ' ' + s.date"></span>
-                                        <span x-text="'· ' + s.window_label"></span>
+                                        <span class="font-bold" x-text="'· ' + s.window_label"></span>
                                         <span class="text-xs text-gray-500"
-                                              x-text="'· ' + s.stops + ' stop(s)'
-                                                  + (s.day_stops > s.stops ? ' (' + s.day_stops + ' op de dag)' : '')
-                                                  + ', ' + s.free_minutes + ' van ' + s.capacity_minutes + ' min vrij'"></span>
+                                              x-text="'· ' + s.day_stops + ' stop(s) die dag, ' + s.free_slots + ' uur vrij'"></span>
                                     </span>
                                     <span class="whitespace-nowrap text-xs">
                                         <template x-if="s.detour_km !== null && s.via_label">
@@ -511,17 +512,6 @@
                                             <span class="text-gray-400" x-text="'lege dag, eigen rit van ' + s.detour_km + ' km'"></span>
                                         </template>
                                         <span x-show="!s.available" x-text="'· ' + s.reason"></span>
-                                        <template x-if="s.rush && s.rush_fee > 0">
-                                            <span class="ml-2 px-1 font-bold bg-red-200"
-                                                  title="Spoeddag. Kiest de klant deze dag op de planpagina, dan komt dit bedrag als eigen regel op de factuur."
-                                                  x-text="'spoed + € ' + s.rush_fee.toFixed(2)"></span>
-                                        </template>
-                                        <template x-if="s.cost !== null">
-                                            <span class="ml-2 px-1 font-bold"
-                                                  :class="s.cost > 0 ? 'bg-orange-200' : 'bg-green-200'"
-                                                  :title="'Wat deze rit ons kost op deze dag (' + s.cost_basis + '). Niet wat de klant betaalt.'"
-                                                  x-text="s.cost > 0 ? ('kost ons € ' + s.cost.toFixed(2)) : 'kost ons niets extra'"></span>
-                                        </template>
                                     </span>
                                 </button>
                             </template>
@@ -529,17 +519,13 @@
 
                         <label class="mt-2 flex items-center gap-2 text-xs text-gray-600">
                             <input type="checkbox" x-model="showAll">
-                            Toon ook volle dagdelen
+                            Toon alle uurblokken, ook de bezette
                         </label>
                         <p class="text-xs text-gray-500 mt-1">
-                            Groen = deze klant kost ons hooguit {{ (int) config('desnipperaar.planning.on_route_detour_km') }} km omweg op de rit van die dag. De omweg is de extra afstand als wij hem ertussen schuiven, niet de afstand tot de dichtstbijzijnde stop: iemand die pal op de route ligt kost bijna niets, ook al staat hij ver van de andere stops.
-                            De bedragen hier zijn <strong>onze kosten</strong> per dag, niet de prijs van de klant. Die staat vast op € {{ number_format((float) ($order->pickup_cost ?? 0), 2, ',', '.') }} en is bij het bestellen uit het adres berekend als max(0, km &minus; {{ (int) config('desnipperaar.planning.region_km') }}) &times; € {{ number_format((float) config('desnipperaar.planning.per_km'), 2, ',', '.') }}; welke dag je kiest verandert daar niets aan.
-                            Gebruik deze kolom dus om te zien welke dag voor ons het gunstigst is.
-                            @if ((int) config('desnipperaar.planning.rush_reserve_minutes') > 0)
-                                <br>Elke dag buiten de eerste {{ (int) config('desnipperaar.planning.rush_days') }} houdt {{ (int) config('desnipperaar.planning.rush_reserve_minutes') }} minuten vrij voor spoed, vandaar de reden &ldquo;gereserveerd voor spoed&rdquo;. Die ruimte valt vanzelf vrij zodra de dag dichtbij komt. Hier in de admin kun je er altijd overheen plannen: het datumveld hierboven kent deze grens niet.
-                            @endif
-                            @if ((float) config('desnipperaar.planning.rush_fee') > 0)
-                                Een dag binnen de eerste {{ (int) config('desnipperaar.planning.rush_days') }} is een spoeddag en kost de klant € {{ number_format((float) config('desnipperaar.planning.rush_fee'), 2, ',', '.') }} extra, maar alleen als hij die dag zelf via de planpagina kiest.
+                            Wij stellen er drie voor, hooguit één per dag, gesorteerd op omweg. Groen = hooguit {{ (int) config('desnipperaar.planning.on_route_detour_km') }} km omweg op de rit van die dag. De omweg is de extra afstand als wij deze stop ertussen schuiven, niet de afstand tot de dichtstbijzijnde stop: iemand die pal op de route ligt kost bijna niets, ook al staat hij ver van de andere stops.
+                            De ophaalprijs staat vast op € {{ number_format((float) ($order->pickup_cost ?? 0), 2, ',', '.') }} en is bij het bestellen uit het adres berekend als max(0, km &minus; {{ (int) config('desnipperaar.planning.region_km') }}) &times; € {{ number_format((float) config('desnipperaar.planning.per_km'), 2, ',', '.') }}. Welk uur je kiest verandert daar niets aan.
+                            @if ((int) config('desnipperaar.planning.rush_reserve_slots') > 0)
+                                <br>Elke dag buiten de eerste {{ (int) config('desnipperaar.planning.rush_days') }} houdt {{ (int) config('desnipperaar.planning.rush_reserve_slots') }} uurblok vrij voor spoed. Die ruimte valt vanzelf vrij zodra de dag dichtbij komt. Hier in de admin kun je er altijd overheen plannen: de velden hierboven kennen deze grens niet.
                             @endif
                         </p>
                     </div>
@@ -707,6 +693,16 @@
 
                 get open() {
                     return this.result ? this.result.slots.filter(s => s.available) : [];
+                },
+
+                // Standaard alleen wat wij voorstellen. Vier weken aan uurblokken
+                // zijn honderden regels; daar kies je niet uit, daar scroll je
+                // doorheen. Het vinkje zet de hele agenda alsnog open, inclusief
+                // de bezette uren, want soms wil je juist zien wat er in de weg
+                // staat.
+                get shown() {
+                    if (!this.result) return [];
+                    return this.showAll ? this.result.slots : (this.result.best || []);
                 },
 
                 async load() {

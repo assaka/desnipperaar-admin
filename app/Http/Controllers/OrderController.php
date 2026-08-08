@@ -692,14 +692,19 @@ class OrderController extends Controller
      * De momenten die wij deze klant kunnen aanbieden, als JSON voor het paneel
      * op de orderpagina.
      *
-     * Hier staat alles in, ook de dagdelen die vol zitten, met de reden erbij.
+     * Hier staat alles in, ook de uurblokken die bezet zijn, met de reden erbij.
      * Dat is het verschil met wat de klant straks te zien krijgt: die kiest uit
-     * wat kan, jij wilt kunnen zien waarom een dag niet kan.
+     * de drie voorstellen, jij wilt kunnen zien waarom een uur niet kan.
+     *
+     * De drie voorstellen gaan wel mee, en het zijn dezelfde drie. Zou het paneel
+     * zelf een top drie uitrekenen, dan kon het paneel iets anders tonen dan de
+     * klant te zien krijgt, en dan is het paneel geen voorbeeld meer.
      */
     public function slots(Request $request, Order $order, \App\Services\SlotFinder $finder)
     {
         $duration = $request->integer('duration');
         $result = $finder->forOrder($order, $duration > 0 ? min($duration, 480) : null);
+        $result['best'] = $finder->bestSlots($result['slots'], 3, $order->pickup_choice === 'spoed');
 
         return response()->json($result);
     }

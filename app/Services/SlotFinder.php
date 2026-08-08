@@ -110,7 +110,6 @@ class SlotFinder
      *     until: string,
      *     not_before: string,
      *     rush_until: string|null,
-     *     rush_fee: float,
      *     slots: array<int, array<string, mixed>>
      * }
      */
@@ -134,10 +133,16 @@ class SlotFinder
 
         $notBefore = $this->notBefore($order, $depotKm);
 
-        $rushFee   = (float) config('desnipperaar.planning.rush_fee');
-        $rushUntil = $rushFee > 0
-            ? now()->startOfDay()->addDays((int) config('desnipperaar.planning.rush_days'))
-            : null;
+        $rushUntil = now()->startOfDay()->addDays((int) config('desnipperaar.planning.rush_days'));
+
+        // Wie voor spoed betaald heeft krijgt ook alleen spoeddagen te zien. Hem
+        // een moment over drie weken aanbieden zou de toeslag tot een lege
+        // rekening maken. Daarom mag hij de reservering opmaken die wij voor hem
+        // hebben vrijgehouden, en niets daarbuiten.
+        $rushOrder = $order->pickup_choice === 'spoed';
+        if ($rushOrder && $rushUntil->lt($until)) {
+            $until = $rushUntil->copy();
+        }
 
         $stopsByDate = $this->plannedStops($from, $until, $order->id);
 
@@ -147,7 +152,6 @@ class SlotFinder
             'duration'   => $duration,
             'not_before' => $notBefore,
             'rush_until' => $rushUntil,
-            'rush_fee'   => $rushFee,
         ];
 
         $slots = [];
@@ -164,8 +168,7 @@ class SlotFinder
             'from'             => $from->toDateString(),
             'until'            => $until->toDateString(),
             'not_before'       => $notBefore->toDateString(),
-            'rush_until'       => $rushUntil?->toDateString(),
-            'rush_fee'         => $rushFee,
+            'rush_until'       => $rushUntil->toDateString(),
             'slots'            => $slots,
         ];
     }
@@ -195,7 +198,9 @@ class SlotFinder
 
         $inRegion = $depotKm <= (float) config('desnipperaar.planning.region_km');
 
-        if ($inRegion || $order->pickup_choice === 'sooner' || (float) ($order->pickup_cost ?? 0) > 0) {
+        if ($inRegion
+            || in_array($order->pickup_choice, ['sooner', 'spoed'], true)
+            || (float) ($order->pickup_cost ?? 0) > 0) {
             return $earliest;
         }
 
@@ -236,11 +241,8 @@ class SlotFinder
      * herhalen suggereert een keuze die er niet is. Wat er wel per dag bij staat:
      *
      *   - on_route: rijden wij die dag toch al bij de klant langs. Zonder bedrag,
-     *     want het scheelt hem niets. Het scheelt ons een rit, en dat is precies
-     *     wat wij hem vragen.
-     *   - rush_fee: het vaste bedrag voor een dag binnen het spoedvenster. Dat is
-     *     wél een prijsverschil, maar een dat vooraf vaststaat en waar iets
-     *     tegenover staat: voorrang op de planning.
+     *     want het scheelt hem niets. Het bepaalt wel welke momenten wij als
+     *     eerste voorstellen, zie bestSlots().
      *
      * @param  array<int, array<string, mixed>>  $slots
      * @return array<int, array<string, mixed>>
@@ -258,8 +260,6 @@ class SlotFinder
                     'weekday'   => $slot['weekday'],
                     'on_route'  => $slot['on_route'],
                     'detour_km' => $slot['detour_km'],
-                    'rush'      => $slot['rush'],
-                    'rush_fee'  => $slot['rush_fee'],
                     'windows'   => [],
                 ];
             }
@@ -274,31 +274,55 @@ class SlotFinder
     }
 
     /**
-     * De dagen waarop wij toch al bij deze klant in de buurt rijden, de beste
-     * eerst. Dit is de aanbeveling die de klantpagina bovenaan zet.
+     * De paar momenten die wij daadwerkelijk voorstellen.
      *
-     * Sorteren op omweg en niet op datum, want de vraag is niet wanneer het kan
-     * maar wanneer het slim is. Bij gelijke omweg wint de vroegste dag: kunnen
-     * wij het net zo goedkoop volgende week doen, dan liever volgende week dan
-     * over drie weken.
+     * Een lijst met alle vrije uren van vier weken is geen keuze maar huiswerk:
+     * dat zijn tientallen regels waar niemand doorheen leest. Wij kiezen er drie
+     * en zetten daar de rest achter weg. Past er niets bij, dan is bellen sneller
+     * dan scrollen.
      *
-     * Spoeddagen vallen af. Een dag aanraden die de klant vijftien euro kost is
-     * geen aanbeveling maar een verkooppraatje, en het spoedvenster is sowieso te
-     * kort om er een route omheen te bouwen.
+     * De volgorde komt van de omweg en niet van de datum, want de vraag is niet
+     * wanneer het kan maar wanneer het slim is. Bij een gelijke omweg wint de
+     * vroegste dag, en binnen een dag het vroegste uur.
      *
-     * @param  array<int, array<string, mixed>>  $days
+     * Hooguit één voorstel per dag. Drie uurblokken op dezelfde ochtend zijn geen
+     * drie keuzes, want wie die dag niet kan heeft aan alle drie niets.
+     *
+     * @param  array<int, array<string, mixed>>  $slots
      * @return array<int, array<string, mixed>>
      */
-    public function recommendedDays(array $days, int $limit = 4): array
+    public function bestSlots(array $slots, int $limit = 3, bool $soonestFirst = false): array
     {
-        $onRoute = array_values(array_filter(
-            $days,
-            fn (array $d) => $d['on_route'] && ! $d['rush'] && $d['detour_km'] !== null
-        ));
+        $open = $this->available($slots);
 
-        usort($onRoute, fn (array $a, array $b) => [$a['detour_km'], $a['date']] <=> [$b['detour_km'], $b['date']]);
+        // Voor een spoedklant telt alleen hoe snel het kan. Hij heeft juist
+        // betaald om niet te hoeven wachten op een dag die ons goed uitkomt.
+        if ($soonestFirst) {
+            usort($open, fn (array $a, array $b) => [$a['date'], $a['window']] <=> [$b['date'], $b['window']]);
+        } else {
+            usort($open, fn (array $a, array $b) => [
+                $a['detour_km'] ?? PHP_FLOAT_MAX, $a['date'], $a['window'],
+            ] <=> [
+                $b['detour_km'] ?? PHP_FLOAT_MAX, $b['date'], $b['window'],
+            ]);
+        }
 
-        return array_slice($onRoute, 0, $limit);
+        $best = [];
+        $seenDays = [];
+
+        foreach ($open as $slot) {
+            if (isset($seenDays[$slot['date']])) {
+                continue;
+            }
+            $seenDays[$slot['date']] = true;
+            $best[] = $slot;
+
+            if (count($best) >= $limit) {
+                break;
+            }
+        }
+
+        return $best;
     }
 
     /**
@@ -340,8 +364,8 @@ class SlotFinder
      */
     private function slotsForDay(Carbon $day, array $stopsByDate, array $ctx): array
     {
-        $windows = config('desnipperaar.planning.week')[$day->dayOfWeekIso] ?? [];
-        if (! $windows || ! WorkingDays::isWorkingDay($day)) {
+        $hours = $this->hoursForDay($day);
+        if (! $hours || ! WorkingDays::isWorkingDay($day)) {
             return [];
         }
 
@@ -376,27 +400,25 @@ class SlotFinder
 
         $needed = $duration + $travel;
 
-        // Een flexibele stop zit nergens vast en belast daarom de dag als
-        // geheel, niet een dagdeel. Zo blokkeert hij geen ochtend die hij
-        // misschien niet eens gebruikt, en telt hij wel mee als de dag vol raakt.
-        $dayCapacity = 0;
-        foreach ($windows as $w) {
-            $dayCapacity += (int) config("desnipperaar.planning.capacity_minutes.{$w}", 0);
-        }
-        $dayUsed = array_sum(array_column($stops, 'minutes'));
+        // Hoeveel aaneengesloten uren deze stop kost. Een gewone ophaling van een
+        // half uur plus rijtijd past in één blok; duurt hij langer, dan houden wij
+        // het volgende blok er ook voor vrij.
+        $slotMinutes = max(1, (int) config('desnipperaar.planning.slot_minutes'));
+        $needed = $duration + $travel;
+        $blocks = max(1, (int) ceil($needed / $slotMinutes));
 
-        // Ligt deze dag binnen het spoedvenster? Dan kost hij de klant het vaste
-        // spoedbedrag, en dan is de reservering voor spoed niet meer nodig: die
-        // was er juist voor deze dag, en nu is hij aangebroken.
+        // Welke uren zijn al bezet, zie occupancy(). Daar zit ook de vertaling van
+        // een oude boeking op dagdeel naar een concreet uur.
+        $taken = $this->occupancy($stops, $hours);
+
         $rush = $ctx['rush_until'] !== null && $day->lte($ctx['rush_until']);
-        $rushFee = $rush ? $ctx['rush_fee'] : 0.0;
 
-        // Buiten het spoedvenster houden wij een deel van de dag leeg. Anders
-        // loopt de agenda weken vooruit vol met ritten die geen haast hadden, en
-        // staan wij met lege handen zodra iemand morgen geholpen wil worden. De
+        // Buiten het spoedvenster houden wij een paar blokken leeg. Anders loopt
+        // de agenda weken vooruit vol met ritten die geen haast hadden, en staan
+        // wij met lege handen zodra iemand overmorgen geholpen wil worden. De
         // reservering schuift met de tijd mee en valt vanzelf vrij.
-        $reserved = $rush ? 0 : (int) config('desnipperaar.planning.rush_reserve_minutes');
-        $bookableDayCapacity = max(0, $dayCapacity - $reserved);
+        $reserve = $rush ? 0 : (int) config('desnipperaar.planning.rush_reserve_slots');
+        $freeCount = count(array_filter($hours, fn (string $h) => ! isset($taken[$h])));
 
         // De wachttijd van de gratis optie. Vóór deze datum bestaat de dag wel,
         // maar niet voor deze klant.
@@ -405,56 +427,155 @@ class SlotFinder
         [$cost, $costBasis] = $this->internalCost($depotKm, $detourKm);
 
         $slots = [];
-        foreach ($windows as $window) {
-            $capacity = (int) config("desnipperaar.planning.capacity_minutes.{$window}", 0);
-            $used = array_sum(array_column(
-                array_filter($stops, fn (array $s) => $s['window'] === $window),
-                'minutes'
-            ));
-
-            $windowFree = max(0, $capacity - $used);
-            $dayFree    = max(0, $bookableDayCapacity - $dayUsed);
+        foreach ($hours as $i => $hour) {
+            // Past de rit vanaf dit uur, inclusief de blokken die hij uitloopt?
+            $fits = true;
+            for ($b = 0; $b < $blocks; $b++) {
+                if (! isset($hours[$i + $b]) || isset($taken[$hours[$i + $b]])) {
+                    $fits = false;
+                    break;
+                }
+            }
 
             $reason = null;
             if ($tooEarly) {
                 $reason = 'wachttijd gratis ophalen';
-            } elseif ($windowFree < $needed) {
-                $reason = 'dagdeel vol';
-            } elseif ($dayFree < $needed) {
-                $reason = $reserved > 0 && ($dayCapacity - $dayUsed) >= $needed
-                    ? 'gereserveerd voor spoed'
-                    : 'dag vol';
+            } elseif (isset($taken[$hour])) {
+                $reason = 'bezet door '.$taken[$hour];
+            } elseif (! $fits) {
+                $reason = 'te weinig aaneengesloten tijd';
+            } elseif ($freeCount - $blocks < $reserve) {
+                $reason = 'laatste ruimte, gereserveerd voor spoed';
             }
 
             $slots[] = [
-                'date'             => $day->toDateString(),
-                'weekday'          => $day->locale('nl')->translatedFormat('l'),
-                'window'           => $window,
-                'window_label'     => self::WINDOW_LABELS[$window] ?? $window,
-                'available'        => $reason === null,
-                'reason'           => $reason,
-                'capacity_minutes' => $capacity,
-                'used_minutes'     => $used,
-                'free_minutes'     => $windowFree,
-                'needed_minutes'   => $needed,
-                'day_free_minutes' => $dayFree,
-                'reserved_minutes' => $reserved,
-                'stops'            => count(array_filter($stops, fn (array $s) => $s['window'] === $window)),
-                'day_stops'        => count($stops),
-                'on_route'         => $onRoute,
-                'detour_km'        => $detourKm === null ? null : round($detourKm, 1),
-                'via_label'        => $insertion['via'] ?? null,
-                'nearest_km'       => isset($insertion['nearest_km']) && $insertion['nearest_km'] !== null
+                'date'           => $day->toDateString(),
+                'weekday'        => $day->locale('nl')->translatedFormat('l'),
+                'window'         => $hour,
+                'window_label'   => str_replace('-', ' – ', $hour),
+                'available'      => $reason === null,
+                'reason'         => $reason,
+                'blocks'         => $blocks,
+                'needed_minutes' => $needed,
+                'free_slots'     => $freeCount,
+                'reserved_slots' => $reserve,
+                'day_stops'      => count($stops),
+                'taken_by'       => $taken[$hour] ?? null,
+                'on_route'       => $onRoute,
+                'detour_km'      => $detourKm === null ? null : round($detourKm, 1),
+                'via_label'      => $insertion['via'] ?? null,
+                'nearest_km'     => isset($insertion['nearest_km']) && $insertion['nearest_km'] !== null
                     ? round($insertion['nearest_km'], 1)
                     : null,
-                'rush'             => $rush,
-                'rush_fee'         => $rushFee,
-                'cost'             => $cost,
-                'cost_basis'       => $costBasis,
+                'rush'           => $rush,
+                'cost'           => $cost,
+                'cost_basis'     => $costBasis,
             ];
         }
 
         return $slots;
+    }
+
+    /**
+     * De uurblokken die wij op deze dag rijden, als "08:00-09:00".
+     *
+     * @return array<int, string>
+     */
+    private function hoursForDay(Carbon $day): array
+    {
+        $ranges = config('desnipperaar.planning.week')[$day->dayOfWeekIso] ?? [];
+        $step   = max(1, (int) config('desnipperaar.planning.slot_minutes'));
+        $hours  = [];
+
+        foreach ((array) $ranges as $range) {
+            if (! preg_match('/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/', (string) $range, $m)) {
+                continue;
+            }
+
+            $start = ((int) $m[1]) * 60 + (int) $m[2];
+            $end   = ((int) $m[3]) * 60 + (int) $m[4];
+
+            for ($t = $start; $t + $step <= $end; $t += $step) {
+                $hours[] = sprintf('%02d:%02d-%02d:%02d',
+                    intdiv($t, 60), $t % 60,
+                    intdiv($t + $step, 60), ($t + $step) % 60);
+            }
+        }
+
+        return $hours;
+    }
+
+    /**
+     * Welke uurblokken op een dag al bezet zijn, met het kenmerk van de rit die
+     * er staat.
+     *
+     * Twee soorten boekingen door elkaar. Een rit met een afgesproken tijd zegt
+     * zelf welke uren hij inneemt. Een oudere boeking staat op een dagdeel of op
+     * flexibel en zegt alleen dát hij die dag rijdt. Zo'n rit ergens neerzetten
+     * moeten wij toch doen, anders bieden wij een uur aan dat in werkelijkheid
+     * bezet is. Wij schuiven hem naar het eerste vrije uur binnen zijn dagdeel;
+     * flexibel mag de hele dag. Dat is een aanname, maar wel de voorzichtige
+     * kant: liever een uur te weinig aanbieden dan een klant dubbel inplannen.
+     *
+     * @param  array<int, array<string, mixed>>  $stops
+     * @param  array<int, string>  $hours
+     * @return array<string, string>
+     */
+    private function occupancy(array $stops, array $hours): array
+    {
+        $slotMinutes = max(1, (int) config('desnipperaar.planning.slot_minutes'));
+        $taken = [];
+
+        $minutesOf = function (string $hour): int {
+            [$h, $m] = explode(':', explode('-', $hour)[0]);
+
+            return ((int) $h) * 60 + (int) $m;
+        };
+
+        // Eerst de ritten met een echte tijd. Die hebben voorrang op de rest,
+        // want zij hebben een afspraak en de anderen alleen een voorkeur.
+        $loose = [];
+        foreach ($stops as $stop) {
+            $raw = $stop['window_raw'] ?? null;
+
+            if (! $raw || ! preg_match('/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/', $raw, $m)) {
+                $loose[] = $stop;
+                continue;
+            }
+
+            $from = ((int) $m[1]) * 60 + (int) $m[2];
+            $to   = max($from + $slotMinutes, ((int) $m[3]) * 60 + (int) $m[4]);
+
+            foreach ($hours as $hour) {
+                $at = $minutesOf($hour);
+                if ($at >= $from && $at < $to) {
+                    $taken[$hour] = $stop['label'];
+                }
+            }
+        }
+
+        // En dan wat er zonder tijd in staat, in het eerste vrije uur dat bij zijn
+        // dagdeel past.
+        $bounds = [
+            'ochtend'  => [0, 12 * 60],
+            'middag'   => [12 * 60, 17 * 60],
+            'avond'    => [17 * 60, 24 * 60],
+            'flexibel' => [0, 24 * 60],
+        ];
+
+        foreach ($loose as $stop) {
+            [$from, $to] = $bounds[$stop['window']] ?? $bounds['flexibel'];
+
+            foreach ($hours as $hour) {
+                $at = $minutesOf($hour);
+                if ($at >= $from && $at < $to && ! isset($taken[$hour])) {
+                    $taken[$hour] = $stop['label'];
+                    break;
+                }
+            }
+        }
+
+        return $taken;
     }
 
     /**

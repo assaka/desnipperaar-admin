@@ -76,15 +76,13 @@ class PickupPlanController extends Controller
         // dan hing de rekening af van hoe vol de agenda toevallig stond op het
         // moment van boeken, en dat is geen prijs die je kunt verdedigen.
         //
-        // De spoedtoeslag is het enige bedrag dat hier bijkomt, en die is van een
-        // andere orde: een vast bedrag voor een dag binnen het spoedvenster, op
-        // de pagina genoemd voordat de klant kiest. Wij lezen hem uit het
-        // narekende moment en niet uit het verzoek, zodat het bedrag niet uit de
-        // browser komt.
+        // Ook een spoedtoeslag komt hier niet vandaan. Wat spoed kost hoort bij
+        // het bestellen, waar de klant de keuze maakt en de prijs ziet voordat hij
+        // afrekent. Een toeslag die pas op de planpagina verschijnt is een prijs
+        // die na het afrekenen omhoog gaat.
         $order->update([
             'pickup_date'                   => $data['date'],
             'pickup_window'                 => $data['window'],
-            'pickup_rush_fee'               => $slot['rush_fee'] > 0 ? $slot['rush_fee'] : null,
             'pickup_planned_by_customer_at' => now(),
             // Een openstaand wijzigingsverzoek is achterhaald zodra de klant zelf
             // een moment kiest.
@@ -128,17 +126,13 @@ class PickupPlanController extends Controller
         // afgesloten order is de lijst niet alleen nutteloos, hij kost ook een
         // ronde geocoderen.
         $days = [];
-        $recommended = [];
+        $best = [];
         $depotKm = null;
-        $rushFee = 0.0;
-        $rushUntil = null;
         if ($status === 'ok') {
             $result = $finder->forOrder($order);
             $days = $finder->days($result['slots']);
-            $recommended = $finder->recommendedDays($days);
+            $best = $finder->bestSlots($result['slots'], 3, $order->pickup_choice === 'spoed');
             $depotKm = $result['depot_km'];
-            $rushFee = $result['rush_fee'];
-            $rushUntil = $result['rush_until'];
         }
 
         return [
@@ -155,15 +149,10 @@ class PickupPlanController extends Controller
             // voor alle dagen, puur ter herinnering op de pagina: de dagkeuze
             // verandert hem niet.
             'pickup_cost'       => (float) ($order->pickup_cost ?? 0),
-            // Het vaste bedrag voor een dag binnen het spoedvenster, en tot
-            // wanneer dat venster loopt. De pagina noemt het bij de dagen die
-            // eronder vallen; 0 betekent dat spoed uitstaat.
-            'rush_fee'          => $rushFee,
-            'rush_until'        => $rushUntil,
-            // De dagen waarop wij toch al bij deze klant langsrijden, beste
-            // eerst. Die zetten wij bovenaan als knop, zodat de klant zonder
-            // rekenwerk de dag kiest die ons een rit scheelt.
-            'recommended'       => $recommended,
+            // De drie momenten die wij voorstellen, met een concreet uur erbij.
+            // Past er niets, dan is bellen sneller dan door alle vrije uren van
+            // vier weken scrollen; de pagina zegt dat er ook bij.
+            'best'              => $best,
             'days'              => $days,
         ];
     }

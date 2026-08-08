@@ -67,11 +67,25 @@ class OrderController extends Controller
               : (str_contains($loc, 'mobiel')  ? 'mobiel' : 'ophaal');
 
         // Pickup cost. The static site sends the road distance (ophaal_km) and the
-        // chosen option (ophaal_keuze = 'sooner'|'free'); we recompute the amount
-        // server-side so the client can never dictate the price.
+        // chosen option (ophaal_keuze = 'spoed'|'sooner'|'free'); we recompute the
+        // amount server-side so the client can never dictate the price.
+        //
+        // Spoed betaalt de kilometers net zo goed als "sooner", plus een vaste
+        // toeslag. Het is een extra dienst bovenop het rijden en geen ander tarief
+        // voor datzelfde rijden, vergelijkbaar met expreslevering.
         $pickupKm     = isset($data['ophaal_km']) && $data['ophaal_km'] !== '' ? (int) $data['ophaal_km'] : null;
-        $pickupChoice = (($data['ophaal_keuze'] ?? '') === 'sooner') ? 'sooner' : 'free';
-        $pickupCost   = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice === 'sooner');
+        $choice       = $data['ophaal_keuze'] ?? '';
+        $pickupChoice = in_array($choice, ['spoed', 'sooner'], true) ? $choice : 'free';
+
+        // Spoed staat uit tot wij hem verkopen. Wie de keuze toch inzendt krijgt
+        // 'sooner': hij wilde snel geholpen worden en dat kan, alleen rekenen wij
+        // er geen toeslag voor die wij nergens hebben aangeboden.
+        if ($pickupChoice === 'spoed' && ! config('desnipperaar.pickup.rush_enabled')) {
+            $pickupChoice = 'sooner';
+        }
+
+        $pickupCost   = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free');
+        $pickupRushFee = \App\Support\Pricing::pickupRushFee($pickupChoice === 'spoed');
 
         // Volume line dropped — box_count / container_count / media_items carry the same info structurally.
         $notes = collect([
@@ -136,6 +150,7 @@ class OrderController extends Controller
             'pilot'              => $pilot,
             'first_box_free'     => $this->isKennismakingEligible($data),
             'pickup_cost'        => $pickupCost,
+            'pickup_rush_fee'    => $pickupRushFee > 0 ? $pickupRushFee : null,
             'pickup_km'          => $pickupKm,
             'pickup_choice'      => $pickupChoice,
         ]);

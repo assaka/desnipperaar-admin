@@ -50,6 +50,16 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
         </tr>
     @endif
 
+    @if (!empty($pickupRushFee) && $pickupRushFee > 0)
+        <tr>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Spoedtoeslag ophalen</td>
+            <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
+            <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
+                € {{ number_format($pickupRushFee, 2, ',', '.') }}
+            </td>
+        </tr>
+    @endif
+
     @php
         $discountKennismaking = collect($quote['lines'])->sum(fn ($l) => ($l['unit'] == 0 && isset($l['was_subtotal'])) ? $l['was_subtotal'] : 0);
         $discountStaffel = collect($mediaLines)->sum(fn ($l) => isset($l['was_subtotal']) ? $l['was_subtotal'] - $l['subtotal'] : 0);

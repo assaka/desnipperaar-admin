@@ -86,6 +86,7 @@ class OrderCreated extends Mailable
                     (bool) $this->order->pilot,
                     (bool) $this->order->first_box_free,
                     (float) $this->order->pickup_cost,
+                    (float) $this->order->pickup_rush_fee,
                 );
         }
 
@@ -135,6 +136,7 @@ class OrderCreated extends Mailable
                 ],
                 'mediaLines'      => $snap['media_lines'] ?? [],
                 'pickupCost'      => $snap['pickup_cost'] ?? 0,
+                'pickupRushFee'   => $snap['pickup_rush_fee'] ?? 0,
                 'subtotal'        => $snap['subtotal'],
                 'subtotalRegular' => $snap['subtotal_regular'],
                 'discount'        => $snap['discount'],

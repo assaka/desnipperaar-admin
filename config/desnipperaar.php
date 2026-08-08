@@ -38,6 +38,19 @@ return [
         'prefix' => env('DESNIPPERAAR_CERT_PREFIX', 'C'),
     ],
 
+    'pickup' => [
+        // Spoed ophalen: hoofdschakelaar. Staat uit, de dienst is gebouwd maar
+        // wordt nog niet verkocht. Zolang dit false is weigert de intake de keuze
+        // 'spoed' en valt hij terug op 'sooner', dus de klant betaalt wel zijn
+        // kilometers en geen toeslag.
+        //
+        // Aanzetten kost twee schakelaars, hier en showSpoedPickup in
+        // site-config.json op de publieke site. De publieke vlag verbergt de
+        // keuze, deze weigert hem; dat is met opzet twee sloten, want een vlag in
+        // de browser houdt niemand tegen die zelf een formulier post.
+        'rush_enabled' => filter_var(env('PICKUP_RUSH_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+    ],
+
     /**
      * Ophaalplanning. Bepaalt welke momenten wij kunnen aanbieden en wanneer een
      * rit "gratis" is omdat wij die dag toch al in de buurt zijn.
@@ -56,25 +69,26 @@ return [
             'lon' => (float) env('PLANNING_DEPOT_LON', 4.945),
         ],
 
-        // Welke dagdelen wij per ISO-weekdag (1 = maandag) rijden. Een dag die
-        // hier niet staat wordt nooit aangeboden. Dit is de plek waar je de
-        // planning krimpt of uitbreidt als de rijdagen veranderen.
+        // Wanneer wij per ISO-weekdag (1 = maandag) rijden, als kloktijden. Een
+        // dag die hier niet staat wordt nooit aangeboden. Dit is de plek waar je
+        // de planning krimpt of uitbreidt als de rijdagen veranderen.
+        //
+        // Uit deze reeksen komen de losse uurblokken die wij aanbieden, dus
+        // 08:00-09:00 tot en met 16:00-17:00. Wij bieden een uur aan en geen
+        // dagdeel, want dat is ook wat er uiteindelijk in pickup_window komt te
+        // staan zodra er een tijd is afgesproken. Twee reeksen op een dag zetten
+        // betekent een gat ertussen, bijvoorbeeld voor een vaste lunchpauze.
         'week' => [
-            1 => ['ochtend', 'middag'],
-            2 => ['ochtend', 'middag'],
-            3 => ['ochtend', 'middag'],
-            4 => ['ochtend', 'middag'],
-            5 => ['ochtend', 'middag'],
+            1 => ['08:00-17:00'],
+            2 => ['08:00-17:00'],
+            3 => ['08:00-17:00'],
+            4 => ['08:00-17:00'],
+            5 => ['08:00-17:00'],
         ],
 
-        // Netto rijtijd per dagdeel, in minuten. Bewust lager dan de klok: de
-        // vensters lopen 08:00-12:00 en 12:00-17:00, maar niemand rijdt vier
-        // uur aaneen zonder laden, lossen of koffie.
-        'capacity_minutes' => [
-            'ochtend' => (int) env('PLANNING_CAPACITY_OCHTEND', 180),
-            'middag'  => (int) env('PLANNING_CAPACITY_MIDDAG', 210),
-            'avond'   => (int) env('PLANNING_CAPACITY_AVOND', 120),
-        ],
+        // De lengte van een aangeboden blok, in minuten. Zestig geeft hele uren,
+        // wat leest als een afspraak en niet als een algoritme.
+        'slot_minutes' => (int) env('PLANNING_SLOT_MINUTES', 60),
 
         // Duur van een stop als de order er zelf geen heeft staan.
         'default_duration' => (int) env('PLANNING_DEFAULT_DURATION', 30),
@@ -124,23 +138,19 @@ return [
         // ophalen gratis zonder voorwaarde.
         'free_wait_days' => (int) env('PLANNING_FREE_WAIT_DAYS', 14),
 
-        // Spoed. Een ophaling binnen zoveel dagen na vandaag kost een vast
-        // bedrag extra, bovenop de ophaalprijs die uit het adres volgt.
-        //
-        // Dit is geen prijs die meebeweegt met hoe vol de agenda staat. Het
-        // bedrag is vast en vooraf bekend, en het staat tegenover iets dat de
-        // klant ook echt krijgt: voorrang. Wie op woensdag bestelt en vrijdag
-        // opgehaald wil worden, schuift voor een geplande rit langs. Zet
-        // rush_fee op 0 om de spoedoptie uit te zetten.
+        // Het spoedvenster: een ophaling binnen zoveel dagen na vandaag geldt als
+        // spoed. Hier staat geen bedrag meer bij. Wat spoed kost hoort thuis bij
+        // het bestellen, waar de klant de keuze maakt en de prijs ziet voordat
+        // hij afrekent, en niet in de planning die achteraf een toeslag zou
+        // opplakken.
         'rush_days' => (int) env('PLANNING_RUSH_DAYS', 2),
-        'rush_fee'  => (float) env('PLANNING_RUSH_FEE', 15.00),
 
-        // Hoeveel minuten wij per dag vrijhouden zolang die dag nog buiten het
+        // Hoeveel blokken wij per dag vrijhouden zolang die dag nog buiten het
         // spoedvenster ligt. Zonder deze reservering loopt de agenda weken
-        // vooruit vol met gewone ritten en kunnen wij een spoedklant niets meer
-        // aanbieden, precies op het moment dat hij bereid is ervoor te betalen.
-        // De reservering valt vanzelf vrij zodra de dag binnen rush_days komt.
-        'rush_reserve_minutes' => (int) env('PLANNING_RUSH_RESERVE_MINUTES', 60),
+        // vooruit vol met ritten die geen haast hadden, en kunnen wij een
+        // spoedklant niets meer aanbieden. De reservering valt vanzelf vrij zodra
+        // de dag binnen rush_days komt.
+        'rush_reserve_slots' => (int) env('PLANNING_RUSH_RESERVE_SLOTS', 1),
 
         // Rechte lijn maal deze factor benadert de wegafstand. Zelfde factor als
         // de fallback in api/distance.js.

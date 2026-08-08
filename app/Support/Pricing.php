@@ -24,10 +24,20 @@ class Pricing
     public const PICKUP_RATE_PER_KM    = 0.65;
 
     /**
+     * Spoedtoeslag: vast bedrag voor ophalen binnen een paar werkdagen.
+     *
+     * Bovenop de kilometerprijs en niet in plaats daarvan, zoals expreslevering
+     * bij een pakket: het rijden kost wat het kost, en spoed is de extra dienst
+     * daar bovenop. Een klant in Gorinchem betaalt dus 38,81 + 15,00 en niet
+     * alleen de 15,00.
+     */
+    public const PICKUP_RUSH_FEE       = 15.00;
+
+    /**
      * Authoritative pickup-cost calculation. The static site sends the km and the
      * chosen option, but the amount is always recomputed here so the client can
-     * never dictate the price. Free ("gratis vanaf 2 weken") is always 0; "sooner"
-     * costs EUR 0,65 per km beyond the first 20 km, one-way.
+     * never dictate the price. Free ("gratis vanaf 2 weken") is always 0; both
+     * "sooner" and "spoed" cost EUR 0,65 per km beyond the first 20 km, one-way.
      */
     public static function pickupCost(?int $km, bool $sooner): float
     {
@@ -35,6 +45,18 @@ class Pricing
             return 0.0;
         }
         return round(($km - self::PICKUP_FREE_KM) * self::PICKUP_RATE_PER_KM, 2);
+    }
+
+    /**
+     * De spoedtoeslag, los van de afstand.
+     *
+     * Er zit met opzet geen kilometergrens op. Spoed is tijd en geen afstand, dus
+     * ook een klant in regio Amsterdam kan hem kopen; die betaalt dan alleen de
+     * toeslag, want zijn rit is gratis.
+     */
+    public static function pickupRushFee(bool $rush): float
+    {
+        return $rush ? self::PICKUP_RUSH_FEE : 0.0;
     }
 
     // Base (tier-0) per-unit prices, excl. BTW. Match the public site (order.html)
@@ -323,7 +345,8 @@ class Pricing
         ?array $mediaItems,
         bool $pilot,
         bool $firstBoxFree,
-        float $pickupCost = 0.0
+        float $pickupCost = 0.0,
+        float $pickupRushFee = 0.0
     ): array {
         if ($pilot) {
             // Pilot replaces all organizer perks per the pricing rule.
@@ -346,8 +369,9 @@ class Pricing
         // (was_subtotal) where present. Pickup cost carries no discount.
         $mediaSubtotalRegular = array_sum(array_map(fn ($l) => $l['was_subtotal'] ?? $l['subtotal'], $mediaLines));
         $pickupCost      = round(max(0, $pickupCost), 2);
-        $subtotal        = round($quote['subtotal'] + $mediaSubtotal + $pickupCost, 2);
-        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotalRegular + $pickupCost, 2);
+        $pickupRushFee   = round(max(0, $pickupRushFee), 2);
+        $subtotal        = round($quote['subtotal'] + $mediaSubtotal + $pickupCost + $pickupRushFee, 2);
+        $subtotalRegular = round($quote['subtotal_regular'] + $mediaSubtotalRegular + $pickupCost + $pickupRushFee, 2);
         $discount        = round($subtotalRegular - $subtotal, 2);
         $vat             = round($subtotal * self::VAT_RATE, 2);
         $total           = round($subtotal + $vat, 2);
@@ -356,6 +380,7 @@ class Pricing
             'lines'            => $quote['lines'],
             'media_lines'      => $mediaLines,
             'pickup_cost'      => $pickupCost,
+            'pickup_rush_fee'  => $pickupRushFee,
             'subtotal'         => $subtotal,
             'subtotal_regular' => $subtotalRegular,
             'discount'         => $discount,
