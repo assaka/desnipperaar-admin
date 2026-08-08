@@ -66,7 +66,7 @@
 <p style="font-size:13px;color:#555;margin-top:20px;">
     Can't make this date?
     @if ($order->public_token)
-        <a href="{{ config('desnipperaar.public_url') }}/herplan/{{ $order->public_token }}" style="color:#0A0A0A;font-weight:700;">Reschedule your pickup online</a>
+        <a href="{{ config('desnipperaar.public_url') }}/en/plan/{{ $order->public_token }}" style="color:#0A0A0A;font-weight:700;">Reschedule your pickup online</a>
         or call <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — we'll move it.
     @else
         Call <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> — we'll move it.

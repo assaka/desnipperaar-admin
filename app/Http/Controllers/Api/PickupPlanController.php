@@ -87,6 +87,14 @@ class PickupPlanController extends Controller
         // het bestellen, waar de klant de keuze maakt en de prijs ziet voordat hij
         // afrekent. Een toeslag die pas op de planpagina verschijnt is een prijs
         // die na het afrekenen omhoog gaat.
+        //
+        // Stond er al een moment, dan onthouden wij het oude. Voor de interne
+        // melding is dat het verschil tussen een nieuwe boeking en een verzetting,
+        // en bij een verzetting komt er een dag vrij waar jij iets mee kunt.
+        $previous = $order->pickup_date
+            ? trim($order->pickup_date->format('d-m-Y').' '.($order->pickup_window ?? ''))
+            : null;
+
         $order->update([
             'pickup_date'                   => $data['date'],
             'pickup_window'                 => $data['window'],
@@ -110,7 +118,7 @@ class PickupPlanController extends Controller
         $adminEmail = config('desnipperaar.notifications.admin_email');
         if ($adminEmail) {
             try {
-                Mail::to($adminEmail)->send(new PickupPlannedByCustomer($fresh));
+                Mail::to($adminEmail)->send(new PickupPlannedByCustomer($fresh, $previous));
             } catch (\Throwable $e) {
                 report($e);
             }
@@ -168,9 +176,16 @@ class PickupPlanController extends Controller
      * Waarom de klant wel of niet kan plannen.
      *
      * Een abonnement heeft een eigen ritme met vaste ophaaldagen, daar valt niets
-     * los te kiezen. Staat er al een datum, dan is dit niet meer de plek: wijzigen
-     * gaat via de herplanpagina, zodat er één plek is waar een bestaande afspraak
-     * verandert.
+     * los te kiezen.
+     *
+     * Een bestaande afspraak is géén reden om te weigeren. Wijzigen ging vroeger
+     * via de herplanpagina, waar de klant een dag voorstelde en wij binnen een
+     * werkdag lieten weten of het kon. Hier weten wij het meteen, dus is dat een
+     * omweg geworden: wie zijn moment wil verzetten kiest gewoon een ander uit
+     * dezelfde lijst. Eén plek, en een antwoord in plaats van een verzoek.
+     *
+     * De dag zelf is te laat. Dan staat de bus geladen en is bellen sneller dan
+     * een formulier.
      */
     private function status(Order $order): string
     {
@@ -183,8 +198,8 @@ class PickupPlanController extends Controller
         if ($order->state === Order::STATE_AFGESLOTEN) {
             return 'closed';
         }
-        if ($order->pickup_date) {
-            return 'already_planned';
+        if ($order->pickup_date && $order->pickup_date->toDateString() <= now()->toDateString()) {
+            return 'too_late';
         }
 
         return 'ok';

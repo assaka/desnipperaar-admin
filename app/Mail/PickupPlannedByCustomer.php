@@ -14,17 +14,23 @@ use Illuminate\Queue\SerializesModels;
  * planpagina. Geen verzoek zoals bij een herplanning, want het moment kwam uit
  * onze eigen lijst met beschikbare momenten en staat dus al vast. Wat er nog
  * moet gebeuren is een chauffeur toewijzen.
+ *
+ * Verzette de klant een bestaande afspraak, dan gaat het oude moment mee. Zonder
+ * dat verschil ziet een wijziging eruit als een nieuwe boeking, terwijl er in het
+ * eerste geval een dag vrijkomt waar jij iets mee kunt.
  */
 class PickupPlannedByCustomer extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order) {}
+    public function __construct(public Order $order, public ?string $previous = null) {}
 
     public function envelope(): Envelope
     {
+        $wat = $this->previous ? 'verzette' : 'plande';
+
         return new Envelope(
-            subject: "Klant plande ophaling {$this->order->order_number} — {$this->order->customer_name}",
+            subject: "Klant {$wat} ophaling {$this->order->order_number} — {$this->order->customer_name}",
         );
     }
 
@@ -32,7 +38,7 @@ class PickupPlannedByCustomer extends Mailable
     {
         return new Content(
             view: 'emails.pickup-planned-by-customer',
-            with: ['order' => $this->order],
+            with: ['order' => $this->order, 'previous' => $this->previous],
         );
     }
 }

@@ -348,6 +348,14 @@ class Order extends Model
             return 'certificate';
         }
 
+        // Staat er een datum terwijl de order nog op nieuw staat, dan heeft de
+        // klant zelf een moment gekozen en moet er alleen nog een chauffeur bij.
+        // In de lijst is dat geen "nieuw" meer: er staat een rit te wachten, en
+        // dat is precies wat je in die kolom zoekt.
+        if ($this->state === self::STATE_NIEUW && $this->pickup_date) {
+            return 'gepland';
+        }
+
         return (string) $this->state;
     }
 
