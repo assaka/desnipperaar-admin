@@ -40,7 +40,7 @@
     .pay h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; margin-bottom: 1.2mm; letter-spacing: 0.04em; }
     .pay .row { margin-bottom: 0.4mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
-    .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
+    .pay .v { font-weight: 700; }
     .small { font-size: 8pt; color: #555; margin-top: 2mm; }
     .foot { position: fixed; bottom: -10mm; left: 0; right: 0; background: #F7F7F4; padding: 2.5mm 14mm; font-family: 'Courier New', monospace; font-size: 8pt; letter-spacing: 0.1em; color: #555; text-align: center; border-top: 1px solid #DDD; }
 </style>
