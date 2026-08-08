@@ -7,10 +7,10 @@
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
     @font-face { font-family: BebasNeue; src: url("file://{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
-    @page { size: A4; margin: 28mm 0 12mm 0; }
+    @page { size: A4; margin: 17mm 0 10mm 0; }
     body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.35; margin: 0; padding: 0; }
-    .brand { position: fixed; top: -28mm; left: 0; right: 0; background: #F5C518; padding: 6mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
-    .wrap { padding: 8mm 14mm; }
+    .brand { position: fixed; top: -17mm; left: 0; right: 0; background: #F5C518; padding: 4mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 20pt; letter-spacing: 0.06em; }
+    .wrap { padding: 4mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
     .top .leverancier { width: 32%; padding-right: 6mm; }
@@ -26,19 +26,19 @@
     .klant { margin-top: 0; }
     .klant h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
     .klant .name { font-weight: 700; font-size: 12pt; }
-    table.lines { width: 100%; border-collapse: collapse; margin: 4mm 0; }
-    table.lines th { background: #0A0A0A; color: #F5C518; padding: 1.6mm 3mm; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    table.lines { width: 100%; border-collapse: collapse; margin: 3mm 0 2mm; }
+    table.lines th { background: #0A0A0A; color: #F5C518; padding: 1.2mm 3mm; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
     table.lines th.r { text-align: right; }
-    table.lines td { padding: 1.4mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
+    table.lines td { padding: 0.9mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
     .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
     .totals td { padding: 0.3mm 2mm; font-size: 9.5pt; line-height: 1.2; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
-    .pay { margin-top: 8mm; padding: 4mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
+    .pay { margin-top: 5mm; padding: 3mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
     .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
-    .pay .row { margin-bottom: 1.5mm; font-size: 9.5pt; }
+    .pay .row { margin-bottom: 0.8mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
     .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
     .small { font-size: 8pt; color: #555; margin-top: 4mm; }
@@ -60,7 +60,12 @@
     $tr = fn ($label) => $labelMap[$label] ?? $label;
 @endphp
 
-<div class="brand">DESNIPPERAAR</div>
+<div class="brand">
+    <table style="width:100%;"><tr>
+        <td>DESNIPPERAAR</td>
+        <td style="text-align:right;">{{ $invoice->isCreditNote() ? "CREDIT NOTE" : "INVOICE" }}</td>
+    </tr></table>
+</div>
 
 <div class="wrap">
 
