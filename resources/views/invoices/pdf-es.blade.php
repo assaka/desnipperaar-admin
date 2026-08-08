@@ -7,9 +7,9 @@
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
     @font-face { font-family: BebasNeue; src: url("file://{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
-    @page { size: A4; margin: 24mm 0 12mm 0; }
+    @page { size: A4; margin: 28mm 0 12mm 0; }
     body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.35; margin: 0; padding: 0; }
-    .brand { position: fixed; top: -24mm; left: 0; right: 0; background: #F5C518; padding: 6mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
+    .brand { position: fixed; top: -28mm; left: 0; right: 0; background: #F5C518; padding: 6mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
     .wrap { padding: 8mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
@@ -20,9 +20,9 @@
     h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 26pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
     .num { font-family: 'Courier New', monospace; font-size: 12pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; white-space: nowrap; }
     .dates { margin-bottom: 6mm; font-size: 9.5pt; }
-    .dates td { padding: 1mm 8mm 1mm 0; }
-    .dates .k { color: #555; }
-    .klant { margin-top: 6mm; padding: 4mm; background: #F7F7F4; border-left: 3px solid #F5C518; }
+    .dates td { padding: 0.8mm 0; }
+    .dates .k { color: #555; padding-right: 5mm; white-space: nowrap; }
+    .klant { margin-top: 5mm; padding-top: 4mm; border-top: 1px solid #DDD; }
     .klant h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
     .klant .name { font-weight: 700; font-size: 12pt; }
     table.lines { width: 100%; border-collapse: collapse; margin: 4mm 0; }
