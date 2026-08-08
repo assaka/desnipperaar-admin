@@ -31,12 +31,12 @@
     table.lines th.r { text-align: right; }
     table.lines td { padding: 0.9mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
-    .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
+    .totals { width: 100%; margin: 0; }
     .totals td { padding: 0.3mm 2mm; font-size: 9.5pt; line-height: 1.2; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
-    .pay { margin-top: 5mm; padding: 3mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
+    .pay { margin-top: 0; padding: 3mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
     .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
     .pay .row { margin-bottom: 0.8mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
@@ -143,31 +143,41 @@
         </tbody>
     </table>
 
-    <table class="totals">
-        <tr><td class="k">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular - $discountStaffel, 2, ',', '.') }}</td></tr>
-        @if ($discountKennismaking > 0)
-            <tr><td class="k">Korting kennismaking</td><td class="v">- € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
-        @endif
-        @if ($discountPilot > 0)
-            <tr><td class="k">Korting Amsterdam-pilot</td><td class="v">- € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
-        @endif
-        @if ($couponAmount > 0)
-            <tr><td class="k">Kortingscode {{ $couponLine['code'] ?? '' }}@if (!empty($couponLine['pct'])) <span style="color:#777;font-size:9pt;white-space:nowrap;">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>@endif</td><td class="v">- € {{ number_format($couponAmount, 2, ',', '.') }}</td></tr>
-        @endif
-        <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
-        <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
+    <table style="width:100%;margin-top:3mm;">
+        <tr>
+            <td style="width:42%;vertical-align:top;padding-right:6mm;">
+                <div class="pay">
+                    <h3>Betaling</h3>
+                    <div class="row"><span class="k">Bedrag</span><span class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</span></div>
+                    @if ($co['iban']) <div class="row"><span class="k">IBAN</span><span class="v">{{ $co['iban'] }}</span></div> @endif
+                    @if ($co['bic']) <div class="row"><span class="k">BIC</span><span class="v">{{ $co['bic'] }}</span></div> @endif
+                    <div class="row"><span class="k">Kenmerk</span><span class="v">{{ $invoice->invoice_number }}</span></div>
+                </div>
+            </td>
+            <td style="width:58%;vertical-align:top;">
+                <table class="totals">
+                    <tr><td class="k">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Subtotaal excl. korting' : 'Subtotaal' }} excl. btw</td><td class="v">€ {{ number_format($subtotalRegular - $discountStaffel, 2, ',', '.') }}</td></tr>
+                    @if ($discountKennismaking > 0)
+                        <tr><td class="k">Korting kennismaking</td><td class="v">- € {{ number_format($discountKennismaking, 2, ',', '.') }}</td></tr>
+                    @endif
+                    @if ($discountPilot > 0)
+                        <tr><td class="k">Korting Amsterdam-pilot</td><td class="v">- € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
+                    @endif
+                    @if ($couponAmount > 0)
+                        <tr><td class="k">Kortingscode {{ $couponLine['code'] ?? '' }}@if (!empty($couponLine['pct'])) <span style="color:#777;font-size:9pt;white-space:nowrap;">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>@endif</td><td class="v">- € {{ number_format($couponAmount, 2, ',', '.') }}</td></tr>
+                    @endif
+                    <tr><td class="k">BTW {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
+                    <tr class="grand"><td>Totaal incl. btw</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
+                </table>
+                @if ($discountStaffel > 0)
+                    <p style="font-size:9px;color:#777;margin:4px 0 0;">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
+                @endif
+            </td>
+        </tr>
     </table>
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
     @endif
-
-    <div class="pay">
-        <h3>Betaling</h3>
-        <div class="row"><span class="k">Bedrag</span><span class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</span></div>
-        @if ($co['iban']) <div class="row"><span class="k">IBAN</span><span class="v">{{ $co['iban'] }}</span></div> @endif
-        @if ($co['bic']) <div class="row"><span class="k">BIC</span><span class="v">{{ $co['bic'] }}</span></div> @endif
-        <div class="row"><span class="k">Kenmerk</span><span class="v">{{ $invoice->invoice_number }}</span></div>
-    </div>
     <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }}.</p>
 
 </div>
