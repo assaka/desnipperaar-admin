@@ -429,12 +429,22 @@
         <form x-show="editing" x-cloak method="POST" action="{{ route('orders.confirm-pickup', $order) }}">
             @csrf
             <div class="grid grid-cols-3 gap-3">
+                @php
+                    // Rijdt er maar één chauffeur, dan valt er niets te kiezen en
+                    // staat hij vast al goed. Zodra er een tweede bij komt is de
+                    // keuze weer echt en begint het lijstje weer op "— kies —",
+                    // zodat niemand per ongeluk de verkeerde laat staan.
+                    $enigeChauffeur = $drivers->count() === 1 ? $drivers->first() : null;
+                    $gekozenChauffeur = $firstBon?->driver_id ?? $enigeChauffeur?->id;
+                @endphp
                 <div>
                     <label class="block text-sm font-bold">Chauffeur *</label>
                     <select name="driver_id" required class="w-full border p-2">
-                        <option value="">— kies —</option>
+                        @unless ($enigeChauffeur)
+                            <option value="">— kies —</option>
+                        @endunless
                         @foreach ($drivers as $driver)
-                            <option value="{{ $driver->id }}" @selected($firstBon?->driver_id === $driver->id)>
+                            <option value="{{ $driver->id }}" @selected($gekozenChauffeur === $driver->id)>
                                 {{ $driver->name }} (****{{ $driver->license_last4 }})
                                 @if (!$driver->signature_path) — geen sig @endif
                             </option>
