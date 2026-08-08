@@ -7,37 +7,37 @@
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
     @font-face { font-family: BebasNeue; src: url("file://{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
-    @page { size: A4; margin: 0; }
-    body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; }
-    .brand { background: #F5C518; padding: 8mm 14mm; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 28pt; letter-spacing: 0.06em; }
+    @page { size: A4; margin: 16mm 0 12mm 0; }
+    body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.5; margin: 0; padding: 0; }
+    .brand { background: #F5C518; padding: 8mm 14mm; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
     .wrap { padding: 8mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
     .top .leverancier { width: 55%; }
     .top .doc-info { width: 45%; text-align: right; }
-    .top h3 { font-family: BebasNeue, Impact, sans-serif; font-size: 11pt; font-weight: 400; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.08em; }
-    .top .name { font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 14pt; margin-bottom: 2mm; letter-spacing: 0.04em; }
-    h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 28pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
-    .num { font-family: 'Courier New', monospace; font-size: 14pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; }
-    .dates { margin-bottom: 6mm; font-size: 10pt; }
+    .top h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.08em; color: #555; }
+    .top .name { font-weight: 700; font-size: 12pt; margin-bottom: 2mm; }
+    h1 { font-family: BebasNeue, Impact, sans-serif; font-size: 26pt; font-weight: 400; margin: 6mm 0 2mm; letter-spacing: 0.04em; }
+    .num { font-family: 'Courier New', monospace; font-size: 12pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; margin-bottom: 6mm; white-space: nowrap; }
+    .dates { margin-bottom: 6mm; font-size: 9.5pt; }
     .dates td { padding: 1mm 8mm 1mm 0; }
     .dates .k { color: #555; }
-    .klant { margin-bottom: 8mm; padding: 4mm; background: #F7F7F4; border-left: 3px solid #F5C518; }
-    .klant h3 { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
-    .klant .name { font-weight: 700; font-size: 11pt; }
+    .klant { margin-top: 6mm; padding: 4mm; background: #F7F7F4; border-left: 3px solid #F5C518; }
+    .klant h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
+    .klant .name { font-weight: 700; font-size: 12pt; }
     table.lines { width: 100%; border-collapse: collapse; margin: 4mm 0; }
-    table.lines th { background: #0A0A0A; color: #F5C518; padding: 2mm 3mm; text-align: left; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    table.lines th { background: #0A0A0A; color: #F5C518; padding: 2mm 3mm; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
     table.lines th.r { text-align: right; }
-    table.lines td { padding: 2mm 3mm; border-bottom: 1px solid #DDD; font-size: 10pt; }
+    table.lines td { padding: 2mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
     .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
-    .totals td { padding: 1mm 2mm; font-size: 10pt; }
+    .totals td { padding: 1.5mm 2mm; font-size: 9.5pt; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
     .pay { margin-top: 8mm; padding: 4mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
-    .pay h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
-    .pay .row { margin-bottom: 1mm; font-size: 9.5pt; }
+    .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
+    .pay .row { margin-bottom: 1.5mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
     .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
     .small { font-size: 8pt; color: #555; margin-top: 4mm; }
@@ -74,6 +74,13 @@
                 @if ($co['kvk']) <div style="margin-top:2mm;">RC&nbsp;: <strong>{{ $co['kvk'] }}</strong></div> @endif
                 @if ($co['btw']) <div>TVA&nbsp;: <strong>{{ $co['btw'] }}</strong></div> @endif
                 <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>
+        <div class="klant">
+            <h3>Destinataire</h3>
+            @if ($invoice->customer_company) <div class="name">{{ $invoice->customer_company }}</div> @endif
+            <div>{{ $invoice->customer_name }}</div>
+            @if ($invoice->customer_address) <div>{{ $invoice->customer_address }}</div> @endif
+            <div>{{ $invoice->customer_postcode }} {{ $invoice->customer_city }}</div>
+        </div>
             </td>
             <td class="doc-info">
                 <h1>{{ $invoice->isCreditNote() ? "AVOIR" : "FACTURE" }}</h1>
@@ -87,14 +94,6 @@
             </td>
         </tr>
     </table>
-
-    <div class="klant">
-        <h3>Destinataire</h3>
-        @if ($invoice->customer_company) <div class="name">{{ $invoice->customer_company }}</div> @endif
-        <div>{{ $invoice->customer_name }}</div>
-        @if ($invoice->customer_address) <div>{{ $invoice->customer_address }}</div> @endif
-        <div>{{ $invoice->customer_postcode }} {{ $invoice->customer_city }}</div>
-    </div>
 
     <table class="lines">
         <thead>
