@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\InvoiceSent;
+use App\Mail\PaymentReceived;
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -107,12 +108,32 @@ class InvoiceController extends Controller
         );
     }
 
-    public function markPaid(Invoice $invoice)
+    public function markPaid(Request $request, Invoice $invoice)
     {
+        // Was hij al betaald, dan is dit een dubbele klik of een tweede tabblad.
+        // Niet opnieuw stempelen en niet opnieuw mailen: de klant heeft het gehoord.
+        if ($invoice->status === Invoice::STATUS_PAID) {
+            return back()->with('status', "Factuur {$invoice->invoice_number} stond al als betaald.");
+        }
+
         $invoice->update([
             'status'  => Invoice::STATUS_PAID,
             'paid_at' => now(),
         ]);
-        return back()->with('status', "Factuur {$invoice->invoice_number} gemarkeerd als betaald.");
+
+        // De betaling afvinken is voor ons administratie, voor de klant het einde
+        // van de order. Vandaar een bevestiging dat het geld binnen is.
+        try {
+            Mail::to($invoice->customer_email)
+                ->send(new PaymentReceived($invoice->fresh(), $request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('status', "Factuur {$invoice->invoice_number} gemarkeerd als betaald.")
+                ->withErrors(['mail' => 'De betaalbevestiging kon niet worden verstuurd: '.$e->getMessage()]);
+        }
+
+        return back()->with('status', "Factuur {$invoice->invoice_number} gemarkeerd als betaald. "
+            ."Betaalbevestiging gestuurd naar {$invoice->customer_email}.");
     }
 }
