@@ -171,7 +171,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
     @endif
-    <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }} of {{ $co['phone'] }}.</p>
+    <p class="small">Gelieve onder vermelding van het kenmerk over te maken. Bij vragen: {{ $co['email'] }} of {{ $co['phone'] }}.</p>
 
 </div>
 

@@ -183,7 +183,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Descuento por volumen aplicado y ya incluido en estos precios.</p>
     @endif
-    <p class="small">Por favor, pague indicando el número de factura. ¿Preguntas? {{ $co['email'] }} o {{ $co['phone'] }}.</p>
+    <p class="small">Por favor, pague indicando la referencia. ¿Preguntas? {{ $co['email'] }} o {{ $co['phone'] }}.</p>
 
 </div>
 

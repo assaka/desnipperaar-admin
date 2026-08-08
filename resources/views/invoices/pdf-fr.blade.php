@@ -183,7 +183,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Remise volume appliquée et déjà incluse dans ces prix.</p>
     @endif
-    <p class="small">Merci de régler en mentionnant le numéro de facture. Des questions&nbsp;? {{ $co['email'] }} ou {{ $co['phone'] }}.</p>
+    <p class="small">Merci de régler en mentionnant la référence. Des questions&nbsp;? {{ $co['email'] }} ou {{ $co['phone'] }}.</p>
 
 </div>
 

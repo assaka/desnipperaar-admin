@@ -183,7 +183,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Volume discount applied and already included in these prices.</p>
     @endif
-    <p class="small">Please pay quoting the invoice number. Questions? {{ $co['email'] }} or {{ $co['phone'] }}.</p>
+    <p class="small">Please pay quoting the reference. Questions? {{ $co['email'] }} or {{ $co['phone'] }}.</p>
 
 </div>
 
