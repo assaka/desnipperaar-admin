@@ -54,15 +54,11 @@ Route::post('/group-deals/{slug}/join', [\App\Http\Controllers\Api\GroupDealCont
 Route::post('/deploy', [\App\Http\Controllers\DeployController::class, 'handle'])
     ->middleware('throttle:10,1');
 
-// Customer self-service reschedule (token-gated) — UI lives on desnipperaar.nl.
-Route::get('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleController::class, 'show'])
-    ->middleware('throttle:120,1');
-Route::post('/reschedule/{token}', [\App\Http\Controllers\Api\RescheduleController::class, 'store'])
-    ->middleware('throttle:20,1');
-
 // Customer self-service pickup planning (token-gated) — UI lives on
-// desnipperaar.nl at /plan/{token}. Anders dan herplannen kiest de klant hier
-// uit momenten die wij zelf hebben doorgerekend, dus de keuze staat meteen vast.
+// desnipperaar.nl at /plan/{token}. De klant kiest uit momenten die wij zelf
+// hebben doorgerekend, dus de keuze staat meteen vast. Ook verzetten gaat hier:
+// er was een aparte herplanroute waar hij een dag voorstelde en op antwoord
+// wachtte, en die is vervallen zodra wij het antwoord meteen konden geven.
 // Lager getarifeerd dan de andere leesroutes: deze rekent een maand vooruit door
 // en zoekt onderweg ontbrekende coördinaten op, dus hij is duurder dan hij eruitziet.
 Route::get('/plan/{token}', [\App\Http\Controllers\Api\PickupPlanController::class, 'show'])

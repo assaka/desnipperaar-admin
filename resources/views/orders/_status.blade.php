@@ -13,12 +13,13 @@
 @php
     [$statusLabel, $statusKleur, $statusTitel] = match ($order->stage()) {
         'nieuw'       => ['Nieuw',       'bg-yellow-400 text-black', null],
-        // Er staat een moment, maar er hangt nog geen chauffeur aan. Zelfde woord
-        // als bevestigd, want er staat hetzelfde te gebeuren; lichter blauw zodat
-        // je in de lijst ziet dat er nog iets moet.
-        'gepland'     => ['Ophalen',     'bg-blue-400 text-black', 'Moment staat vast, chauffeur nog niet toegewezen'],
-        // Bevestigd zegt dat wij iets hebben bevestigd; ophalen zegt wat er staat
-        // te gebeuren, en dat is waar je in de lijst naar zoekt.
+        // Twee wegen naar hetzelfde punt: de klant koos zelf een moment (gepland)
+        // of wij bevestigden er een (bevestigd). In de lijst is dat hetzelfde
+        // bericht, namelijk dat er een rit staat, dus hetzelfde label en dezelfde
+        // kleur. Bij gepland moet er nog een chauffeur bij; dat verschil in een
+        // tint blauw stoppen leest niemand, dus het staat in de tooltip en op de
+        // orderpagina zelf.
+        'gepland'     => ['Ophalen',     'bg-blue-600 text-white', 'Moment staat vast, chauffeur nog niet toegewezen'],
         'bevestigd'   => ['Ophalen',     'bg-blue-600 text-white', null],
         'opgehaald'   => ['Opgehaald',   'bg-indigo-600 text-white', null],
         'vernietigd'  => ['Vernietigd',  'bg-purple-600 text-white', null],

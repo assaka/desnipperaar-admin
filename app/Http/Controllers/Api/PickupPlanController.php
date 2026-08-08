@@ -99,12 +99,6 @@ class PickupPlanController extends Controller
             'pickup_date'                   => $data['date'],
             'pickup_window'                 => $data['window'],
             'pickup_planned_by_customer_at' => now(),
-            // Een openstaand wijzigingsverzoek is achterhaald zodra de klant zelf
-            // een moment kiest.
-            'reschedule_requested_at'     => null,
-            'reschedule_requested_date'   => null,
-            'reschedule_requested_window' => null,
-            'reschedule_notes'            => null,
         ]);
 
         $fresh = $order->fresh()->load('customer');

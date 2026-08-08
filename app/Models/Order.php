@@ -122,10 +122,6 @@ class Order extends Model
         'sub_billing_provider',
         'sub_billing_ref',
         'public_token',
-        'reschedule_requested_at',
-        'reschedule_requested_date',
-        'reschedule_requested_window',
-        'reschedule_notes',
         'group_deal_id',
         'subscription_order_id',
         'subscription_scheduled_for',
@@ -177,8 +173,6 @@ class Order extends Model
         'box_count' => 'integer',
         'container_count' => 'integer',
         'duration_minutes' => 'integer',
-        'reschedule_requested_at'   => 'datetime',
-        'reschedule_requested_date' => 'date',
         'is_organizer' => 'boolean',
         'quote_locked' => 'boolean',
         'price_snapshot' => 'array',
@@ -190,9 +184,8 @@ class Order extends Model
             if (empty($order->reply_ref)) {
                 $order->reply_ref = self::generateReplyRef();
             }
-            // Het token bestond pas zodra de admin een ophaling bevestigde, want
-            // tot dan was de herplanpagina de enige die het gebruikte. De
-            // planpagina zit eerder in de reis: de klant kiest zijn moment
+            // Het token bestond pas zodra de admin een ophaling bevestigde.
+            // De planpagina zit eerder in de reis: de klant kiest zijn moment
             // meteen na het bestellen. Daarom krijgt elke order het token bij
             // het aanmaken, zodat elke mail erover kan linken.
             if (empty($order->public_token)) {

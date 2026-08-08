@@ -110,8 +110,7 @@ class PlanningController extends Controller
         $orders = Order::where('state', Order::STATE_BEVESTIGD)
             ->where(function ($q) use ($start, $end) {
                 if ($start && $end) {
-                    $q->whereBetween('pickup_date', [$start, $end])
-                      ->orWhereBetween('reschedule_requested_date', [$start, $end]);
+                    $q->whereBetween('pickup_date', [$start, $end]);
                 }
             })
             ->with('customer', 'bons.driver')
@@ -122,9 +121,6 @@ class PlanningController extends Controller
             $driverId = $order->bons->first()?->driver_id;
             if ($order->pickup_date) {
                 $events[] = $this->buildEvent($order, 'confirmed', $driverId);
-            }
-            if ($order->reschedule_requested_at && $order->reschedule_requested_date) {
-                $events[] = $this->buildEvent($order, 'proposal', $driverId);
             }
         }
 
@@ -178,12 +174,8 @@ class PlanningController extends Controller
                 || $order->pickup_window !== $data['window'];
 
         $order->update([
-            'pickup_date'                 => $data['pickup_date'],
-            'pickup_window'               => $data['window'],
-            'reschedule_requested_at'     => null,
-            'reschedule_requested_date'   => null,
-            'reschedule_requested_window' => null,
-            'reschedule_notes'            => null,
+            'pickup_date'   => $data['pickup_date'],
+            'pickup_window' => $data['window'],
         ]);
 
         $mailed = false;
@@ -276,28 +268,18 @@ class PlanningController extends Controller
             'label'       => 'Geen chauffeur',
             'lightColors' => ['main' => '#64748B', 'container' => '#E2E8F0', 'onContainer' => '#0A0A0A'],
         ];
-        $calendars['proposal'] = [
-            'colorName'   => 'proposal',
-            'label'       => 'Klantvoorstel',
-            'lightColors' => ['main' => '#E67E22', 'container' => '#FED7AA', 'onContainer' => '#8B4513'],
-        ];
         return $calendars;
     }
 
     private function buildEvent(Order $order, string $type, ?int $driverId): array
     {
-        $isProposal = $type === 'proposal';
-        $date       = $isProposal ? $order->reschedule_requested_date : $order->pickup_date;
-        $window     = $isProposal ? $order->reschedule_requested_window : ($order->pickup_window ?? 'flexibel');
-
-        $title = ($isProposal ? '⚠ VOORSTEL: ' : '')
-               . $order->order_number . ' · ' . $order->customer_name;
+        $window = $order->pickup_window ?? 'flexibel';
 
         return $this->formatEvent(
-            id: ($isProposal ? 'proposal-' : 'order-') . $order->id,
-            title: $title,
-            calendarId: $isProposal ? 'proposal' : ($driverId ? 'driver-' . $driverId : 'unassigned'),
-            date: $date,
+            id: 'order-' . $order->id,
+            title: $order->order_number . ' · ' . $order->customer_name,
+            calendarId: $driverId ? 'driver-' . $driverId : 'unassigned',
+            date: $order->pickup_date,
             window: $window,
             duration: (int) ($order->duration_minutes ?? 30),
             ext: [

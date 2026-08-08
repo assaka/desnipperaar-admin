@@ -376,16 +376,6 @@ class OrderController extends Controller
         return back()->with('status', $message);
     }
 
-    // Open customer reschedule requests (cleared when a new pickup is confirmed).
-    public function reschedules()
-    {
-        $orders = Order::with('customer')
-            ->whereNotNull('reschedule_requested_at')
-            ->orderByDesc('reschedule_requested_at')
-            ->paginate(25);
-        return view('orders.reschedules', compact('orders'));
-    }
-
     public function create(Request $request)
     {
         $preselected = null;
@@ -656,11 +646,6 @@ class OrderController extends Controller
             'duration_minutes' => $data['duration_minutes'] ?? $order->duration_minutes,
             'state'            => Order::STATE_BEVESTIGD,
             'public_token'     => $order->public_token ?: Str::random(40),
-            // Any pending reschedule request is resolved by a new confirmation.
-            'reschedule_requested_at'     => null,
-            'reschedule_requested_date'   => null,
-            'reschedule_requested_window' => null,
-            'reschedule_notes'            => null,
         ]);
 
         // Ritten onder een abonnement krijgen geen bevestigingsmail. De klant

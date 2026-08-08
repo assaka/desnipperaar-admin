@@ -2,7 +2,7 @@
 
 return [
 
-    // Public customer-facing site. The reschedule (herplan) page lives there.
+    // Public customer-facing site. The pickup planning page lives there.
     'public_url' => env('PUBLIC_SITE_URL', 'https://desnipperaar.nl'),
 
     'order' => [

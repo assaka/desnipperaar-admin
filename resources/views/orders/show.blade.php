@@ -362,28 +362,10 @@
 
     @php $firstBon = $order->bons->first(); @endphp
 
-    @if ($order->reschedule_requested_at)
-        <section class="mb-4 bg-orange-50 border-l-4 border-orange-500 p-4">
-            <div class="flex justify-between items-baseline mb-2">
-                <h2 class="font-black text-orange-900">⚠ Klant vraagt andere ophaaldatum</h2>
-                <span class="text-xs text-gray-600">{{ $order->reschedule_requested_at->format('d-m-Y H:i') }}</span>
-            </div>
-            <div class="text-sm">
-                <div><strong>Voorgesteld:</strong>
-                    {{ $order->reschedule_requested_date ? ucfirst($order->reschedule_requested_date->locale('nl')->translatedFormat('l d F Y')) : '' }}
-                    ({{ $order->reschedule_requested_window }})</div>
-                @if ($order->reschedule_notes)
-                    <div class="mt-1 italic">"{{ $order->reschedule_notes }}"</div>
-                @endif
-                <p class="text-xs text-gray-700 mt-2">Gebruik <strong>Wijzig planning</strong> hieronder om de datum aan te passen en de klant te mailen; daarmee wordt dit verzoek afgesloten.</p>
-            </div>
-        </section>
-    @endif
-
     @include('orders._coupon')
 
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
-             x-data="slotPanel({{ $order->state === 'nieuw' || $order->reschedule_requested_at ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
+             x-data="slotPanel({{ $order->state === 'nieuw' ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
             @if ($order->state === 'bevestigd')
@@ -460,8 +442,8 @@
                     </select>
                 </div>
                 @php
-                    $prefillDate   = $order->reschedule_requested_date?->format('Y-m-d') ?? $order->pickup_date?->format('Y-m-d');
-                    $prefillWindow = $order->reschedule_requested_window ?? $order->pickup_window;
+                    $prefillDate   = $order->pickup_date?->format('Y-m-d');
+                    $prefillWindow = $order->pickup_window;
                 @endphp
                 <div>
                     <label class="block text-sm font-bold">Ophaaldatum *</label>
