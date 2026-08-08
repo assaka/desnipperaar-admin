@@ -7,9 +7,9 @@
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Regular.ttf') }}") format("truetype"); font-weight: 400; }
     @font-face { font-family: Inter; src: url("file://{{ storage_path('fonts/Inter-Bold.ttf') }}") format("truetype"); font-weight: 700; }
     @font-face { font-family: BebasNeue; src: url("file://{{ storage_path('fonts/BebasNeue-Regular.ttf') }}") format("truetype"); font-weight: 400; }
-    @page { size: A4; margin: 28mm 0 12mm 0; }
-    body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.5; margin: 0; padding: 0; }
-    .brand { position: fixed; top: 0; left: 0; right: 0; background: #F5C518; padding: 8mm 14mm; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
+    @page { size: A4; margin: 24mm 0 12mm 0; }
+    body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.35; margin: 0; padding: 0; }
+    .brand { position: fixed; top: -24mm; left: 0; right: 0; background: #F5C518; padding: 6mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 26pt; letter-spacing: 0.06em; }
     .wrap { padding: 8mm 14mm; }
     .top { width: 100%; margin-bottom: 8mm; }
     .top td { vertical-align: top; }
@@ -26,12 +26,12 @@
     .klant h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2mm; color: #555; }
     .klant .name { font-weight: 700; font-size: 12pt; }
     table.lines { width: 100%; border-collapse: collapse; margin: 4mm 0; }
-    table.lines th { background: #0A0A0A; color: #F5C518; padding: 2mm 3mm; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+    table.lines th { background: #0A0A0A; color: #F5C518; padding: 1.6mm 3mm; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
     table.lines th.r { text-align: right; }
-    table.lines td { padding: 2mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
+    table.lines td { padding: 1.4mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
     .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
-    .totals td { padding: 1.5mm 2mm; font-size: 9.5pt; }
+    .totals td { padding: 0.9mm 2mm; font-size: 9.5pt; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
