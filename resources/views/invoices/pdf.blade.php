@@ -67,7 +67,7 @@
                 <div>{{ $co['country'] }}</div>
                 @if ($co['kvk']) <div style="margin-top:2mm;">KvK: <strong>{{ $co['kvk'] }}</strong></div> @endif
                 @if ($co['btw']) <div>BTW: <strong>{{ $co['btw'] }}</strong></div> @endif
-                <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>            </td>
+            </td>
             <td class="ontvanger">
         <div class="klant">
             <h3>Aan</h3>
@@ -171,7 +171,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
     @endif
-    <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }}.</p>
+    <p class="small">Gelieve onder vermelding van het factuurnummer over te maken. Bij vragen: {{ $co['email'] }} of {{ $co['phone'] }}.</p>
 
 </div>
 

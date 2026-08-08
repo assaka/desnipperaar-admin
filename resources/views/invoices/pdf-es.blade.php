@@ -79,7 +79,7 @@
                 <div>{{ $co['country'] }}</div>
                 @if ($co['kvk']) <div style="margin-top:2mm;">Reg. merc.: <strong>{{ $co['kvk'] }}</strong></div> @endif
                 @if ($co['btw']) <div>IVA: <strong>{{ $co['btw'] }}</strong></div> @endif
-                <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>            </td>
+            </td>
             <td class="ontvanger">
         <div class="klant">
             <h3>Destinatario</h3>
@@ -183,7 +183,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Descuento por volumen aplicado y ya incluido en estos precios.</p>
     @endif
-    <p class="small">Por favor, pague indicando el número de factura. ¿Preguntas? {{ $co['email'] }}.</p>
+    <p class="small">Por favor, pague indicando el número de factura. ¿Preguntas? {{ $co['email'] }} o {{ $co['phone'] }}.</p>
 
 </div>
 

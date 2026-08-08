@@ -79,7 +79,7 @@
                 <div>{{ $co['country'] }}</div>
                 @if ($co['kvk']) <div style="margin-top:2mm;">RC&nbsp;: <strong>{{ $co['kvk'] }}</strong></div> @endif
                 @if ($co['btw']) <div>TVA&nbsp;: <strong>{{ $co['btw'] }}</strong></div> @endif
-                <div style="margin-top:2mm;">{{ $co['phone'] }} &middot; {{ $co['email'] }}</div>            </td>
+            </td>
             <td class="ontvanger">
         <div class="klant">
             <h3>Destinataire</h3>
@@ -183,7 +183,7 @@
     @if ($discountStaffel > 0)
         <p style="font-size:9px;color:#777;margin:4px 0 0;">* Remise volume appliquée et déjà incluse dans ces prix.</p>
     @endif
-    <p class="small">Merci de régler en mentionnant le numéro de facture. Des questions&nbsp;? {{ $co['email'] }}.</p>
+    <p class="small">Merci de régler en mentionnant le numéro de facture. Des questions&nbsp;? {{ $co['email'] }} ou {{ $co['phone'] }}.</p>
 
 </div>
 
