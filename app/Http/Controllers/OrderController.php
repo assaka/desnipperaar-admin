@@ -618,6 +618,15 @@ class OrderController extends Controller
         $driver = Driver::findOrFail($data['driver_id']);
         \App\Services\PickupAssigner::attach($order, $driver);
 
+        // Stond er al een afspraak, dan is dit een wijziging en niet de eerste
+        // bevestiging. De mail zegt dat ook, ongeacht wie hem verzet.
+        $moved = $order->pickup_date
+            && ($order->pickup_date->toDateString() !== $data['pickup_date']
+                || $order->pickup_window !== $data['pickup_window']);
+        $previous = $moved
+            ? trim($order->pickup_date->format('d-m-Y').' '.($order->pickup_window ?? ''))
+            : null;
+
         $order->update([
             'pickup_date'      => $data['pickup_date'],
             'pickup_window'    => $data['pickup_window'],
@@ -644,8 +653,10 @@ class OrderController extends Controller
 
         try {
             Mail::to($order->customer_email)
-                ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));
-            return back()->with('status', "Ophaling gepland en bevestigingsmail verstuurd naar {$order->customer_email}.");
+                ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user(), $previous));
+            $wat = $previous ? 'wijzigingsmail' : 'bevestigingsmail';
+
+            return back()->with('status', "Ophaling gepland en {$wat} verstuurd naar {$order->customer_email}.");
         } catch (\Throwable $e) {
             report($e);
             return back()->withErrors(['mail' => 'Planning opgeslagen maar mail kon niet worden verstuurd: ' . $e->getMessage()]);

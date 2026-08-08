@@ -123,7 +123,7 @@ class PickupPlanController extends Controller
         // Eén bevestiging, ook als wij hier meteen een chauffeur toewijzen. De
         // klant hoeft niet te weten dat er intern nog een stap zat.
         try {
-            Mail::to($order->customer_email)->send(new PickupConfirmed($fresh));
+            Mail::to($order->customer_email)->send(new PickupConfirmed($fresh, null, $previous));
         } catch (\Throwable $e) {
             report($e);
         }

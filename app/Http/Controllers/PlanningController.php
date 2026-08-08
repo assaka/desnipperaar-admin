@@ -173,6 +173,14 @@ class PlanningController extends Controller
         $changed = $order->pickup_date?->toDateString() !== $data['pickup_date']
                 || $order->pickup_window !== $data['window'];
 
+        // De vorige afspraak, voordat wij hem overschrijven. De mail heet anders
+        // zodra er al iets stond, en dat hangt aan de afspraak en niet aan wie
+        // hem verzet: of de klant het op de planpagina doet of wij hier op het
+        // bord, voor hem is het hetzelfde bericht.
+        $previous = $order->pickup_date
+            ? trim($order->pickup_date->format('d-m-Y').' '.($order->pickup_window ?? ''))
+            : null;
+
         $order->update([
             'pickup_date'   => $data['pickup_date'],
             'pickup_window' => $data['window'],
@@ -182,7 +190,7 @@ class PlanningController extends Controller
         if ($changed) {
             try {
                 Mail::to($order->customer_email)
-                    ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user()));
+                    ->send(new PickupConfirmed($order->fresh()->load('customer'), $request->user(), $previous));
                 $mailed = true;
             } catch (\Throwable $e) {
                 report($e);

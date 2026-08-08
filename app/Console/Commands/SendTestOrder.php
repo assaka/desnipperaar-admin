@@ -195,7 +195,7 @@ class SendTestOrder extends Command
                 'pickup_planned_by_customer_at' => now(),
             ]);
             $fresh = $order->fresh()->load('customer');
-            $rows[] = ['Pickup moved', $order->order_number, $this->mail($email, fn () => new PickupConfirmed($fresh, $sender))];
+            $rows[] = ['Pickup moved', $order->order_number, $this->mail($email, fn () => new PickupConfirmed($fresh, $sender, $previous))];
             $rows[] = ['Moved (admin notif)', $order->order_number, $this->mail($email, fn () => new PickupPlannedByCustomer($fresh, $previous))];
         }
 

@@ -3,12 +3,18 @@
     $windowLabels = ['ochtend' => 'Matin', 'middag' => 'Après-midi', 'avond' => 'Soir'];
     $winLabel = $windowLabels[$order->pickup_window] ?? 'Flexible';
 @endphp
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Enlèvement confirmé.</h1>
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">{{ $previous ? 'Enlèvement modifié.' : 'Enlèvement confirmé.' }}</h1>
 
 <p>Bonjour {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($previous)
+<p>Le créneau d'enlèvement de votre commande
+<strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong> a été modifié.</p>
+<p style="font-size:13px;color:#555;">Votre rendez-vous précédent du <strong>{{ $previous }}</strong> est annulé.</p>
+@else
 <p>Nous avons planifié un enlèvement pour votre commande
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.</p>
+@endif
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;background:#F7F7F4;border-left:4px solid #F5C518;">
     <tr>

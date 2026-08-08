@@ -1,10 +1,16 @@
 @component('emails._layout', ['title' => 'Ophaalmoment '.$order->order_number])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Ophaalmoment bevestigd.</h1>
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">{{ $previous ? 'Ophaalmoment gewijzigd.' : 'Ophaalmoment bevestigd.' }}</h1>
 
 <p>Beste {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($previous)
+<p>Het ophaalmoment voor uw opdracht
+<strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong> is gewijzigd.</p>
+<p style="font-size:13px;color:#555;">Uw eerdere afspraak van <strong>{{ $previous }}</strong> komt hiermee te vervallen.</p>
+@else
 <p>Wij hebben een ophaalmoment vastgesteld voor uw opdracht
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.</p>
+@endif
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;background:#F7F7F4;border-left:4px solid #F5C518;">
     <tr>

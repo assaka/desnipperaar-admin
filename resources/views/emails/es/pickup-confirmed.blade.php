@@ -3,12 +3,18 @@
     $windowLabels = ['ochtend' => 'Mañana', 'middag' => 'Tarde', 'avond' => 'Noche'];
     $winLabel = $windowLabels[$order->pickup_window] ?? 'Flexible';
 @endphp
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Recogida confirmada.</h1>
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">{{ $previous ? 'Recogida modificada.' : 'Recogida confirmada.' }}</h1>
 
 <p>Hola {{ explode(' ', $order->customer_name)[0] }},</p>
 
+@if ($previous)
+<p>La franja de recogida de su pedido
+<strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong> ha cambiado.</p>
+<p style="font-size:13px;color:#555;">Su cita anterior del <strong>{{ $previous }}</strong> queda cancelada.</p>
+@else
 <p>Hemos programado una recogida para su pedido
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.</p>
+@endif
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;background:#F7F7F4;border-left:4px solid #F5C518;">
     <tr>
