@@ -35,9 +35,9 @@
     .totals td { padding: 0.3mm 2mm; font-size: 9.5pt; line-height: 1.2; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
-    .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
+    .totals .grand td { font-weight: 700; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
     .pay { margin-top: 4mm; padding: 2.5mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
-    .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 1.2mm; letter-spacing: 0.04em; }
+    .pay h3 { font-size: 9pt; font-weight: 700; text-transform: uppercase; margin-bottom: 1.2mm; letter-spacing: 0.04em; }
     .pay .row { margin-bottom: 0.4mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
     .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
