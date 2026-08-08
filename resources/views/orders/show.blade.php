@@ -498,7 +498,9 @@
                                         <span class="font-bold" x-text="s.weekday + ' ' + s.date"></span>
                                         <span x-text="'· ' + s.window_label"></span>
                                         <span class="text-xs text-gray-500"
-                                              x-text="'· ' + s.stops + ' stop(s), ' + s.free_minutes + ' van ' + s.capacity_minutes + ' min vrij'"></span>
+                                              x-text="'· ' + s.stops + ' stop(s)'
+                                                  + (s.day_stops > s.stops ? ' (' + s.day_stops + ' op de dag)' : '')
+                                                  + ', ' + s.free_minutes + ' van ' + s.capacity_minutes + ' min vrij'"></span>
                                     </span>
                                     <span class="whitespace-nowrap text-xs">
                                         <template x-if="s.detour_km !== null && s.via_label">

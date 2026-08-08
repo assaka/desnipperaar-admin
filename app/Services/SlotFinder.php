@@ -56,6 +56,43 @@ class SlotFinder
         'flexibel' => 'Flexibel',
     ];
 
+    /**
+     * Het dagdeel waar een opgeslagen venster in valt.
+     *
+     * pickup_window kent twee vormen. De klant kiest een dagdeel ("ochtend"),
+     * maar zodra iemand op de planning een tijd afspreekt staat er een klok in,
+     * zoals "11:00-12:00". Beide zijn geldig, zie de regex in OrderController.
+     *
+     * Voor de capaciteit telt alleen in welk dagdeel de stop valt. Zonder deze
+     * vertaling vergelijkt de teller "ochtend" met "11:00-12:00", vindt niets, en
+     * meldt een lege ochtend terwijl er twee ritten in staan. Het uur waarop de
+     * rit begint bepaalt het dagdeel, met dezelfde grenzen als WINDOW_LABELS.
+     */
+    public static function bucket(?string $window): string
+    {
+        if (! $window) {
+            return 'flexibel';
+        }
+
+        if (isset(self::WINDOW_LABELS[$window])) {
+            return $window;
+        }
+
+        if (preg_match('/^(\d{1,2}):\d{2}/', $window, $m)) {
+            $hour = (int) $m[1];
+
+            if ($hour < 12) {
+                return 'ochtend';
+            }
+
+            return $hour < 17 ? 'middag' : 'avond';
+        }
+
+        // Iets wat wij niet herkennen bezet de dag wel maar geen dagdeel. Beter
+        // een stop die te ruim telt dan een stop die verdwijnt.
+        return 'flexibel';
+    }
+
     private int $geocodeBudget = self::GEOCODE_BUDGET;
 
     /**
@@ -633,7 +670,8 @@ class SlotFinder
 
         foreach ($orders as $planned) {
             $byDate[$planned->pickup_date->toDateString()][] = [
-                'window'  => $planned->pickup_window ?: 'flexibel',
+                'window'  => self::bucket($planned->pickup_window),
+                'window_raw' => $planned->pickup_window,
                 'minutes' => (int) ($planned->duration_minutes ?? $defaultDuration),
                 'point'   => $this->pointFor($planned),
                 'label'   => trim($planned->order_number.' '.($planned->customer_city ?? '')),
@@ -649,7 +687,8 @@ class SlotFinder
 
         foreach ($bons as $bon) {
             $byDate[$bon->planned_for->toDateString()][] = [
-                'window'  => $bon->planned_window ?: 'flexibel',
+                'window'  => self::bucket($bon->planned_window),
+                'window_raw' => $bon->planned_window,
                 'minutes' => $defaultDuration,
                 'point'   => $bon->order ? $this->pointFor($bon->order) : null,
                 'label'   => trim($bon->bon_number.' '.($bon->order?->customer_city ?? '')),
