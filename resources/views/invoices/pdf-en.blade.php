@@ -30,10 +30,10 @@
     table.lines th.r { text-align: right; }
     table.lines td { padding: 2mm 3mm; border-bottom: 1px solid #DDD; font-size: 10pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
-    .totals { width: 60mm; margin-left: auto; margin-top: 4mm; }
+    .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
     .totals td { padding: 1mm 2mm; font-size: 10pt; }
     .totals .k { color: #555; }
-    .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
+    .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
     .pay { margin-top: 8mm; padding: 4mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
     .pay h3 { font-size: 10pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
@@ -160,7 +160,7 @@
             <tr><td class="k">Amsterdam pilot discount</td><td class="v">- € {{ number_format($discountPilot, 2, ',', '.') }}</td></tr>
         @endif
         @if ($couponAmount > 0)
-            <tr><td class="k">Discount code {{ $couponLine['code'] ?? '' }}@if (!empty($couponLine['pct'])) <span style="color:#777;">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>@endif</td><td class="v">- € {{ number_format($couponAmount, 2, ',', '.') }}</td></tr>
+            <tr><td class="k">Discount code {{ $couponLine['code'] ?? '' }}@if (!empty($couponLine['pct'])) <span style="color:#777;font-size:9pt;white-space:nowrap;">({{ \App\Support\Pricing::formatPercentage($couponLine['pct']) }}% × € {{ number_format($couponLine['base'], 2, ',', '.') }})</span>@endif</td><td class="v">- € {{ number_format($couponAmount, 2, ',', '.') }}</td></tr>
         @endif
         <tr><td class="k">VAT {{ number_format($invoice->vat_rate * 100, 0) }}%</td><td class="v">€ {{ number_format($invoice->vat_amount, 2, ',', '.') }}</td></tr>
         <tr class="grand"><td>Total incl. VAT</td><td class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</td></tr>
