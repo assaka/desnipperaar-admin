@@ -15,7 +15,6 @@ use App\Models\Driver;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class OrderController extends Controller
@@ -617,27 +616,7 @@ class OrderController extends Controller
         ]);
 
         $driver = Driver::findOrFail($data['driver_id']);
-        $bon    = $order->bons()->orderBy('id')->first();
-
-        if (!$bon) {
-            $bon = Bon::create([
-                'bon_number' => Bon::generateBonNumber(),
-                'order_id'   => $order->id,
-                'mode'       => $order->delivery_mode,
-            ]);
-        }
-
-        $bonPatch = [
-            'driver_id'            => $driver->id,
-            'driver_name_snapshot' => $driver->name,
-            'driver_license_last4' => $driver->license_last4,
-        ];
-        if ($driver->signature_path && empty($bon->driver_signature_path)) {
-            $copy = "signatures/bon-{$bon->id}-driver.png";
-            Storage::disk('local')->put($copy, Storage::disk('local')->get($driver->signature_path));
-            $bonPatch['driver_signature_path'] = $copy;
-        }
-        $bon->update($bonPatch);
+        \App\Services\PickupAssigner::attach($order, $driver);
 
         $order->update([
             'pickup_date'      => $data['pickup_date'],

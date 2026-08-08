@@ -40,12 +40,18 @@ Het moment kwam uit onze eigen lijst met beschikbare momenten, dus er is ruimte 
     @endif
 </div>
 
+@php $chauffeur = $driverName ?? null; @endphp
+
 <p style="margin:28px 0;">
     <a href="{{ route('orders.show', $order) }}"
        style="display:inline-block;background:#0A0A0A;color:#F5C518;padding:14px 28px;font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:0.05em;text-decoration:none;">
-        Open order &amp; wijs chauffeur toe →
+        {{ $chauffeur ? 'Open de order →' : 'Open order & wijs chauffeur toe →' }}
     </a>
 </p>
 
-<p style="font-size:12px;color:#555;">De datum staat al op de order. Wat er nog moet gebeuren is een chauffeur kiezen, zodat de bon wordt aangemaakt.</p>
+@if ($chauffeur)
+    <p style="font-size:12px;color:#555;">De rit staat bevestigd op naam van <strong>{{ $chauffeur }}</strong> en de bon is aangemaakt. Er hoeft niets meer te gebeuren; klopt er iets niet, dan pas je het op de order aan.</p>
+@else
+    <p style="font-size:12px;color:#555;">De datum staat al op de order. Wat er nog moet gebeuren is een chauffeur kiezen, zodat de bon wordt aangemaakt.</p>
+@endif
 @endcomponent

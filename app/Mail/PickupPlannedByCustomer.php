@@ -23,7 +23,11 @@ class PickupPlannedByCustomer extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order, public ?string $previous = null) {}
+    public function __construct(
+        public Order $order,
+        public ?string $previous = null,
+        public ?string $driverName = null,
+    ) {}
 
     public function envelope(): Envelope
     {
@@ -38,7 +42,11 @@ class PickupPlannedByCustomer extends Mailable
     {
         return new Content(
             view: 'emails.pickup-planned-by-customer',
-            with: ['order' => $this->order, 'previous' => $this->previous],
+            with: [
+                'order'      => $this->order,
+                'previous'   => $this->previous,
+                'driverName' => $this->driverName,
+            ],
         );
     }
 }

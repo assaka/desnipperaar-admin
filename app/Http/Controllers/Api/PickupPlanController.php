@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\PickupConfirmed;
 use App\Mail\PickupPlannedByCustomer;
 use App\Models\Order;
+use App\Services\PickupAssigner;
 use App\Services\SlotFinder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -95,14 +96,32 @@ class PickupPlanController extends Controller
             ? trim($order->pickup_date->format('d-m-Y').' '.($order->pickup_window ?? ''))
             : null;
 
-        $order->update([
+        // Rijdt er maar één chauffeur, dan hangen wij hem er meteen aan en is de
+        // rit bevestigd. Er valt niets te kiezen, dus een order die blijft wachten
+        // op "wijs een chauffeur toe" wacht op een beslissing die al vaststaat.
+        //
+        // Zijn er meer chauffeurs, of geen enkele, dan blijft de order op nieuw
+        // staan met alleen een datum. Dan is toewijzen gokken, en dat doet een
+        // mens beter. Zelfde regel als het lijstje op de orderpagina.
+        $driver = PickupAssigner::soleDriver();
+
+        $patch = [
             'pickup_date'                   => $data['date'],
             'pickup_window'                 => $data['window'],
             'pickup_planned_by_customer_at' => now(),
-        ]);
+        ];
+
+        if ($driver) {
+            PickupAssigner::attach($order, $driver);
+            $patch['state'] = Order::STATE_BEVESTIGD;
+        }
+
+        $order->update($patch);
 
         $fresh = $order->fresh()->load('customer');
 
+        // Eén bevestiging, ook als wij hier meteen een chauffeur toewijzen. De
+        // klant hoeft niet te weten dat er intern nog een stap zat.
         try {
             Mail::to($order->customer_email)->send(new PickupConfirmed($fresh));
         } catch (\Throwable $e) {
@@ -112,7 +131,7 @@ class PickupPlanController extends Controller
         $adminEmail = config('desnipperaar.notifications.admin_email');
         if ($adminEmail) {
             try {
-                Mail::to($adminEmail)->send(new PickupPlannedByCustomer($fresh, $previous));
+                Mail::to($adminEmail)->send(new PickupPlannedByCustomer($fresh, $previous, $driver?->name));
             } catch (\Throwable $e) {
                 report($e);
             }
