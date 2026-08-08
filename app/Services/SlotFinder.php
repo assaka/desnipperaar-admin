@@ -350,8 +350,9 @@ class SlotFinder
     }
 
     /**
-     * De vroegste dag die wij mogen aanbieden. Morgen kan niet: de dag ervoor
-     * gaat de herinnering uit en wordt de bus geladen.
+     * De vroegste dag die wij mogen aanbieden, lead_days vanaf vandaag. Of die
+     * dag ook echt gereden wordt bepaalt WorkingDays: valt hij in het weekend of
+     * op een feestdag, dan levert hij vanzelf geen blokken op.
      */
     public function firstOfferableDate(): Carbon
     {

@@ -102,8 +102,13 @@ return [
         'minutes_per_km'        => (float) env('PLANNING_MINUTES_PER_KM', 1.5),
 
         // Hoe ver vooruit wij momenten aanbieden, en hoeveel dagen wij minimaal
-        // nodig hebben. Morgen aanbieden kan niet: de dag ervoor gaat de
-        // herinnering uit en de bus wordt geladen.
+        // nodig hebben.
+        //
+        // Op productie staat lead_days op 1 via de env, dus de eerstvolgende
+        // werkdag mag. Dat is nodig zodra spoed aan gaat: staat lead_days gelijk
+        // aan rush_days, dan verkoopt spoed precies de dag die iedereen toch al
+        // gratis krijgt en koopt de klant lucht. Ruimer zetten betekent meer tijd
+        // om te combineren, en een spoedoptie die meer voorstelt.
         'horizon_days' => (int) env('PLANNING_HORIZON_DAYS', 28),
         'lead_days'    => (int) env('PLANNING_LEAD_DAYS', 2),
 
