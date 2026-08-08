@@ -131,7 +131,7 @@ class PickupPlanController extends Controller
         if ($status === 'ok') {
             $result = $finder->forOrder($order);
             $days = $finder->days($result['slots']);
-            $best = $finder->bestSlots($result['slots'], 3, $order->pickup_choice === 'spoed');
+            $best = $finder->bestSlots($result['slots'], soonestFirst: $order->pickup_choice === 'spoed');
             $depotKm = $result['depot_km'];
         }
 

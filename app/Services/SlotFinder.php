@@ -277,21 +277,25 @@ class SlotFinder
      * De paar momenten die wij daadwerkelijk voorstellen.
      *
      * Een lijst met alle vrije uren van vier weken is geen keuze maar huiswerk:
-     * dat zijn tientallen regels waar niemand doorheen leest. Wij kiezen er drie
-     * en zetten daar de rest achter weg. Past er niets bij, dan is bellen sneller
-     * dan scrollen.
+     * dat zijn tientallen regels waar niemand doorheen leest. Wij kiezen er een
+     * handvol en zetten de rest weg. Past er niets bij, dan is bellen sneller dan
+     * scrollen.
      *
      * De volgorde komt van de omweg en niet van de datum, want de vraag is niet
      * wanneer het kan maar wanneer het slim is. Bij een gelijke omweg wint de
      * vroegste dag, en binnen een dag het vroegste uur.
      *
-     * Hooguit één voorstel per dag. Drie uurblokken op dezelfde ochtend zijn geen
-     * drie keuzes, want wie die dag niet kan heeft aan alle drie niets.
+     * Meerdere uren per dag mogen, tot $perDay. Een dag met maar één tijdstip is
+     * voor de klant vaak net het verkeerde tijdstip, en de uren die wij aanbieden
+     * liggen toch al tegen een geplande rit aan, dus ze zijn allemaal even goed
+     * voor de route. Wel gespreid over dagen beginnen: eerst van elke dag het
+     * beste uur, dan pas een tweede uur op dezelfde dag. Anders vult de eerste
+     * dag de hele lijst en heeft wie die dag niet kan alsnog niets.
      *
      * @param  array<int, array<string, mixed>>  $slots
      * @return array<int, array<string, mixed>>
      */
-    public function bestSlots(array $slots, int $limit = 3, bool $soonestFirst = false): array
+    public function bestSlots(array $slots, int $limit = 6, bool $soonestFirst = false, int $perDay = 3): array
     {
         $open = $this->available($slots);
 
@@ -307,20 +311,29 @@ class SlotFinder
             ]);
         }
 
-        $best = [];
-        $seenDays = [];
-
+        // Per dag op volgorde bewaren, daarna ronde voor ronde afromen. Ronde één
+        // pakt van elke dag het eerste uur, ronde twee het tweede, en zo verder.
+        $byDay = [];
         foreach ($open as $slot) {
-            if (isset($seenDays[$slot['date']])) {
-                continue;
-            }
-            $seenDays[$slot['date']] = true;
-            $best[] = $slot;
+            $byDay[$slot['date']][] = $slot;
+        }
 
-            if (count($best) >= $limit) {
-                break;
+        $best = [];
+        for ($round = 0; $round < $perDay && count($best) < $limit; $round++) {
+            foreach ($byDay as $daySlots) {
+                if (! isset($daySlots[$round])) {
+                    continue;
+                }
+                $best[] = $daySlots[$round];
+                if (count($best) >= $limit) {
+                    break;
+                }
             }
         }
+
+        // De rondes hebben de volgorde door elkaar gegooid; terugleggen op dag en
+        // tijd, want een lijst met momenten hoort chronologisch te lopen.
+        usort($best, fn (array $a, array $b) => [$a['date'], $a['window']] <=> [$b['date'], $b['window']]);
 
         return $best;
     }
@@ -410,7 +423,9 @@ class SlotFinder
 
         // Welke uren zijn al bezet, zie occupancy(). Daar zit ook de vertaling van
         // een oude boeking op dagdeel naar een concreet uur.
-        $taken = $this->occupancy($stops, $hours);
+        $occupied = $this->occupancy($stops, $hours);
+        $taken = $occupied['taken'];
+        $busy  = $occupied['busy'];
 
         $rush = $ctx['rush_until'] !== null && $day->lte($ctx['rush_until']);
 
@@ -438,6 +453,24 @@ class SlotFinder
                 }
             }
 
+            // Sluit dit blok aan op een rit die er al staat? Wij rijden liever
+            // een aaneengesloten blok dan losse ritten met gaten ertussen: de bus
+            // staat dan niet stil en de chauffeur rijdt niet heen en weer.
+            //
+            // Daarom bieden wij op een dag waar al iets staat alleen de uren aan
+            // die er direct voor of direct na liggen. Zo groeit de dag vanzelf
+            // aan één stuk door in plaats van dat er om 10:00 en om 15:00 iets
+            // staat met vier lege uren ertussen. Een lege dag heeft niets om op
+            // aan te sluiten, dus daar mag alles.
+            [$from, $to] = $this->blockRange($hour, $blocks, $slotMinutes);
+            $adjacent = false;
+            foreach ($busy as [$busyFrom, $busyTo]) {
+                if ($busyTo === $from || $busyFrom === $to) {
+                    $adjacent = true;
+                    break;
+                }
+            }
+
             $reason = null;
             if ($tooEarly) {
                 $reason = 'wachttijd gratis ophalen';
@@ -445,11 +478,14 @@ class SlotFinder
                 $reason = 'bezet door '.$taken[$hour];
             } elseif (! $fits) {
                 $reason = 'te weinig aaneengesloten tijd';
+            } elseif ($busy && ! $adjacent) {
+                $reason = 'sluit niet aan op een geplande rit';
             } elseif ($freeCount - $blocks < $reserve) {
                 $reason = 'laatste ruimte, gereserveerd voor spoed';
             }
 
             $slots[] = [
+                'adjacent'       => $adjacent,
                 'date'           => $day->toDateString(),
                 'weekday'        => $day->locale('nl')->translatedFormat('l'),
                 'window'         => $hour,
@@ -475,6 +511,20 @@ class SlotFinder
         }
 
         return $slots;
+    }
+
+    /**
+     * Van welk tot welk tijdstip een rit loopt die op dit blok begint en er
+     * $blocks in beslag neemt, in minuten vanaf middernacht.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function blockRange(string $hour, int $blocks, int $slotMinutes): array
+    {
+        [$h, $m] = explode(':', explode('-', $hour)[0]);
+        $from = ((int) $h) * 60 + (int) $m;
+
+        return [$from, $from + ($blocks * $slotMinutes)];
     }
 
     /**
@@ -518,14 +568,21 @@ class SlotFinder
      * flexibel mag de hele dag. Dat is een aanname, maar wel de voorzichtige
      * kant: liever een uur te weinig aanbieden dan een klant dubbel inplannen.
      *
+     * Naast de bezette blokken geven wij de bezette tijdvakken terug, in minuten
+     * vanaf middernacht. Die zijn nodig om te bepalen wat er tegen een geplande
+     * rit aan ligt, en dat kan ook een rit zijn die buiten de aangeboden uren
+     * valt: staat er een ophaling van 09:00 tot 10:00 en bieden wij pas vanaf
+     * 10:00 aan, dan sluit 10:00 er wel degelijk op aan.
+     *
      * @param  array<int, array<string, mixed>>  $stops
      * @param  array<int, string>  $hours
-     * @return array<string, string>
+     * @return array{taken: array<string, string>, busy: array<int, array{0: int, 1: int}>}
      */
     private function occupancy(array $stops, array $hours): array
     {
         $slotMinutes = max(1, (int) config('desnipperaar.planning.slot_minutes'));
         $taken = [];
+        $busy = [];
 
         $minutesOf = function (string $hour): int {
             [$h, $m] = explode(':', explode('-', $hour)[0]);
@@ -546,6 +603,7 @@ class SlotFinder
 
             $from = ((int) $m[1]) * 60 + (int) $m[2];
             $to   = max($from + $slotMinutes, ((int) $m[3]) * 60 + (int) $m[4]);
+            $busy[] = [$from, $to];
 
             foreach ($hours as $hour) {
                 $at = $minutesOf($hour);
@@ -571,12 +629,13 @@ class SlotFinder
                 $at = $minutesOf($hour);
                 if ($at >= $from && $at < $to && ! isset($taken[$hour])) {
                     $taken[$hour] = $stop['label'];
+                    $busy[] = [$at, $at + $slotMinutes];
                     break;
                 }
             }
         }
 
-        return $taken;
+        return ['taken' => $taken, 'busy' => $busy];
     }
 
     /**

@@ -704,7 +704,7 @@ class OrderController extends Controller
     {
         $duration = $request->integer('duration');
         $result = $finder->forOrder($order, $duration > 0 ? min($duration, 480) : null);
-        $result['best'] = $finder->bestSlots($result['slots'], 3, $order->pickup_choice === 'spoed');
+        $result['best'] = $finder->bestSlots($result['slots'], soonestFirst: $order->pickup_choice === 'spoed');
 
         return response()->json($result);
     }
