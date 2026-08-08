@@ -57,21 +57,34 @@ class PickupPlanController extends Controller
         $data = $validator->validated();
 
         // Opnieuw narekenen in plaats van de klant op zijn woord geloven. Tussen
-        // het tonen van de lijst en deze klik kan er een andere ophaling zijn
-        // bijgekomen, en dan is het moment weg. Een 409 stuurt de pagina terug
-        // met een verse lijst.
+        // het kiezen en het bevestigen kan er een andere ophaling zijn bijgekomen,
+        // en dan is de dag vol of duurder geworden. Een 409 stuurt de pagina terug
+        // met verse dagen.
         $result = $finder->forOrder($order);
-        $ceiling = $this->priceCeiling($order);
-        if (! $finder->isOffered($result['slots'], $data['date'], $data['window'], $ceiling)) {
+        $slot = $finder->find($result['slots'], $data['date'], $data['window']);
+
+        if (! $slot) {
             return response()->json([
                 'error' => 'slot_taken',
-                'slots' => $finder->offer($result['slots'], null, $ceiling),
+                'days'  => $finder->days($result['slots']),
             ], 409);
         }
 
+        // pickup_cost blijft met opzet ongemoeid. Die prijs is bij het bestellen
+        // uit het adres berekend en staat in de orderbevestiging; welke dag de
+        // klant kiest verandert daar niets aan. Zou de dagkeuze de prijs bepalen,
+        // dan hing de rekening af van hoe vol de agenda toevallig stond op het
+        // moment van boeken, en dat is geen prijs die je kunt verdedigen.
+        //
+        // De spoedtoeslag is het enige bedrag dat hier bijkomt, en die is van een
+        // andere orde: een vast bedrag voor een dag binnen het spoedvenster, op
+        // de pagina genoemd voordat de klant kiest. Wij lezen hem uit het
+        // narekende moment en niet uit het verzoek, zodat het bedrag niet uit de
+        // browser komt.
         $order->update([
             'pickup_date'                   => $data['date'],
             'pickup_window'                 => $data['window'],
+            'pickup_rush_fee'               => $slot['rush_fee'] > 0 ? $slot['rush_fee'] : null,
             'pickup_planned_by_customer_at' => now(),
             // Een openstaand wijzigingsverzoek is achterhaald zodra de klant zelf
             // een moment kiest.
@@ -114,12 +127,18 @@ class PickupPlanController extends Controller
         // Alleen zoeken als er iets te kiezen valt. Bij een opgehaalde of
         // afgesloten order is de lijst niet alleen nutteloos, hij kost ook een
         // ronde geocoderen.
-        $slots = [];
+        $days = [];
+        $recommended = [];
         $depotKm = null;
+        $rushFee = 0.0;
+        $rushUntil = null;
         if ($status === 'ok') {
             $result = $finder->forOrder($order);
-            $slots = $finder->offer($result['slots'], null, $this->priceCeiling($order));
+            $days = $finder->days($result['slots']);
+            $recommended = $finder->recommendedDays($days);
             $depotKm = $result['depot_km'];
+            $rushFee = $result['rush_fee'];
+            $rushUntil = $result['rush_until'];
         }
 
         return [
@@ -132,22 +151,21 @@ class PickupPlanController extends Controller
             'customer_postcode' => $order->customer_postcode,
             'customer_city'     => $order->customer_city,
             'depot_km'          => $depotKm,
-            'slots'             => $slots,
+            // De ophaalprijs zoals die bij het bestellen is berekend. Eén bedrag
+            // voor alle dagen, puur ter herinnering op de pagina: de dagkeuze
+            // verandert hem niet.
+            'pickup_cost'       => (float) ($order->pickup_cost ?? 0),
+            // Het vaste bedrag voor een dag binnen het spoedvenster, en tot
+            // wanneer dat venster loopt. De pagina noemt het bij de dagen die
+            // eronder vallen; 0 betekent dat spoed uitstaat.
+            'rush_fee'          => $rushFee,
+            'rush_until'        => $rushUntil,
+            // De dagen waarop wij toch al bij deze klant langsrijden, beste
+            // eerst. Die zetten wij bovenaan als knop, zodat de klant zonder
+            // rekenwerk de dag kiest die ons een rit scheelt.
+            'recommended'       => $recommended,
+            'days'              => $days,
         ];
-    }
-
-    /**
-     * Het duurste moment dat wij deze klant mogen voorleggen: wat hij bij het
-     * bestellen al voor ophalen heeft geaccepteerd.
-     *
-     * Die prijs stond in zijn orderbevestiging en komt zo op de factuur, dus een
-     * duurder moment aanbieden zou betekenen dat wij achteraf meer rekenen dan
-     * afgesproken. Een goedkoper moment mag altijd: pickup_cost blijft dan staan
-     * en de klant betaalt niet meer dan hij al wist.
-     */
-    private function priceCeiling(Order $order): float
-    {
-        return (float) ($order->pickup_cost ?? 0);
     }
 
     /**

@@ -79,11 +79,13 @@ return [
         // Duur van een stop als de order er zelf geen heeft staan.
         'default_duration' => (int) env('PLANNING_DEFAULT_DURATION', 30),
 
-        // Reistijd die een stop bovenop zijn eigen duur kost. Ligt de stop bij
-        // een al geplande stop in de buurt (binnen cluster_km) dan rijden wij er
-        // toch al langs en kost hij alleen de korte variant.
+        // Reistijd die een stop bovenop zijn eigen duur kost, naar rato van de
+        // omweg. travel_minutes_nearby is de ondergrens (uitstappen en weer
+        // wegrijden kost ook tijd), travel_minutes de bovengrens: het dagdeel
+        // zegt wanneer wij aankomen, niet hoe lang wij onderweg waren.
         'travel_minutes'        => (int) env('PLANNING_TRAVEL_MINUTES', 25),
         'travel_minutes_nearby' => (int) env('PLANNING_TRAVEL_MINUTES_NEARBY', 10),
+        'minutes_per_km'        => (float) env('PLANNING_MINUTES_PER_KM', 1.5),
 
         // Hoe ver vooruit wij momenten aanbieden, en hoeveel dagen wij minimaal
         // nodig hebben. Morgen aanbieden kan niet: de dag ervoor gaat de
@@ -91,25 +93,59 @@ return [
         'horizon_days' => (int) env('PLANNING_HORIZON_DAYS', 28),
         'lead_days'    => (int) env('PLANNING_LEAD_DAYS', 2),
 
-        // Binnen deze straal van een al geplande stop rijden wij "toch al
-        // langs". Dat maakt het moment gratis, ook buiten regio Amsterdam.
-        'cluster_km' => (float) env('PLANNING_CLUSTER_KM', 12),
+        // Tot zoveel extra kilometers omweg beschouwen wij een klant als "op de
+        // route": hij kost dan weinig extra rijtijd en krijgt op het planbord de
+        // groene markering. Het maakt de rit niet goedkoper voor de klant, want
+        // de ophaalprijs staat al vast bij het bestellen; het maakt hem goedkoper
+        // voor ons. 25 km is ongeveer een half uur extra rijden.
+        'on_route_detour_km' => (float) env('PLANNING_ON_ROUTE_DETOUR_KM', 25),
 
-        // Regio Amsterdam: altijd gratis ophalen, ongeacht de dag. Gelijk aan
-        // de 20 km op /werkgebied en in api/distance.js.
-        'free_radius_km' => (float) env('PLANNING_FREE_RADIUS_KM', 20),
+        // De grens van regio Amsterdam, gelijk aan de 20 km op /werkgebied en in
+        // api/distance.js. Binnen deze straal is ophalen gratis.
+        //
+        // Buiten de regio worden deze eerste 20 km afgetrokken, precies zoals
+        // order.html rekent: max(0, km - 20) * per_km. Wij houden die formule
+        // hier gelijk zodat het bedrag op het planbord en het bedrag op de
+        // bevestiging dezelfde herkomst hebben. Bijkomend voordeel: er is geen
+        // sprong op de grens. Wie op 20,1 km woont betaalt zeven cent en niet
+        // dertien euro.
+        'region_km' => (float) env('PLANNING_REGION_KM', 20),
 
-        // Tarief voor een rit die wij speciaal voor deze klant maken, per km
-        // boven de eerste free_radius_km. Zelfde bedrag als op /order.
+        // Tarief per kilometer voor een ophaling buiten de regio. Zelfde bedrag
+        // als op /order.
         'per_km' => (float) env('PLANNING_PER_KM', 0.65),
+
+        // De wachttijd die hoort bij de gratis optie buiten regio Amsterdam.
+        // Op /order staat "gratis ophalen met minimaal 2 weken wachttijd", en
+        // dit is die twee weken. Het is geen willekeurige drempel: die tijd
+        // hebben wij nodig om de rit te laten samenvallen met een andere rit in
+        // de buurt. Wie eerder wil betaalt per kilometer, dat is de keuze
+        // "sooner" op /order. Binnen de regio geldt de wachttijd niet, daar is
+        // ophalen gratis zonder voorwaarde.
+        'free_wait_days' => (int) env('PLANNING_FREE_WAIT_DAYS', 14),
+
+        // Spoed. Een ophaling binnen zoveel dagen na vandaag kost een vast
+        // bedrag extra, bovenop de ophaalprijs die uit het adres volgt.
+        //
+        // Dit is geen prijs die meebeweegt met hoe vol de agenda staat. Het
+        // bedrag is vast en vooraf bekend, en het staat tegenover iets dat de
+        // klant ook echt krijgt: voorrang. Wie op woensdag bestelt en vrijdag
+        // opgehaald wil worden, schuift voor een geplande rit langs. Zet
+        // rush_fee op 0 om de spoedoptie uit te zetten.
+        'rush_days' => (int) env('PLANNING_RUSH_DAYS', 2),
+        'rush_fee'  => (float) env('PLANNING_RUSH_FEE', 15.00),
+
+        // Hoeveel minuten wij per dag vrijhouden zolang die dag nog buiten het
+        // spoedvenster ligt. Zonder deze reservering loopt de agenda weken
+        // vooruit vol met gewone ritten en kunnen wij een spoedklant niets meer
+        // aanbieden, precies op het moment dat hij bereid is ervoor te betalen.
+        // De reservering valt vanzelf vrij zodra de dag binnen rush_days komt.
+        'rush_reserve_minutes' => (int) env('PLANNING_RUSH_RESERVE_MINUTES', 60),
 
         // Rechte lijn maal deze factor benadert de wegafstand. Zelfde factor als
         // de fallback in api/distance.js.
         'road_factor' => (float) env('PLANNING_ROAD_FACTOR', 1.3),
 
-        // Hoeveel momenten de klant maximaal te zien krijgt. Een lijst van
-        // veertig velden kiest niemand uit.
-        'max_offered' => (int) env('PLANNING_MAX_OFFERED', 12),
     ],
 
     'pilot' => [

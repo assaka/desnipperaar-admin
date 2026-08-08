@@ -501,21 +501,25 @@
                                               x-text="'· ' + s.stops + ' stop(s), ' + s.free_minutes + ' van ' + s.capacity_minutes + ' min vrij'"></span>
                                     </span>
                                     <span class="whitespace-nowrap text-xs">
-                                        <template x-if="s.nearest_km !== null">
+                                        <template x-if="s.detour_km !== null && s.via_label">
                                             <span :class="s.on_route ? 'text-green-700 font-bold' : 'text-gray-500'"
-                                                  x-text="s.nearest_km + ' km van ' + s.nearest_label"></span>
+                                                  x-text="'+' + s.detour_km + ' km omweg via ' + s.via_label"></span>
                                         </template>
-                                        <template x-if="s.nearest_km === null && s.available">
-                                            <span class="text-gray-400">niets in de buurt</span>
+                                        <template x-if="s.detour_km !== null && !s.via_label">
+                                            <span class="text-gray-400" x-text="'lege dag, eigen rit van ' + s.detour_km + ' km'"></span>
                                         </template>
                                         <span x-show="!s.available" x-text="'· ' + s.reason"></span>
-                                        <template x-if="s.price !== null">
-                                            <span class="ml-2 px-1 font-bold"
-                                                  :class="s.price > 0 ? 'bg-orange-200' : 'bg-green-200'"
-                                                  x-text="s.price > 0 ? ('€ ' + s.price.toFixed(2)) : 'gratis'"></span>
+                                        <template x-if="s.rush && s.rush_fee > 0">
+                                            <span class="ml-2 px-1 font-bold bg-red-200"
+                                                  title="Spoeddag. Kiest de klant deze dag op de planpagina, dan komt dit bedrag als eigen regel op de factuur."
+                                                  x-text="'spoed + € ' + s.rush_fee.toFixed(2)"></span>
                                         </template>
-                                        <span x-show="offered.includes(s.date + '|' + s.window)"
-                                              class="ml-1 px-1 bg-black text-yellow-400 font-bold uppercase text-[10px]">klant</span>
+                                        <template x-if="s.cost !== null">
+                                            <span class="ml-2 px-1 font-bold"
+                                                  :class="s.cost > 0 ? 'bg-orange-200' : 'bg-green-200'"
+                                                  :title="'Wat deze rit ons kost op deze dag (' + s.cost_basis + '). Niet wat de klant betaalt.'"
+                                                  x-text="s.cost > 0 ? ('kost ons € ' + s.cost.toFixed(2)) : 'kost ons niets extra'"></span>
+                                        </template>
                                     </span>
                                 </button>
                             </template>
@@ -526,8 +530,15 @@
                             Toon ook volle dagdelen
                         </label>
                         <p class="text-xs text-gray-500 mt-1">
-                            Groen = wij rijden die dag toch al binnen {{ (int) config('desnipperaar.planning.cluster_km') }} km langs, dus de rit kost ons een omweg en geen hele rit.
-                            Het zwarte label markeert de momenten die de klant zelf te zien zou krijgen.
+                            Groen = deze klant kost ons hooguit {{ (int) config('desnipperaar.planning.on_route_detour_km') }} km omweg op de rit van die dag. De omweg is de extra afstand als wij hem ertussen schuiven, niet de afstand tot de dichtstbijzijnde stop: iemand die pal op de route ligt kost bijna niets, ook al staat hij ver van de andere stops.
+                            De bedragen hier zijn <strong>onze kosten</strong> per dag, niet de prijs van de klant. Die staat vast op € {{ number_format((float) ($order->pickup_cost ?? 0), 2, ',', '.') }} en is bij het bestellen uit het adres berekend als max(0, km &minus; {{ (int) config('desnipperaar.planning.region_km') }}) &times; € {{ number_format((float) config('desnipperaar.planning.per_km'), 2, ',', '.') }}; welke dag je kiest verandert daar niets aan.
+                            Gebruik deze kolom dus om te zien welke dag voor ons het gunstigst is.
+                            @if ((int) config('desnipperaar.planning.rush_reserve_minutes') > 0)
+                                <br>Elke dag buiten de eerste {{ (int) config('desnipperaar.planning.rush_days') }} houdt {{ (int) config('desnipperaar.planning.rush_reserve_minutes') }} minuten vrij voor spoed, vandaar de reden &ldquo;gereserveerd voor spoed&rdquo;. Die ruimte valt vanzelf vrij zodra de dag dichtbij komt. Hier in de admin kun je er altijd overheen plannen: het datumveld hierboven kent deze grens niet.
+                            @endif
+                            @if ((float) config('desnipperaar.planning.rush_fee') > 0)
+                                Een dag binnen de eerste {{ (int) config('desnipperaar.planning.rush_days') }} is een spoeddag en kost de klant € {{ number_format((float) config('desnipperaar.planning.rush_fee'), 2, ',', '.') }} extra, maar alleen als hij die dag zelf via de planpagina kiest.
+                            @endif
                         </p>
                     </div>
                 </template>
@@ -690,7 +701,6 @@
                 loading: false,
                 error: '',
                 result: null,
-                offered: [],
                 showAll: false,
 
                 get open() {
@@ -709,7 +719,6 @@
                         const r = await fetch(url + q, { headers: { Accept: 'application/json' } });
                         if (!r.ok) throw new Error('HTTP ' + r.status);
                         this.result = await r.json();
-                        this.offered = this.result.offered || [];
                     } catch (e) {
                         this.error = 'Zoeken mislukt: ' + e.message;
                         this.result = null;

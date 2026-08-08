@@ -314,6 +314,18 @@ class Invoice extends Model
             ];
         }
 
+        // Spoedtoeslag: aparte regel, want dit is een latere keuze van de klant
+        // op de planpagina en geen onderdeel van de prijs uit de bevestiging.
+        $rushFee = (float) ($order->pickup_rush_fee ?? 0);
+        if ($rushFee > 0) {
+            $lines[] = [
+                'label'    => 'Spoedtoeslag ophalen',
+                'qty'      => 1,
+                'unit'     => $rushFee,
+                'subtotal' => $rushFee,
+            ];
+        }
+
         $subtotal = array_sum(array_column($lines, 'subtotal'));
         $vat      = round($subtotal * 0.21, 2);
         $total    = round($subtotal + $vat, 2);
