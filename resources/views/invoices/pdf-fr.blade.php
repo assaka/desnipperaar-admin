@@ -11,7 +11,7 @@
     body { font-family: Inter, Arial, sans-serif; color: #0A0A0A; font-size: 9.5pt; line-height: 1.35; margin: 0; padding: 0; }
     .brand { position: fixed; top: -13mm; left: 0; right: 0; background: #F5C518; padding: 2.5mm 14mm; line-height: 1; font-family: BebasNeue, Impact, sans-serif; font-weight: 400; font-size: 16pt; letter-spacing: 0.06em; }
     .wrap { padding: 4mm 14mm; }
-    .top { width: 100%; margin-bottom: 8mm; }
+    .top { width: 100%; margin-bottom: 5mm; }
     .top td { vertical-align: top; }
     .top .leverancier { width: 32%; padding-right: 6mm; }
     .top .ontvanger { width: 30%; padding-right: 6mm; }
@@ -36,12 +36,12 @@
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
-    .pay { margin-top: 6mm; padding: 3mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
-    .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; letter-spacing: 0.04em; }
-    .pay .row { margin-bottom: 0.8mm; font-size: 9.5pt; }
+    .pay { margin-top: 4mm; padding: 2.5mm 5mm; border: 2px solid #0A0A0A; page-break-inside: avoid; }
+    .pay h3 { font-size: 9pt; font-weight: 900; text-transform: uppercase; margin-bottom: 1.2mm; letter-spacing: 0.04em; }
+    .pay .row { margin-bottom: 0.4mm; font-size: 9.5pt; }
     .pay .k { display: inline-block; width: 28mm; color: #555; font-size: 9pt; }
     .pay .v { font-weight: 700; font-family: 'Courier New', monospace; }
-    .small { font-size: 8pt; color: #555; margin-top: 4mm; }
+    .small { font-size: 8pt; color: #555; margin-top: 2mm; }
     .foot { position: fixed; bottom: -10mm; left: 0; right: 0; background: #F7F7F4; padding: 2.5mm 14mm; font-family: 'Courier New', monospace; font-size: 8pt; letter-spacing: 0.1em; color: #555; text-align: center; border-top: 1px solid #DDD; }
 </style>
 </head>
