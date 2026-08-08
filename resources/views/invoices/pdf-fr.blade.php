@@ -32,7 +32,7 @@
     table.lines td { padding: 1.4mm 3mm; border-bottom: 1px solid #DDD; font-size: 9.5pt; }
     table.lines td.r { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; }
     .totals { width: 110mm; margin-left: auto; margin-top: 4mm; }
-    .totals td { padding: 0.9mm 2mm; font-size: 9.5pt; }
+    .totals td { padding: 0.3mm 2mm; font-size: 9.5pt; line-height: 1.2; }
     .totals .k { color: #555; }
     .totals .v { text-align: right; font-family: 'Courier New', monospace; white-space: nowrap; width: 30mm; }
     .totals .grand td { font-weight: 900; font-size: 12pt; border-top: 2px solid #0A0A0A; padding-top: 2mm; }
@@ -85,13 +85,11 @@
         </div>
             </td>
             <td class="doc-info">
-                <h1>{{ $invoice->isCreditNote() ? "AVOIR" : "FACTURE" }}</h1>
-                <div class="num">{{ $invoice->invoice_number }}</div>
                 <table class="dates" style="width:100%;text-align:right;">
+                    <tr><td class="k">{{ $invoice->isCreditNote() ? "Numéro d'avoir" : "Numéro de facture" }}</td><td><strong>{{ $invoice->invoice_number }}</strong></td></tr>
                     <tr><td class="k">Date de facture</td><td>{{ $invoice->issued_at->format('d-m-Y') }}</td></tr>
                     <tr><td class="k">Échéance</td><td><strong>{{ $invoice->due_at->format('d-m-Y') }}</strong></td></tr>
                     <tr><td class="k">{{ $invoice->order->isAbonnement() ? "Abonnement" : "Référence commande" }}</td><td>{{ $invoice->order->order_number }}</td></tr>
-                    @if ($invoice->bon_id) <tr><td class="k">N° de bon</td><td>{{ $invoice->bon?->bon_number }}</td></tr> @endif
                 </table>
             </td>
         </tr>
@@ -172,7 +170,6 @@
 
     <div class="pay">
         <h3>Paiement</h3>
-        <div class="row"><span class="k">Échéance</span><span class="v">{{ $invoice->due_at->format('d-m-Y') }} ({{ config('desnipperaar.invoice.payment_terms_days') }} jours)</span></div>
         <div class="row"><span class="k">Montant</span><span class="v">€ {{ number_format($invoice->amount_incl_btw, 2, ',', '.') }}</span></div>
         @if ($co['iban']) <div class="row"><span class="k">IBAN</span><span class="v">{{ $co['iban'] }}</span></div> @endif
         @if ($co['bic']) <div class="row"><span class="k">BIC</span><span class="v">{{ $co['bic'] }}</span></div> @endif
