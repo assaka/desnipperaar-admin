@@ -32,6 +32,9 @@ class OrderController extends Controller
             'stad'       => 'required|string|max:100',
             'plaats'     => 'required|string|max:10|regex:/^\d{4}\s?[A-Za-z]{2}$/',
             'branche'    => 'nullable|string|max:100',
+            // Vrije attributiekeuze van het bestelformulier. Alleen ter informatie
+            // in de notities, dus geen eigen kolom en geen vaste lijst.
+            'gevonden_via' => 'nullable|string|max:100',
             'type'       => 'nullable|string|max:200',
             'volume'     => 'nullable|string|max:500',
             'locatie'    => 'nullable|string|max:200',
@@ -102,6 +105,7 @@ class OrderController extends Controller
         $notes = collect([
             !empty($data['bedrijf']) ? 'Bedrijf: '  . $data['bedrijf']  : null,
             !empty($data['branche']) ? 'Branche: '  . $data['branche']  : null,
+            !empty($data['gevonden_via']) ? 'Gevonden via: ' . $data['gevonden_via'] : null,
             !empty($data['type'])    ? 'Type: '     . $data['type']     : null,
             !empty($data['termijn']) ? 'Termijn: '  . $data['termijn']  : null,
             !empty($data['bericht']) ? "\n"         . $data['bericht']  : null,
