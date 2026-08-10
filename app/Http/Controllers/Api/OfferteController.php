@@ -45,6 +45,7 @@ class OfferteController extends Controller
             'Type: offerte op maat',
             !empty($data['bedrijf']) ? 'Bedrijf: '       . $data['bedrijf']  : null,
             !empty($data['branche']) ? 'Branche: '       . $data['branche']  : null,
+            !empty($data['gevonden_via']) ? 'Gevonden via: ' . $data['gevonden_via'] : null,
             !empty($data['type'])    ? 'Materiaal: '     . $data['type']     : null,
             !empty($data['volume'])  ? 'Volume: '        . $data['volume']   : null,
             !empty($data['methode']) ? 'Methode: '       . $data['methode']  : null,

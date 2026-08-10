@@ -34,6 +34,9 @@ class OfferteRequest extends FormRequest
             'stad'       => 'nullable|string|max:100',
 
             'branche'    => 'nullable|string|max:100',
+            // Attributievraag van het formulier. Alleen ter informatie in de
+            // notities, dus geen eigen kolom en geen vaste lijst.
+            'gevonden_via' => 'nullable|string|max:100',
             'type'       => 'required|string|max:200',
             'volume'     => 'nullable|string|max:500',
             'methode'    => 'nullable|string|max:50',
