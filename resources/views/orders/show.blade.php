@@ -264,26 +264,10 @@
          deze keuze. Het bepaalt daarnaast hoeveel haast een order heeft, gratis
          mag op een rit in de buurt wachten en spoed niet. --}}
     @if ($order->pickup_choice && $order->delivery_mode === 'ophaal')
-        @php
-            $ophaalInRegio = $order->pickup_km !== null
-                && $order->pickup_km <= \App\Support\Pricing::PICKUP_FREE_KM;
-            $ophaalKosten = (float) ($order->pickup_cost ?? 0) + (float) ($order->pickup_rush_fee ?? 0);
-        @endphp
+        @php $ophaalKosten = (float) ($order->pickup_cost ?? 0) + (float) ($order->pickup_rush_fee ?? 0); @endphp
         <div class="mb-2 text-sm">
             <strong>Klant koos:</strong>
-            @switch($order->pickup_choice)
-                @case('spoed')
-                    <span class="bg-red-700 text-white px-1 font-bold uppercase text-xs">spoed</span>
-                    binnen 2 werkdagen
-                    @break
-                @case('sooner')
-                    <span class="bg-black text-yellow-400 px-1 font-bold uppercase text-xs">eerder</span>
-                    binnen 2 weken
-                    @break
-                @default
-                    <span class="bg-gray-300 text-black px-1 font-bold uppercase text-xs">gratis</span>
-                    {{ $ophaalInRegio ? 'regio Amsterdam' : 'vanaf 2 weken' }}
-            @endswitch
+            @include('orders._pickup_choice')
             <span class="text-xs text-gray-600">
                 @if ($order->pickup_km !== null) · {{ $order->pickup_km }} km @endif
                 · € {{ number_format($ophaalKosten, 2, ',', '.') }} ophaalkosten
