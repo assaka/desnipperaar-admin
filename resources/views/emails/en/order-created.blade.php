@@ -53,9 +53,15 @@ We will contact you within one business day to confirm the pickup.</p>
         </tr>
     @endforeach
 
-    @if (!empty($pickupCost) && $pickupCost > 0)
+    @if (!empty($pickupChoice))
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Earlier pickup (within 2 weeks)</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
+                @switch($pickupChoice)
+                    @case('spoed') Rush pickup @break
+                    @case('sooner') Earlier pickup (within 2 weeks) @break
+                    @default {{ $pickupInRegion ? 'Free pickup (Amsterdam region)' : 'Free pickup (from 2 weeks)' }}
+                @endswitch
+            </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupCost, 2, ',', '.') }}
@@ -65,7 +71,7 @@ We will contact you within one business day to confirm the pickup.</p>
 
     @if (!empty($pickupRushFee) && $pickupRushFee > 0)
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Rush pickup surcharge</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Rush pickup surcharge, within 2 working days</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupRushFee, 2, ',', '.') }}

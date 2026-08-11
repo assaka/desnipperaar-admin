@@ -40,9 +40,19 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
         </tr>
     @endforeach
 
-    @if (!empty($pickupCost) && $pickupCost > 0)
+    {{-- De ophaalregel hangt aan de keuze en niet aan het bedrag. Anders valt hij
+         weg bij gratis, en ook bij "eerder" binnen de eerste 20 km, want daar komt
+         het rijden op nul uit. Nul euro is ook een prijs en die hoort in het
+         overzicht te staan. --}}
+    @if (!empty($pickupChoice))
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Eerder ophalen (binnen 2 weken)</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
+                @switch($pickupChoice)
+                    @case('spoed') Spoed ophalen @break
+                    @case('sooner') Eerder ophalen (binnen 2 weken) @break
+                    @default {{ $pickupInRegion ? 'Gratis ophalen (regio Amsterdam)' : 'Gratis ophalen (vanaf 2 weken)' }}
+                @endswitch
+            </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupCost, 2, ',', '.') }}
@@ -52,7 +62,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
     @if (!empty($pickupRushFee) && $pickupRushFee > 0)
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Spoedtoeslag ophalen</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Spoedtoeslag ophalen, binnen 2 werkdagen</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupRushFee, 2, ',', '.') }}

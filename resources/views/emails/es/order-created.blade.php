@@ -53,9 +53,15 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
         </tr>
     @endforeach
 
-    @if (!empty($pickupCost) && $pickupCost > 0)
+    @if (!empty($pickupChoice))
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Recogida anticipada (en 2 semanas)</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
+                @switch($pickupChoice)
+                    @case('spoed') Recogida urgente @break
+                    @case('sooner') Recogida anticipada (en 2 semanas) @break
+                    @default {{ $pickupInRegion ? 'Recogida gratuita (región de Ámsterdam)' : 'Recogida gratuita (a partir de 2 semanas)' }}
+                @endswitch
+            </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupCost, 2, ',', '.') }}
@@ -65,7 +71,7 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
 
     @if (!empty($pickupRushFee) && $pickupRushFee > 0)
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Recargo por recogida urgente</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Recargo por recogida urgente, en 2 días laborables</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupRushFee, 2, ',', '.') }}

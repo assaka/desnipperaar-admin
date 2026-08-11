@@ -53,9 +53,15 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
         </tr>
     @endforeach
 
-    @if (!empty($pickupCost) && $pickupCost > 0)
+    @if (!empty($pickupChoice))
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Enlèvement anticipé (sous 2 semaines)</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
+                @switch($pickupChoice)
+                    @case('spoed') Enlèvement urgent @break
+                    @case('sooner') Enlèvement anticipé (sous 2 semaines) @break
+                    @default {{ $pickupInRegion ? "Enlèvement gratuit (région d'Amsterdam)" : 'Enlèvement gratuit (à partir de 2 semaines)' }}
+                @endswitch
+            </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupCost, 2, ',', '.') }}
@@ -65,7 +71,7 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
 
     @if (!empty($pickupRushFee) && $pickupRushFee > 0)
         <tr>
-            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Supplément enlèvement urgent</td>
+            <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">Supplément enlèvement urgent, sous 2 jours ouvrés</td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>
             <td style="padding:6px 0;font-weight:700;font-size:13px;border-bottom:1px dashed #DDD;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">
                 € {{ number_format($pickupRushFee, 2, ',', '.') }}
