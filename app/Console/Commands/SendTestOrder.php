@@ -38,6 +38,8 @@ class SendTestOrder extends Command
         {--reschedule : Plan een moment en verzet het daarna, zoals de klant dat op de planpagina doet}
         {--boxes=4 : Number of boxes}
         {--containers=1 : Number of 240 L roll containers}
+        {--pickup=free : Pickup speed the customer picked: free, sooner or spoed}
+        {--km=5 : Road distance to the customer in km; drives the pickup cost and the free-region wording}
         {--media= : Data carriers as key:qty pairs, e.g. hdd:120,usb:600,phone:30 (default hdd:1,usb:2). Use high quantities to exercise the volume staffel.}';
 
     protected $description = 'Create a test order (optionally the full pipeline) and send the customer e-mails to a chosen address.';
@@ -50,13 +52,25 @@ class SendTestOrder extends Command
         $reschedule = (bool) $this->option('reschedule');
         $boxes  = (int) $this->option('boxes');
         $cntrs  = (int) $this->option('containers');
+        $choice = strtolower((string) $this->option('pickup'));
+        $km     = (int) $this->option('km');
 
         if (! in_array($locale, ['nl', 'en', 'fr', 'es'], true)) {
             $this->error("Invalid locale '{$locale}'. Use one of: nl, en, fr, es.");
             return self::FAILURE;
         }
 
-        $this->info("Creating test order for {$email} (locale={$locale}, full=" . ($full ? 'yes' : 'no') . ')');
+        if (! in_array($choice, ['free', 'sooner', 'spoed'], true)) {
+            $this->error("Invalid --pickup '{$choice}'. Use one of: free, sooner, spoed.");
+            return self::FAILURE;
+        }
+
+        // Dezelfde rekensom als de bestelpagina, via Pricing, zodat een test niet
+        // stiekem een ander bedrag oplevert dan een echte bestelling.
+        $pickupCost    = \App\Support\Pricing::pickupCost($km, $choice !== 'free');
+        $pickupRushFee = \App\Support\Pricing::pickupRushFee($choice === 'spoed');
+
+        $this->info("Creating test order for {$email} (locale={$locale}, pickup={$choice} @ {$km} km, full=" . ($full ? 'yes' : 'no') . ')');
 
         $sender = User::orderBy('id')->first();
 
@@ -125,6 +139,10 @@ class SendTestOrder extends Command
             'state'              => Order::STATE_NIEUW,
             'pilot'              => $pilot,
             'first_box_free'     => false,
+            'pickup_choice'      => $choice,
+            'pickup_km'          => $km,
+            'pickup_cost'        => $pickupCost,
+            'pickup_rush_fee'    => $pickupRushFee > 0 ? $pickupRushFee : null,
         ]);
 
         $rows = [];
