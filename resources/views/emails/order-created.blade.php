@@ -144,6 +144,18 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
         <td style="padding:4px 0;color:#555;font-size:12px;">Leveringsmethode</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ ucfirst($order->delivery_mode) }}service</td>
     </tr>
+    @if (!empty($pickupChoice))
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Ophaalmoment</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">
+                @switch($pickupChoice)
+                    @case('spoed') Spoed, ophalen binnen 2 werkdagen @break
+                    @case('sooner') Eerder ophalen, binnen 2 weken @break
+                    @default {{ $pickupInRegion ? 'Gratis ophalen in de regio Amsterdam' : 'Gratis ophalen vanaf 2 weken' }}
+                @endswitch
+            </td>
+        </tr>
+    @endif
     @if ($order->pickup_date)
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Gewenste datum</td>

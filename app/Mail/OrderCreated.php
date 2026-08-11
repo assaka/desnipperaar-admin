@@ -137,6 +137,18 @@ class OrderCreated extends Mailable
                 'mediaLines'      => $snap['media_lines'] ?? [],
                 'pickupCost'      => $snap['pickup_cost'] ?? 0,
                 'pickupRushFee'   => $snap['pickup_rush_fee'] ?? 0,
+                // De gekozen ophaalsnelheid, ook als die niets kost. Zonder dit
+                // leest de klant zijn keuze nergens terug: "gratis vanaf 2 weken"
+                // heeft geen prijsregel, en "eerder" ook niet zodra hij binnen de
+                // eerste 20 km woont. Handmatige orders hebben geen keuze en
+                // krijgen niets.
+                'pickupChoice'    => $this->order->delivery_mode === 'ophaal'
+                    ? ($this->order->pickup_choice ?: null)
+                    : null,
+                // In de regio Amsterdam viel er niets te kiezen, dus daar noemen
+                // wij niet de wachttijd van twee weken die daar niet geldt.
+                'pickupInRegion'  => $this->order->pickup_km !== null
+                    && $this->order->pickup_km <= \App\Support\Pricing::PICKUP_FREE_KM,
                 'subtotal'        => $snap['subtotal'],
                 'subtotalRegular' => $snap['subtotal_regular'],
                 'discount'        => $snap['discount'],
