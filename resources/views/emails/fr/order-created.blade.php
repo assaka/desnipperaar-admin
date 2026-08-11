@@ -163,18 +163,6 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
         <td style="padding:4px 0;color:#555;font-size:12px;">Type de service</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>
     </tr>
-    @if (!empty($pickupChoice))
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Moment d'enlèvement</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">
-                @switch($pickupChoice)
-                    @case('spoed') Enlèvement urgent, sous 2 jours ouvrés @break
-                    @case('sooner') Enlèvement plus tôt, sous 2 semaines @break
-                    @default {{ $pickupInRegion ? "Enlèvement gratuit dans la région d'Amsterdam" : 'Enlèvement gratuit à partir de 2 semaines' }}
-                @endswitch
-            </td>
-        </tr>
-    @endif
     @if ($order->pickup_date)
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Date souhaitée</td>

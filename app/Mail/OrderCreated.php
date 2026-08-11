@@ -137,11 +137,11 @@ class OrderCreated extends Mailable
                 'mediaLines'      => $snap['media_lines'] ?? [],
                 'pickupCost'      => $snap['pickup_cost'] ?? 0,
                 'pickupRushFee'   => $snap['pickup_rush_fee'] ?? 0,
-                // De gekozen ophaalsnelheid, ook als die niets kost. Zonder dit
-                // leest de klant zijn keuze nergens terug: "gratis vanaf 2 weken"
-                // heeft geen prijsregel, en "eerder" ook niet zodra hij binnen de
-                // eerste 20 km woont. Handmatige orders hebben geen keuze en
-                // krijgen niets.
+                // De gekozen ophaalsnelheid draagt de ophaalregel in het
+                // besteloverzicht. Aan het bedrag hangen kon niet: "gratis" kost
+                // nul, en "eerder" ook zodra de klant binnen de eerste 20 km
+                // woont, en dan viel de regel weg. Handmatige orders hebben geen
+                // keuze en krijgen dus geen ophaalregel.
                 'pickupChoice'    => $this->order->delivery_mode === 'ophaal'
                     ? ($this->order->pickup_choice ?: null)
                     : null,

@@ -163,18 +163,6 @@ We will contact you within one business day to confirm the pickup.</p>
         <td style="padding:4px 0;color:#555;font-size:12px;">Service type</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>
     </tr>
-    @if (!empty($pickupChoice))
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Pickup time</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">
-                @switch($pickupChoice)
-                    @case('spoed') Rush pickup, within 2 working days @break
-                    @case('sooner') Sooner pickup, within 2 weeks @break
-                    @default {{ $pickupInRegion ? 'Free pickup in the Amsterdam region' : 'Free pickup from 2 weeks' }}
-                @endswitch
-            </td>
-        </tr>
-    @endif
     @if ($order->pickup_date)
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Requested date</td>

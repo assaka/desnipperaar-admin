@@ -163,18 +163,6 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
         <td style="padding:4px 0;color:#555;font-size:12px;">Tipo de servicio</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>
     </tr>
-    @if (!empty($pickupChoice))
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Momento de recogida</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">
-                @switch($pickupChoice)
-                    @case('spoed') Recogida urgente, en 2 días laborables @break
-                    @case('sooner') Recogida antes, en 2 semanas @break
-                    @default {{ $pickupInRegion ? 'Recogida gratuita en la región de Ámsterdam' : 'Recogida gratuita a partir de 2 semanas' }}
-                @endswitch
-            </td>
-        </tr>
-    @endif
     @if ($order->pickup_date)
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Fecha solicitada</td>
