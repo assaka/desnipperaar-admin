@@ -43,8 +43,16 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
     {{-- De ophaalregel hangt aan de keuze en niet aan het bedrag. Anders valt hij
          weg bij gratis, en ook bij "eerder" binnen de eerste 20 km, want daar komt
          het rijden op nul uit. Nul euro is ook een prijs en die hoort in het
-         overzicht te staan. --}}
-    @if (!empty($pickupChoice))
+         overzicht te staan.
+
+         Eén uitzondering: spoed binnen de gratis straal. Daar zijn geen
+         kilometers te rekenen en zegt de toeslagregel hieronder alles al, dus een
+         regel van € 0,00 erboven is ruis. --}}
+    @php
+        $toonOphaalregel = !empty($pickupChoice)
+            && ! ($pickupCost <= 0 && !empty($pickupRushFee) && $pickupRushFee > 0);
+    @endphp
+    @if ($toonOphaalregel)
         <tr>
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
                 @switch($pickupChoice)

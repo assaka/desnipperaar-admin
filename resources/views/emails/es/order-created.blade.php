@@ -53,7 +53,11 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
         </tr>
     @endforeach
 
-    @if (!empty($pickupChoice))
+    @php
+        $toonOphaalregel = !empty($pickupChoice)
+            && ! ($pickupCost <= 0 && !empty($pickupRushFee) && $pickupRushFee > 0);
+    @endphp
+    @if ($toonOphaalregel)
         <tr>
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
                 @switch($pickupChoice)
