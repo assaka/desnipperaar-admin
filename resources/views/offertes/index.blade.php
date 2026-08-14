@@ -22,7 +22,13 @@
         <tbody>
             @forelse ($offertes as $offerte)
                 @php
-                    if ($offerte->quote_accepted_at) {
+                    // Geannuleerd gaat voor. Een geannuleerde offerte die hier als
+                    // "verzonden" staat vraagt om een herinnering achteraan iets
+                    // dat van tafel is.
+                    if ($offerte->isCanceled()) {
+                        $statusLabel = 'geannuleerd';
+                        $statusClass = 'bg-gray-700 text-white';
+                    } elseif ($offerte->quote_accepted_at) {
                         $statusLabel = 'geaccepteerd';
                         $statusClass = 'bg-green-700 text-white';
                     } elseif ($offerte->quote_sent_at) {

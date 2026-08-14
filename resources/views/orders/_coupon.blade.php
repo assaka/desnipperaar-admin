@@ -56,6 +56,10 @@
             Factuur {{ $paidInvoice->invoice_number }} is betaald, dus een kortingscode wordt niet meer verrekend.
             Moet er geld terug, maak dan een creditfactuur.
         </p>
+    @elseif ($order->isCanceled())
+        <p class="text-sm text-gray-500">
+            Deze order is geannuleerd, er wordt niets meer gefactureerd. Een kortingscode heeft hier niets meer te doen.
+        </p>
     @elseif ($order->isAbonnement())
         <p class="text-sm text-gray-500">
             Een abonnement wordt per periode gefactureerd, daar hoort geen kortingscode per order op.

@@ -24,6 +24,13 @@
         'opgehaald'   => ['Opgehaald',   'bg-indigo-600 text-white', null],
         'vernietigd'  => ['Vernietigd',  'bg-purple-600 text-white', null],
         'afgesloten'  => ['Afgesloten',  'bg-gray-500 text-white', null],
+        // Donkerder dan afgesloten, want het is het tegenovergestelde: afgesloten
+        // is klaar, geannuleerd is nooit gebeurd. Zelfde grijs als een vervallen
+        // factuur. De reden staat in de tooltip, dat scheelt de orderpagina
+        // openen om te zien waarom iets van tafel is.
+        'geannuleerd' => ['Geannuleerd', 'bg-gray-700 text-white',
+                          trim(($order->cancel_reason ?: 'Geannuleerd')
+                               .($order->canceled_at ? ' · '.$order->canceled_at->format('d-m-Y H:i') : ''))],
         'certificate' => ['Certificate', 'bg-black text-yellow-400', null],
         'paid'        => ['Paid',        'bg-green-600 text-white', null],
         'completed'   => ['Completed',   'bg-green-800 text-white', null],

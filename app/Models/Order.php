@@ -64,6 +64,13 @@ class Order extends Model
     const STATE_VERNIETIGD   = 'vernietigd';
     const STATE_AFGESLOTEN   = 'afgesloten';
 
+    /**
+     * Gaat niet door. Bewust een eigen toestand en niet "afgesloten": afgesloten
+     * betekent dat het werk klaar is, geannuleerd dat het nooit is gebeurd. Dat
+     * verschil telt in de lijst, in de planning en in de boekhouding.
+     */
+    const STATE_GEANNULEERD  = 'geannuleerd';
+
     protected $fillable = [
         'order_number',
         'quote_reference',
@@ -88,6 +95,8 @@ class Order extends Model
         'media_items',
         'notes',
         'state',
+        'canceled_at',
+        'cancel_reason',
         'pilot',
         'pickup_date',
         'pickup_window',
@@ -153,6 +162,7 @@ class Order extends Model
         'sub_renewal_notified_at' => 'datetime',
         'sub_terminated_at' => 'datetime',
         'pickup_reminder_sent_at' => 'datetime',
+        'canceled_at' => 'datetime',
         'sub_ends_on' => 'date',
         'sub_last_invoiced_period' => 'date',
         'subscription_scheduled_for' => 'date',
@@ -325,6 +335,13 @@ class Order extends Model
      */
     public function stage(): string
     {
+        // Geannuleerd gaat voor alles. Er kan een openstaande factuur onder
+        // hangen die bij het annuleren is vervallen, en die mag deze order niet
+        // alsnog als lopend laten lezen.
+        if ($this->isCanceled()) {
+            return self::STATE_GEANNULEERD;
+        }
+
         // Is de rekening teruggeboekt, dan zegt dat meer dan betaald of afgesloten:
         // het geld is terug. Alleen als er niets blijft staan, dus elke factuur op
         // deze order heeft zijn creditfactuur. Bij een abonnement met tien perioden
@@ -371,6 +388,40 @@ class Order extends Model
         }
 
         return (string) $this->state;
+    }
+
+    public function isCanceled(): bool
+    {
+        return $this->state === self::STATE_GEANNULEERD;
+    }
+
+    /**
+     * Mag deze order nog van tafel?
+     *
+     * Twee dingen maken het onomkeerbaar. Is de rit gereden, dan ligt er een
+     * getekende bon en is het papier bij ons; dat gebeurde en daar hoort een
+     * factuur bij, geen annulering. Is er betaald, dan is de rekening vereffend
+     * en hoort het geld via een creditfactuur terug, zodat de tegenboeking in de
+     * boeken staat in plaats van dat de order stilletjes verdwijnt.
+     *
+     * Een abonnement staat er buiten. Dat loopt door en wordt opgezegd, met een
+     * einddatum en een retourrit, zie terminateSubscription().
+     *
+     * Kijkt naar een getekende bon en niet naar de toestand: een bon wordt al
+     * aangemaakt zodra er een chauffeur op staat, soms weken voor de rit, en dat
+     * mag annuleren niet blokkeren.
+     */
+    public function canCancel(): bool
+    {
+        if ($this->isAbonnement() || $this->isCanceled()) {
+            return false;
+        }
+
+        if ($this->hasPaidInvoice()) {
+            return false;
+        }
+
+        return ! $this->bons()->whereNotNull('picked_up_at')->exists();
     }
 
     /** Opgehaald of verder: de rit is gereden en er ligt een bon onder. */

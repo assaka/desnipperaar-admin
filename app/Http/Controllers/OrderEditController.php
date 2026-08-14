@@ -29,6 +29,13 @@ class OrderEditController extends Controller
     public function update(Request $request, Order $order)
     {
         // De knop is er dan niet, maar de route moet het zelf ook weigeren.
+        if ($order->isCanceled()) {
+            return back()->withErrors([
+                'box_count' => "Order {$order->order_number} is geannuleerd. Er valt niets meer bij te werken, "
+                    .'maak een nieuwe order aan als het toch doorgaat.',
+            ]);
+        }
+
         if ($order->hasPaidInvoice()) {
             return back()->withErrors([
                 'box_count' => "Order {$order->order_number} heeft een betaalde factuur en staat daarmee vast. "

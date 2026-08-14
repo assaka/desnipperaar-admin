@@ -700,6 +700,9 @@ class OrderController extends Controller
         if ($order->isAbonnement()) {
             return back()->with('error', 'Een abonnement heeft vaste ophaaldagen, daar valt niets los te plannen.');
         }
+        if ($order->isCanceled()) {
+            return back()->with('error', 'Deze opdracht is geannuleerd, er valt niets te plannen.');
+        }
         if (in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
             return back()->with('error', 'Deze opdracht is al opgehaald of afgerond.');
         }
@@ -724,6 +727,125 @@ class OrderController extends Controller
         $order->forceFill(['pickup_plan_invited_at' => now()])->save();
 
         return back()->with('status', 'Planlink gestuurd naar '.$order->customer_email.'.');
+    }
+
+    /**
+     * Annuleer een order. Hij gaat niet door.
+     *
+     * Voor een klant die afbelt, een dubbele bestelling of een test. Alles wat
+     * er nog aan open staat gaat mee van tafel, want anders blijft er ergens iets
+     * hangen dat niemand meer verwacht:
+     *
+     *  - nog niet getekende bons verdwijnen, zodat er geen rit blijft staan die
+     *    de chauffeur morgen op zijn lijst ziet;
+     *  - openstaande facturen (concept of verstuurd) worden vervallen verklaard,
+     *    zodat er geen rekening blijft staan voor werk dat niet gebeurt.
+     *
+     * Wat er niet gebeurt is verwijderen. De order blijft staan met de reden en
+     * het moment erbij, want over twee weken belt de klant erover.
+     */
+    public function cancel(Request $request, Order $order)
+    {
+        if ($order->isAbonnement()) {
+            return back()->withErrors(['cancel' =>
+                'Een abonnement loopt door en wordt opgezegd, met een einddatum en een retourrit. Gebruik Opzeggen op de abonnementspagina.']);
+        }
+
+        if ($order->isCanceled()) {
+            return back()->with('status', 'Order '.$order->order_number.' was al geannuleerd op '
+                .$order->canceled_at?->format('d-m-Y H:i').'.');
+        }
+
+        if ($order->hasPaidInvoice()) {
+            return back()->withErrors(['cancel' =>
+                "Order {$order->order_number} heeft een betaalde factuur. Boek het bedrag terug met een creditfactuur, "
+                .'dan staat de tegenboeking in de boeken.']);
+        }
+
+        if ($order->bons()->whereNotNull('picked_up_at')->exists()) {
+            return back()->withErrors(['cancel' =>
+                "Er is al een getekende bon op {$order->order_number}. De rit is gereden en het papier is bij ons, "
+                .'dus dit is geen annulering meer. Rond de order af of crediteer de factuur.']);
+        }
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:300',
+            'notify' => 'nullable|boolean',
+        ]);
+
+        $reason = trim((string) ($data['reason'] ?? '')) ?: null;
+
+        // Ongereden ritten weg. Alleen die zonder handtekening, want hierboven is
+        // al vastgesteld dat er geen getekende bon is.
+        $dropped = $order->bons()->whereNull('picked_up_at')->delete();
+
+        // Openstaande facturen vervallen. Een creditfactuur blijft staan: die
+        // hoort bij een betaling die er ooit was en is geen openstaande rekening.
+        $voided = 0;
+        foreach ($order->invoices()->get() as $invoice) {
+            if ($invoice->isCreditNote()
+                || ! in_array($invoice->status, [\App\Models\Invoice::STATUS_DRAFT, \App\Models\Invoice::STATUS_SENT], true)) {
+                continue;
+            }
+            $invoice->update(['status' => \App\Models\Invoice::STATUS_CANCELED]);
+            $voided++;
+        }
+
+        $order->update([
+            'state'         => Order::STATE_GEANNULEERD,
+            'canceled_at'   => now(),
+            'cancel_reason' => $reason,
+        ]);
+
+        $message = 'Order '.$order->order_number.' geannuleerd.';
+        if ($dropped) {
+            $message .= ' '.$dropped.' nog niet gereden bon(nen) verwijderd.';
+        }
+        if ($voided) {
+            $message .= ' '.$voided.' openstaande factu'.($voided === 1 ? 'ur' : 'ren').' vervallen verklaard.';
+        }
+
+        $fresh = $order->fresh()->load('customer');
+
+        // De klant. Alleen als erom gevraagd is: bij een dubbele bestelling of een
+        // test heeft hij niets te horen, en dan is een annuleringsmail voor een
+        // order die hij nooit bewust plaatste alleen maar verwarrend.
+        $klantGemaild = false;
+        if (! $request->boolean('notify')) {
+            $message .= ' De klant is hierover niet gemaild.';
+        } elseif (! $order->customer_email) {
+            $message .= ' Geen e-mailadres op deze order, dus de klant is niet gemaild.';
+        } else {
+            try {
+                Mail::to($order->customer_email)->send(new \App\Mail\OrderCancelled($fresh, $request->user()));
+                $klantGemaild = true;
+                $message .= ' Bevestiging gestuurd naar '.$order->customer_email.'.';
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' LET OP: de annuleringsmail is NIET verstuurd, zie de logs.';
+            }
+        }
+
+        // Onszelf. Altijd, en los van de keuze hierboven: wie de planning rijdt
+        // moet weten dat er een rit van de lijst af is, ook als de klant niets
+        // hoeft te horen. Zelfde adres als de andere interne meldingen.
+        $adminEmail = config('desnipperaar.notifications.admin_email');
+        if ($adminEmail) {
+            try {
+                Mail::to($adminEmail)->send(new \App\Mail\OrderCancelledAlert(
+                    $fresh,
+                    $request->user(),
+                    $dropped,
+                    $voided,
+                    $klantGemaild,
+                ));
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' De interne melding kon niet worden verstuurd, zie de logs.';
+            }
+        }
+
+        return back()->with('status', $message);
     }
 
     public function transition(Request $request, Order $order)

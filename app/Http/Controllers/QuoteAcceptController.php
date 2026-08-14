@@ -15,12 +15,23 @@ class QuoteAcceptController extends Controller
     public function show(string $token)
     {
         $order = Order::where('quote_token', $token)->firstOrFail();
+
+        // Een ingetrokken offerte laat zich niet meer accepteren, dus hem tonen
+        // met een knop eronder is een belofte die wij niet nakomen.
+        if ($order->isCanceled()) {
+            return view('public.quote-canceled', compact('order'));
+        }
+
         return view('public.quote', compact('order'));
     }
 
     public function accept(Request $request, string $token)
     {
         $order = Order::where('quote_token', $token)->firstOrFail();
+
+        if ($order->isCanceled()) {
+            return view('public.quote-canceled', compact('order'));
+        }
 
         if ($order->quote_accepted_at) {
             return view('public.quote-already-accepted', compact('order'));

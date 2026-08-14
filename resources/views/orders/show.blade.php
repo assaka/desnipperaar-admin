@@ -8,7 +8,10 @@
     // moet gebeuren is crediteren, niet bijwerken.
     $betaaldeFactuur = $order->invoices->reject->isCreditNote()
         ->firstWhere('status', \App\Models\Invoice::STATUS_PAID);
-    $magBewerken = $betaaldeFactuur === null;
+
+    // Een geannuleerde order staat net zo goed vast. Er gebeurt niets meer, dus
+    // er valt ook niets meer bij te werken of na te sturen.
+    $magBewerken = $betaaldeFactuur === null && ! $order->isCanceled();
 
     // Een verstuurde factuur op een opgehaalde order: de rit is gereden, de
     // rekening is de deur uit en het enige dat er nog moet gebeuren is de
@@ -40,7 +43,7 @@
     De balk verschijnt bij beide. Undo alleen bij typed, want Undo op een
     opgeslagen wijziging zou suggereren dat je die kunt terugdraaien.
 --}}
-<div x-data="{ typed: false, stale: {{ $order->confirmation_stale ? 'true' : 'false' }}, editOpen: false }"
+<div x-data="{ typed: false, stale: {{ $order->confirmation_stale && ! $order->isCanceled() ? 'true' : 'false' }}, editOpen: false }"
      @order-dirty="typed = true"
      @order-clean="typed = false">
 
@@ -101,6 +104,18 @@
         <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-2 mb-4 text-sm">{{ session('error') }}</div>
     @endif
 
+    @if ($order->isCanceled())
+        <div class="bg-gray-700 text-white px-3 py-2 mb-4 text-sm">
+            <strong class="uppercase">Geannuleerd</strong>
+            @if ($order->canceled_at) op {{ $order->canceled_at->format('d-m-Y H:i') }} @endif
+            @if ($order->cancel_reason) · {{ $order->cancel_reason }} @endif
+            <div class="text-xs text-gray-300 mt-1">
+                Deze order gaat niet door. Er wordt niets meer gepland, bijgewerkt of gefactureerd.
+                Gaat het toch door, maak dan een nieuwe order aan.
+            </div>
+        </div>
+    @endif
+
     <section class="mb-6">
         <div>
             <div class="flex items-baseline justify-between gap-3 mb-2">
@@ -110,6 +125,9 @@
                         <button type="button" @click="editOpen = !editOpen"
                                 class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
                                 x-text="editOpen ? 'Sluiten' : 'Edit'">Edit</button>
+                    @elseif (! $betaaldeFactuur)
+                        {{-- Geannuleerd zonder betaalde factuur. Niets te bewerken
+                             en niets te crediteren. --}}
                     @elseif ($betaaldeFactuur->isCredited())
                         <span class="text-xs text-gray-500 whitespace-nowrap">
                             betaald en gecrediteerd met
@@ -159,12 +177,39 @@
 
                     {{-- Resend hoort bij de andere acties op deze order en niet
                          alleen in de balk: de bevestiging opnieuw sturen kan altijd,
-                         ook als er niets is gewijzigd. --}}
-                    <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}"
-                          onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
-                        @csrf
-                        <button class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Resend</button>
-                    </form>
+                         ook als er niets is gewijzigd. Behalve bij een geannuleerde
+                         order, want dan is de bevestiging niet meer waar. --}}
+                    @unless ($order->isCanceled())
+                        <form method="POST" action="{{ route('orders.resend-confirmation', $order) }}"
+                              onsubmit="return confirm('Bevestiging opnieuw sturen naar {{ $order->customer_email }}?')">
+                            @csrf
+                            <button class="bg-gray-200 text-black px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Resend</button>
+                        </form>
+                    @endunless
+
+                    {{-- Annuleren. Zelfde vorm als Credit hierboven: de knop klapt
+                         een reden uit, want een geannuleerde order zonder reden is
+                         een raadsel zodra de klant er later over belt. De reden gaat
+                         mee in de mail, dus schrijf hem voor de klant. --}}
+                    @if ($order->canCancel())
+                        <form method="POST" action="{{ route('orders.cancel', $order) }}"
+                              class="flex items-center gap-2" x-data="{ annuleren: false }"
+                              onsubmit="return confirm('Order {{ $order->order_number }} annuleren? Nog niet gereden bons en openstaande facturen vervallen.')">
+                            @csrf
+                            <button type="button" @click="annuleren = !annuleren"
+                                    class="bg-gray-700 text-white px-3 py-1 text-xs uppercase font-bold whitespace-nowrap">Cancel</button>
+                            <div x-show="annuleren" x-cloak class="flex items-center gap-2">
+                                <input type="text" name="reason" maxlength="300"
+                                       placeholder="reden, komt in de mail"
+                                       class="border p-1 text-xs w-56">
+                                <label class="flex items-center gap-1 text-xs whitespace-nowrap">
+                                    <input type="checkbox" name="notify" value="1" checked>
+                                    klant mailen
+                                </label>
+                                <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Annuleren</button>
+                            </div>
+                        </form>
+                    @endif
                 </div>
             </div>
             @if ($order->customer?->company)
@@ -397,7 +442,7 @@
              een moment staat. --}}
         @if (! $order->isAbonnement()
              && ! $order->pickup_date
-             && ! in_array($order->state, ['opgehaald', 'vernietigd', 'afgesloten'], true))
+             && ! in_array($order->state, ['opgehaald', 'vernietigd', 'afgesloten', 'geannuleerd'], true))
             <div class="mb-3 pb-3 border-b border-yellow-300 flex flex-wrap items-center gap-2">
                 <form method="POST" action="{{ route('orders.send-plan-link', $order) }}"
                       onsubmit="return confirm('Planlink mailen naar {{ $order->customer_email }}?')">
@@ -433,6 +478,12 @@
                     @if ($firstBon?->driver_license_last4) <span class="font-mono text-xs">(****{{ $firstBon->driver_license_last4 }})</span>@endif
                 </div>
                     <div class="mt-1 text-xs text-gray-600">Bevestigingsmail is naar de klant verstuurd.</div>
+                @if ($order->isCanceled())
+                    {{-- De datum blijft staan als geschiedenis, maar er rijdt niemand
+                         meer. Zonder deze regel leest dit blok als een afspraak die
+                         nog staat. --}}
+                    <div class="mt-1 text-xs font-bold text-gray-700">Vervallen door de annulering.</div>
+                @endif
                 @if ($order->pickup_planned_by_customer_at)
                     <div class="mt-1 text-xs text-gray-600">
                         <span class="bg-green-700 text-white px-1 font-bold uppercase">zelf gepland</span>

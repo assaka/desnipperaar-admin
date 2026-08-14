@@ -208,7 +208,11 @@ class PickupPlanController extends Controller
         if (in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD], true)) {
             return 'picked_up';
         }
-        if ($order->state === Order::STATE_AFGESLOTEN) {
+        // Geannuleerd valt onder 'closed'. De publieke planpagina kent die status
+        // al en zegt dat online plannen niet meer kan met het telefoonnummer
+        // erbij, en dat is precies wat hier moet gebeuren. Een eigen status zou
+        // daar op onbekende link uitkomen, en dat is het niet.
+        if ($order->state === Order::STATE_AFGESLOTEN || $order->isCanceled()) {
             return 'closed';
         }
         if ($order->pickup_date && $order->pickup_date->toDateString() <= now()->toDateString()) {

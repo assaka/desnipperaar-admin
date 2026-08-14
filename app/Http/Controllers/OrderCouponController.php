@@ -43,6 +43,14 @@ class OrderCouponController extends Controller
             ]);
         }
 
+        // Een geannuleerde order wordt niet meer gefactureerd, dus een korting
+        // erop wordt nergens verrekend.
+        if ($order->isCanceled()) {
+            return back()->withErrors([
+                'coupon_code' => "Order {$order->order_number} is geannuleerd, er wordt niets meer gefactureerd.",
+            ]);
+        }
+
         // Een betaalde factuur wordt niet herrekend, dus een korting die er nu nog
         // op komt zou wel op de order staan maar nergens verrekend worden. Dat
         // levert een order op die een korting belooft die de klant nooit krijgt.
