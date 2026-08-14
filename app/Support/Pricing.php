@@ -10,7 +10,12 @@ class Pricing
     public const CONTAINER_FIRST       = 120.00;
     public const CONTAINER_NEXT        = 45.00;
 
-    // Amsterdam-pilot rates (20% off)
+    // Amsterdam-pilot rates (20% off).
+    //
+    // OBSOLEET sinds 2026-08-14, zie config/desnipperaar.php → pilot. Deze
+    // tarieven worden alleen nog geraakt door oude orders die de vlag dragen,
+    // zodat hun factuur en bon tonen wat de klant destijds betaalde. Geen nieuwe
+    // order komt hier langs.
     public const BOX_FIRST_PILOT       = 24.00;
     public const BOX_NEXT_PILOT        = 20.00;
     public const CONTAINER_FIRST_PILOT = 96.00;
@@ -266,6 +271,9 @@ class Pricing
     /**
      * Postcode prefix range that gets the Amsterdam-pilot 20% discount.
      * Range comes from config (desnipperaar.pilot) so it stays in sync with OrderController.
+     *
+     * @deprecated 2026-08-14 De pilot is afgelopen. Geeft altijd false zolang de
+     *             schakelaar uit staat, zie config/desnipperaar.php → pilot.
      */
     public static function isPilotPostcode(?string $postcode): bool
     {
@@ -297,6 +305,11 @@ class Pricing
         return $row;
     }
 
+    /**
+     * @param bool $pilot OBSOLEET, zie config/desnipperaar.php → pilot. Alleen
+     *                    nog true bij het opnieuw opbouwen van een oude order die
+     *                    de vlag draagt. Zet hem nergens met de hand aan.
+     */
     public static function quote(int $boxes, int $containers, bool $pilot = false, bool $firstBoxFree = false): array
     {
         $bFirst = $pilot ? self::BOX_FIRST_PILOT       : self::BOX_FIRST;

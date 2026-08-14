@@ -97,6 +97,9 @@ class Order extends Model
         'state',
         'canceled_at',
         'cancel_reason',
+        // OBSOLEET, zie config/desnipperaar.php → pilot. Staat op oude orders nog
+        // op true en blijft daar staan, zodat hun papier klopt. Nieuwe orders
+        // krijgen hem niet meer.
         'pilot',
         'pickup_date',
         'pickup_window',

@@ -175,12 +175,24 @@ return [
 
     ],
 
+    /**
+     * OBSOLEET sinds 2026-08-14. De Amsterdam-pilot is afgelopen en de korting
+     * wordt niet meer gegeven.
+     *
+     * Blijft met opzet staan en wordt niet gesloopt: een handvol oude orders
+     * draagt pilot=true, en hun bon, factuur en bevestigingsmail moeten die
+     * kortingsregel blijven tonen zoals de klant hem destijds kreeg. Weghalen
+     * betekent papier herschrijven dat de deur al uit is.
+     *
+     * Bouw er niets nieuws op. Wie hier langskomt voor een prijs- of
+     * kortingsvraag: dit pad is dood, de enige levende korting per order is de
+     * kortingscode.
+     */
     'pilot' => [
-        // Master switch for the Amsterdam pilot. When false, no new order,
-        // group-deal participant, or customer is ever flagged as pilot, so the
-        // 20% pilot discount and its badges/labels disappear from order intake,
-        // planning, quotes and emails. Historical orders keep their stored
-        // pilot flag, so past bons/invoices still render their pilot line.
+        // Master switch. Staat uit en hoort uit te blijven. Zolang hij uit staat
+        // krijgt geen enkele nieuwe order, group-deal-deelnemer of klant de
+        // pilotvlag, en verdwijnen de 20% korting en de bijbehorende labels uit
+        // intake, planning, offertes en mails. Bestaande rijen houden hun vlag.
         'enabled'        => env('PILOT_ENABLED', false),
         'postcode_start' => 1011,
         'postcode_end'   => 1109,
