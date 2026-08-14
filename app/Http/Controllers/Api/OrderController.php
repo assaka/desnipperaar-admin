@@ -145,6 +145,53 @@ class OrderController extends Controller
             'locale'   => $locale,
         ]))->save();
 
+        // De kortingscode uit het bestelformulier.
+        //
+        // Tot nu toe werd hier alleen times_used opgehoogd en landde de code
+        // nergens: de klant zag zijn korting in het winkelwagentje, de order in de
+        // admin wist er niets van en de factuur dus ook niet. Iemand moest hem met
+        // de hand alsnog toekennen, en dat gebeurde soms dagen later of helemaal
+        // niet.
+        //
+        // Twee dingen moeten kloppen met wat de klant op /order zag, anders belooft
+        // het scherm iets anders dan de factuur:
+        //
+        //  - de grondslag is het bedrag van de goederen, zonder ophaalkosten. Het
+        //    winkelwagentje trekt de korting van het artikelsubtotaal af en zet de
+        //    ophaalkosten er daarna bovenop. Die rit is doorbelaste kilometers, geen
+        //    dienst waar een actiecode korting op geeft.
+        //  - een kortingscode vervangt de pilotkorting. Hoogstens één korting, dat
+        //    is de regel op de pagina, dus wie een code invult krijgt de
+        //    Amsterdam-korting niet er nog eens bovenop.
+        $kennismaking = $this->isKennismakingEligible($data);
+
+        $coupon         = ! empty($data['coupon_code']) ? Coupon::findByCode($data['coupon_code']) : null;
+        $couponBase     = 0.0;
+        $couponDiscount = 0.0;
+
+        if ($coupon) {
+            $couponBase = (float) \App\Support\Pricing::snapshot(
+                (int) ($data['boxes'] ?? 0),
+                (int) ($data['containers'] ?? 0),
+                $mediaItems,
+                false,          // pilot uit, de code neemt zijn plaats in
+                $kennismaking,
+                0.0,            // ophaalkosten tellen niet mee in de grondslag
+                0.0,
+            )['subtotal'];
+
+            $couponDiscount = $coupon->isValid($couponBase)
+                ? round($coupon->discountFor($couponBase), 2)
+                : 0.0;
+
+            // Een code die niets oplevert (verlopen, uitgeput, onder het
+            // minimumbedrag of een lege order) hoort niet op de order te staan en
+            // telt ook niet als gebruik.
+            if ($couponDiscount <= 0) {
+                $coupon = null;
+            }
+        }
+
         $order = Order::create([
             'order_number'       => Order::generateOrderNumber(),
             'customer_id'        => $customer->id,
@@ -162,21 +209,23 @@ class OrderController extends Controller
             'media_items'        => $mediaItems ?: null,
             'notes'              => $notes ?: null,
             'state'              => Order::STATE_NIEUW,
-            'pilot'              => $pilot,
-            'first_box_free'     => $this->isKennismakingEligible($data),
+            'pilot'              => $coupon ? false : $pilot,
+            'first_box_free'     => $kennismaking,
             'pickup_cost'        => $pickupCost,
             'pickup_rush_fee'    => $pickupRushFee > 0 ? $pickupRushFee : null,
             'pickup_km'          => $pickupKm,
             'pickup_choice'      => $pickupChoice,
+            'coupon_code'        => $coupon ? strtoupper(trim($coupon->code)) : null,
+            'coupon_discount'    => $coupon ? $couponDiscount : null,
+            'coupon_applied_at'  => $coupon ? now() : null,
+            'coupon_type'        => $coupon?->type,
+            'coupon_value'       => $coupon?->value,
+            'coupon_base'        => $coupon ? $couponBase : null,
         ]);
 
-        // Increment coupon usage if a valid code was submitted.
-        if (!empty($data['coupon_code'])) {
-            $coupon = Coupon::findByCode($data['coupon_code']);
-            if ($coupon && $coupon->isValid()) {
-                $coupon->incrementUsage();
-            }
-        }
+        // Pas tellen als de code ook echt op een order staat. Een code die is
+        // afgewezen mag geen tik van zijn maximum aantal gebruiken kosten.
+        $coupon?->incrementUsage();
 
         // Bon is intentionally NOT created here — it's only created once admin plans the pickup.
 
