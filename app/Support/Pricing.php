@@ -147,6 +147,30 @@ class Pricing
         return ($line['kind'] ?? null) === 'coupon';
     }
 
+    /** De regels waarmee de rit naar de klant wordt doorbelast. */
+    public const PICKUP_LABELS = [
+        'Eerder ophalen (binnen 2 weken)',
+        'Spoedtoeslag ophalen',
+    ];
+
+    /**
+     * True voor een regel die de ophaalrit doorbelast.
+     *
+     * Die regels staan buiten de grondslag van een kortingscode. Het
+     * winkelwagentje op /order trekt de korting van het artikelsubtotaal af en
+     * zet de ophaalkosten er daarna bovenop, dus een actiecode geeft geen korting
+     * op gereden kilometers. Zelfde vorm als isMediaLine(): regels dragen `kind`,
+     * en oudere factuursnapshots worden op hun label herkend.
+     */
+    public static function isPickupLine(array $line): bool
+    {
+        if (($line['kind'] ?? null) === 'pickup') {
+            return true;
+        }
+
+        return in_array($line['label'] ?? '', self::PICKUP_LABELS, true);
+    }
+
     /**
      * De kortingscode als eigen regel met een negatief bedrag.
      *

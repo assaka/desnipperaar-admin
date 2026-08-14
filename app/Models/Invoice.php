@@ -68,9 +68,18 @@ class Invoice extends Model
             fn ($l) => !\App\Support\Pricing::isCouponLine($l)
         ));
 
-        $gross    = round(array_sum(array_column($lines, 'subtotal')), 2);
+        // Twee bedragen, en ze zijn niet hetzelfde. Het factuurbedrag is de
+        // bovengrens van wat een korting kan wegnemen, want meer terugbrengen dan
+        // er staat kan niet. De grondslag van het percentage is smaller en laat de
+        // ophaalregels erbuiten, zie grossExclBtw().
+        $factuurbedrag = round(array_sum(array_column($lines, 'subtotal')), 2);
+        $grondslag     = round(array_sum(array_map(
+            fn ($l) => \App\Support\Pricing::isPickupLine($l) ? 0 : $l['subtotal'],
+            $lines
+        )), 2);
+
         $order    = $this->order;
-        $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $gross);
+        $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $factuurbedrag);
 
         if ($order && !empty($order->coupon_code) && $discount > 0) {
             // De grondslag is het bedrag van deze factuur, niet wat er bij het
@@ -81,7 +90,7 @@ class Invoice extends Model
                 $discount,
                 $order->coupon_type,
                 $order->coupon_value !== null ? (float) $order->coupon_value : null,
-                $gross,
+                $grondslag,
             );
         }
 
@@ -98,11 +107,22 @@ class Invoice extends Model
         return $this;
     }
 
-    /** Het factuurbedrag excl. btw zonder de kortingsregel, de basis voor een korting. */
+    /**
+     * De grondslag voor een kortingscode op deze factuur.
+     *
+     * Zonder de kortingsregel zelf, want daar wordt de korting op gerekend, en
+     * zonder de ophaalregels. Die rit is doorbelaste kilometers; het
+     * winkelwagentje op /order houdt hem ook buiten de grondslag en zet hem er
+     * pas na de korting bovenop. Zou de factuur er hier wel overheen rekenen, dan
+     * kreeg wie zijn code vergat en hem hier met de hand kreeg toegekend meer
+     * korting dan wie hem meteen invulde.
+     */
     public function grossExclBtw(): float
     {
         return round(array_sum(array_map(
-            fn ($l) => \App\Support\Pricing::isCouponLine($l) ? 0 : $l['subtotal'],
+            fn ($l) => (\App\Support\Pricing::isCouponLine($l) || \App\Support\Pricing::isPickupLine($l))
+                ? 0
+                : $l['subtotal'],
             $this->lines ?? []
         )), 2);
     }
@@ -319,6 +339,7 @@ class Invoice extends Model
         if ($pickupCost > 0) {
             $lines[] = [
                 'label'    => 'Eerder ophalen (binnen 2 weken)',
+                'kind'     => 'pickup',
                 'qty'      => 1,
                 'unit'     => $pickupCost,
                 'subtotal' => $pickupCost,
@@ -331,6 +352,7 @@ class Invoice extends Model
         if ($rushFee > 0) {
             $lines[] = [
                 'label'    => 'Spoedtoeslag ophalen',
+                'kind'     => 'pickup',
                 'qty'      => 1,
                 'unit'     => $rushFee,
                 'subtotal' => $rushFee,

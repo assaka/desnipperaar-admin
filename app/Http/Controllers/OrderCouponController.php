@@ -162,7 +162,15 @@ class OrderCouponController extends Controller
         return ['updated' => $updated, 'skipped' => $skipped];
     }
 
-    /** Het bedrag excl. btw waar de korting op gerekend wordt. */
+    /**
+     * Het bedrag excl. btw waar de korting op gerekend wordt.
+     *
+     * De ophaalkosten en de spoedtoeslag tellen niet mee. Het winkelwagentje op
+     * /order rekent zo, en sinds de code daar ook echt op de order landt hoort
+     * deze weg dezelfde uitkomst te geven. Anders kreeg wie zijn code vergat en
+     * hem hier met de hand kreeg toegekend meer korting dan wie hem meteen
+     * invulde, en dat verschil is niet uit te leggen.
+     */
     private function grossExclBtw(Order $order): float
     {
         // Bestaat er al een factuur, dan is dat het bedrag dat de klant te zien
@@ -183,7 +191,8 @@ class OrderCouponController extends Controller
             $order->media_items,
             (bool) $order->pilot,
             (bool) $order->first_box_free,
-            (float) ($order->pickup_cost ?? 0),
+            0.0,   // ophaalkosten staan buiten de grondslag
+            0.0,
         )['subtotal'];
     }
 

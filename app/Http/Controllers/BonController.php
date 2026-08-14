@@ -53,11 +53,11 @@ class BonController extends Controller
             }
             $pickupCost = (float) ($order->pickup_cost ?? 0);
             if ($pickupCost > 0) {
-                $q['lines'][] = ['label' => 'Eerder ophalen (binnen 2 weken)', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
+                $q['lines'][] = ['label' => 'Eerder ophalen (binnen 2 weken)', 'kind' => 'pickup', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
             }
             $rushFee = (float) ($order->pickup_rush_fee ?? 0);
             if ($rushFee > 0) {
-                $q['lines'][] = ['label' => 'Spoedtoeslag ophalen', 'qty' => 1, 'unit' => $rushFee, 'subtotal' => $rushFee];
+                $q['lines'][] = ['label' => 'Spoedtoeslag ophalen', 'kind' => 'pickup', 'qty' => 1, 'unit' => $rushFee, 'subtotal' => $rushFee];
             }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
             $q['vat']      = round($q['subtotal'] * 0.21, 2);
