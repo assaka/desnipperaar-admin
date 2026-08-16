@@ -26,6 +26,11 @@ Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityCo
 Route::get('/coupon', [\App\Http\Controllers\Api\CouponController::class, 'validate'])
     ->middleware('throttle:120,1');
 
+// Mints the personal 24-hour code the order page counts down from. Same IP
+// inside the window gets its existing code back instead of a fresh deadline.
+Route::post('/coupon/issue', [\App\Http\Controllers\Api\CouponController::class, 'issue'])
+    ->middleware('throttle:20,1');
+
 // SnipperDag e-mail signup (exit popup + homepage inline section).
 Route::post('/subscribe', [\App\Http\Controllers\Api\SubscribeController::class, 'store'])
     ->middleware('throttle:20,1');

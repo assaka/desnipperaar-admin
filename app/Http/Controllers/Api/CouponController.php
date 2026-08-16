@@ -45,4 +45,78 @@ class CouponController extends Controller
             'discount_amount' => $coupon->discountFor($subtotal),
         ]);
     }
+
+    /** Prefix, percentage and lifetime of the coupon the order page hands out. */
+    private const ISSUE_PREFIX = 'SNIP24';
+    private const ISSUE_PCT    = 25;
+    private const ISSUE_HOURS  = 24;
+
+    /**
+     * POST /api/coupon/issue
+     *
+     * Mints the personal 25% code the order page counts down from. One code per
+     * visitor per 24 hours: a repeat call from the same IP gets the same row
+     * back with its original expiry, so refreshing the page cannot buy more
+     * time than the banner promises.
+     *
+     * Returns { issued: true, code, pct, expires_at } or { issued: false } when
+     * the caller looks like a crawler, which the order page treats as "no offer"
+     * rather than as an error.
+     */
+    public function issue(Request $request): JsonResponse
+    {
+        // Crawlers that run JavaScript would otherwise leave a coupon row per
+        // visit. They never order, so there is nothing to give them.
+        $agent = (string) $request->userAgent();
+        if ($agent === '' || preg_match('/bot|crawl|spider|slurp|headless|lighthouse|preview|monitor/i', $agent)) {
+            return response()->json(['issued' => false]);
+        }
+
+        // HMAC rather than the address: enough to recognise the same visitor,
+        // without the coupons table becoming a log of who visited.
+        $hash = hash_hmac('sha256', (string) $request->ip(), (string) config('app.key'));
+
+        $coupon = Coupon::where('issued_ip_hash', $hash)
+            ->where('code', 'LIKE', self::ISSUE_PREFIX . '%')
+            ->where('is_active', true)
+            ->where('times_used', 0)
+            ->where('expires_at', '>', now())
+            ->latest('id')
+            ->first();
+
+        if (! $coupon) {
+            $coupon = Coupon::create([
+                'code'           => $this->freshIssueCode(),
+                'type'           => 'percentage',
+                'value'          => self::ISSUE_PCT,
+                'max_uses'       => 1,
+                'expires_at'     => now()->addHours(self::ISSUE_HOURS),
+                'is_active'      => true,
+                'description'    => 'Automatisch uitgegeven op de bestelpagina',
+                'issued_ip_hash' => $hash,
+            ]);
+        }
+
+        return response()->json([
+            'issued'     => true,
+            'code'       => $coupon->code,
+            'pct'        => (int) round((float) $coupon->value),
+            'expires_at' => $coupon->expires_at->toIso8601String(),
+        ]);
+    }
+
+    /** A unique SNIP24<random> code. Alphabet skips easily-confused characters. */
+    private function freshIssueCode(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        do {
+            $suffix = '';
+            for ($i = 0; $i < 5; $i++) {
+                $suffix .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+            }
+            $code = self::ISSUE_PREFIX . $suffix;
+        } while (Coupon::where('code', $code)->exists());
+
+        return $code;
+    }
 }

@@ -60,3 +60,10 @@ Schedule::command('subscriptions:renewal-notice')
 Schedule::command('mail:fetch-inbound')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+// The order page mints a coupon per visitor per day. Clear out the expired
+// unused ones so the hand-made coupons stay findable in the admin list.
+Schedule::command('coupons:prune-issued')
+    ->dailyAt('04:30')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
