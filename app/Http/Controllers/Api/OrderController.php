@@ -64,6 +64,12 @@ class OrderController extends Controller
             'ophaal_keuze'   => 'nullable|string|max:60',
             'ophaal_km'      => 'nullable|integer|min:0|max:400',
             'ophaal_kosten'  => 'nullable|numeric|min:0|max:1000',
+        ], [], [
+            // De regel heet intern nog 'plaats', maar het formulierveld heet
+            // postcode. Zonder deze vertaling krijgt de bezoeker "The plaats
+            // field is required" te zien bij een veld dat Postcode heet.
+            'plaats' => 'postcode',
+            'stad'   => 'plaats',
         ]);
 
         $locale = in_array($data['lang'] ?? null, ['nl', 'en', 'fr', 'es'], true) ? $data['lang'] : 'nl';
