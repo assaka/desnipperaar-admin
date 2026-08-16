@@ -21,6 +21,20 @@ class OrderController extends Controller
             return response()->json(['ok' => true], 201);
         }
 
+        // Het bestelformulier stuurde de postcode jarenlang onder de naam
+        // "plaats", terwijl "stad" de plaatsnaam droeg. Dezelfde sleutel betekent
+        // op /api/subscription en /api/offerte juist wél een plaatsnaam, dus de
+        // naam loog en per route iets anders. De site stuurt hem nu als
+        // "postcode".
+        //
+        // Hier alleen normaliseren en niet hernoemen: zolang oude pagina's in een
+        // browsercache nog "plaats" sturen moeten die blijven werken, en de rest
+        // van deze controller blijft zo ongewijzigd. Weghalen kan zodra de logs
+        // een tijd geen "plaats" zonder "postcode" meer laten zien.
+        if (filled($request->input('postcode')) && blank($request->input('plaats'))) {
+            $request->merge(['plaats' => $request->input('postcode')]);
+        }
+
         $data = $request->validate([
             'naam'       => 'required|string|max:255',
             'bedrijf'    => 'nullable|string|max:255',
@@ -200,7 +214,10 @@ class OrderController extends Controller
             'customer_phone'     => $data['telefoon'],
             'customer_address'   => $data['adres'] ?? null,
             'customer_postcode'  => $postcode,
-            'customer_city'      => $data['stad']   ?? $data['plaats'] ?? null,
+            // Geen terugval op 'plaats' meer: dat veld draagt een postcode, geen
+            // plaatsnaam, dus die terugval zou een postcode als stad opslaan.
+            // 'stad' is verplicht, dus er valt niets terug te vallen.
+            'customer_city'      => $data['stad'] ?? null,
             'locale'             => $locale,
             'customer_reference' => $customer->reference,
             'delivery_mode'      => $mode,
