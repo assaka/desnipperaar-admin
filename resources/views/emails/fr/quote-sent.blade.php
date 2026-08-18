@@ -48,6 +48,8 @@
 <p style="font-size:12px;color:#555;">Ce lien est personnel et propre à votre devis. La page suivante affiche tous les détails.
 Vous renseignez votre adresse et cliquez sur <strong>Passer la commande</strong>. Ce n'est qu'alors que vous concluez un accord pour le montant indiqué ci-dessus.
 Si vous ne cliquez pas, vous n'êtes engagé à rien.</p>
+
+<p style="font-size:12px;color:#555;">Nos <a href="{{ $termsUrl }}" style="color:#0A0A0A;text-decoration:underline;">conditions générales</a> s'appliquent à ce devis et à la mission. Nous vous les envoyons gratuitement sur demande.</p>
 @else
 <p style="font-size:12px;color:#555;">Vous pouvez simplement répondre à cet e-mail, votre message nous parviendra directement.</p>
 @endif

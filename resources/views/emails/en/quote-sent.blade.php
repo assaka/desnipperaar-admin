@@ -48,6 +48,8 @@
 <p style="font-size:12px;color:#555;">This link is personal and unique to your quote. The next page shows every detail.
 You fill in your address and click <strong>Place order</strong>. Only then do you enter into an agreement for the amount stated above.
 If you do not click, you are under no obligation.</p>
+
+<p style="font-size:12px;color:#555;">Our <a href="{{ $termsUrl }}" style="color:#0A0A0A;text-decoration:underline;">general terms and conditions</a> apply to this quote and to the job. We will send them to you free of charge on request.</p>
 @else
 <p style="font-size:12px;color:#555;">You can simply reply to this email and your message will reach us directly.</p>
 @endif

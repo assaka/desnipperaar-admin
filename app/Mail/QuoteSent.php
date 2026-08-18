@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\PublicUrl;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -72,6 +73,11 @@ class QuoteSent extends Mailable
                 'isOffer'    => ! is_null($this->order->quoted_amount_excl_btw),
                 // Customer-facing quote lives on the public domain, not admin.*
                 'acceptUrl'  => rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$this->order->quote_token,
+                // De voorwaarden moeten voor of bij het sluiten van de overeenkomst
+                // beschikbaar zijn, anders zijn ze niet inroepbaar (art. 6:233 BW).
+                // Deze mail is dat moment, want de knop hieronder leidt naar de
+                // accepteerpagina.
+                'termsUrl'   => PublicUrl::terms($this->mailLocale),
             ],
         );
     }

@@ -48,6 +48,8 @@
 <p style="font-size:12px;color:#555;">Este enlace es personal y exclusivo de su presupuesto. La página siguiente muestra todos los detalles.
 Rellena su dirección y hace clic en <strong>Realizar pedido</strong>. Solo entonces formaliza un acuerdo por el importe indicado arriba.
 Si no hace clic, no tiene ninguna obligación.</p>
+
+<p style="font-size:12px;color:#555;">Nuestras <a href="{{ $termsUrl }}" style="color:#0A0A0A;text-decoration:underline;">condiciones generales</a> se aplican a este presupuesto y al encargo. Se las enviamos gratuitamente si lo solicita.</p>
 @else
 <p style="font-size:12px;color:#555;">Puede responder directamente a este correo y su mensaje nos llegará al instante.</p>
 @endif

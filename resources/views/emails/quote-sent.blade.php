@@ -48,6 +48,8 @@
 <p style="font-size:12px;color:#555;">Deze link is persoonlijk en uniek voor uw offerte. Op de vervolgpagina ziet u alle details.
 U vult uw adresgegevens in en klikt op <strong>Plaats opdracht</strong>. Pas dan komt een overeenkomst tot stand voor het hierboven genoemde bedrag.
 Klikt u niet, dan bent u nergens aan gebonden.</p>
+
+<p style="font-size:12px;color:#555;">Op deze offerte en op de opdracht zijn onze <a href="{{ $termsUrl }}" style="color:#0A0A0A;text-decoration:underline;">algemene voorwaarden</a> van toepassing. Wij sturen ze op verzoek kosteloos toe.</p>
 @else
 <p style="font-size:12px;color:#555;">U kunt gewoon op deze e-mail antwoorden, dan komt uw reactie direct bij ons binnen.</p>
 @endif
