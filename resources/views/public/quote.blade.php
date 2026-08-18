@@ -181,7 +181,7 @@
             <p class="small" style="margin-top:10px;">
                 Door op <strong>Plaats opdracht</strong> te klikken gaat u akkoord met het bedrag
                 van <strong><span id="legal-incl">{{ $inclBtw }}</span></strong> incl. btw
-                en de <a href="https://desnipperaar.nl/voorwaarden" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
+                en de <a href="{{ $termsUrl ?? 'https://desnipperaar.nl/voorwaarden' }}" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
                 Uw IP-adres en tijdstip worden vastgelegd als bewijs.
             </p>
         </form>

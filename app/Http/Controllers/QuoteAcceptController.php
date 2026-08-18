@@ -22,7 +22,12 @@ class QuoteAcceptController extends Controller
             return view('public.quote-canceled', compact('order'));
         }
 
-        return view('public.quote', compact('order'));
+        // Zelfde link als in de offertemail, in de taal van de klant. De tabel
+        // met slugs staat op een plek, zie App\Support\PublicUrl.
+        return view('public.quote', [
+            'order'    => $order,
+            'termsUrl' => \App\Support\PublicUrl::terms($order->locale),
+        ]);
     }
 
     public function accept(Request $request, string $token)
