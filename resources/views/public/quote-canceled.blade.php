@@ -1,16 +1,22 @@
 @extends('public._layout')
-@section('title', 'Offerte geannuleerd')
+@section('title', __('quote.cancel_title'))
+
+@php
+    $contactMail = $order->senderUser()?->email ?? 'sales@desnipperaar.nl';
+    $phoneLink   = '<a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>';
+    $mailLink    = '<a href="mailto:'.e($contactMail).'" style="color:#0A0A0A;">'.e($contactMail).'</a>';
+@endphp
 
 @section('content')
     <div class="banner bad">
-        Deze offerte is geannuleerd{{ $order->canceled_at ? ' op '.$order->canceled_at->format('d-m-Y') : '' }}.
+        {{ $order->canceled_at
+            ? __('quote.cancel_banner_date', ['date' => $order->canceled_at->format('d-m-Y')])
+            : __('quote.cancel_banner') }}
     </div>
-    <h1>Offerte niet meer geldig.</h1>
-    <p>Offerte <span class="num">{{ $order->order_number }}</span> is ingetrokken en kan niet meer worden geaccepteerd.</p>
+    <h1>{{ __('quote.cancel_h1') }}</h1>
+    <p>{!! __('quote.cancel_p', ['number' => '<span class="num">'.e($order->order_number).'</span>']) !!}</p>
     @if ($order->cancel_reason)
-        <p>De reden die wij erbij noteerden is "{{ $order->cancel_reason }}".</p>
+        <p>{{ __('quote.cancel_reason', ['reason' => $order->cancel_reason]) }}</p>
     @endif
-    <p>Gaat het toch door? Neem contact op via <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> of
-    <a href="mailto:{{ $order->senderUser()?->email ?? 'sales@desnipperaar.nl' }}" style="color:#0A0A0A;">{{ $order->senderUser()?->email ?? 'sales@desnipperaar.nl' }}</a>
-    voor een nieuwe offerte.</p>
+    <p>{!! __('quote.cancel_new', ['phone' => $phoneLink, 'email' => $mailLink]) !!}</p>
 @endsection

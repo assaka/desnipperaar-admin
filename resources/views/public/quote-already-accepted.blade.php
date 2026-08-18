@@ -1,12 +1,14 @@
 @extends('public._layout')
-@section('title', 'Offerte al geaccepteerd')
+@section('title', __('quote.done_title'))
 
 @section('content')
     <div class="banner ok">
-        Deze offerte is al geaccepteerd op {{ $order->quote_accepted_at->format('d-m-Y H:i') }}.
+        {{ __('quote.done_banner', ['date' => $order->quote_accepted_at->format('d-m-Y H:i')]) }}
     </div>
-    <h1>Uw opdracht is al geplaatst.</h1>
-    <p>Order <span class="num">{{ $order->order_number }}</span> is in behandeling.
-    U heeft de orderbevestiging per e-mail ontvangen op <strong>{{ $order->customer_email }}</strong>.</p>
-    <p class="small">Geen mail ontvangen? Check spam, of neem contact op via 06-10229965.</p>
+    <h1>{{ __('quote.done_h1') }}</h1>
+    <p>{!! __('quote.done_p', [
+        'number' => '<span class="num">'.e($order->order_number).'</span>',
+        'email'  => '<strong>'.e($order->customer_email).'</strong>',
+    ]) !!}</p>
+    <p class="small">{{ __('quote.done_small', ['phone' => '06-10229965']) }}</p>
 @endsection

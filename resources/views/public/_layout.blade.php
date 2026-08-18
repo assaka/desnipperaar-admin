@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,7 +49,7 @@
     <div class="card">
         @yield('content')
     </div>
-    <p class="trust">AVG &middot; DIN 66399 &middot; VOG &middot; Verzekerd &middot; €&nbsp;2,5 mln dekking</p>
+    <p class="trust">{!! __('quote.trust') !!}</p>
 </div>
 </body>
 </html>

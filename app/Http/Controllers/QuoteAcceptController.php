@@ -12,9 +12,19 @@ use Illuminate\Support\Facades\Mail;
 
 class QuoteAcceptController extends Controller
 {
+    /**
+     * De offertepagina praat de taal van de offerte, niet van de server.
+     * Zelfde bron en zelfde whitelist als de mails gebruiken.
+     */
+    private function applyLocale(Order $order): void
+    {
+        app()->setLocale(in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl');
+    }
+
     public function show(string $token)
     {
         $order = Order::where('quote_token', $token)->firstOrFail();
+        $this->applyLocale($order);
 
         // Een ingetrokken offerte laat zich niet meer accepteren, dus hem tonen
         // met een knop eronder is een belofte die wij niet nakomen.
@@ -33,6 +43,7 @@ class QuoteAcceptController extends Controller
     public function accept(Request $request, string $token)
     {
         $order = Order::where('quote_token', $token)->firstOrFail();
+        $this->applyLocale($order);
 
         if ($order->isCanceled()) {
             return view('public.quote-canceled', compact('order'));
@@ -63,15 +74,15 @@ class QuoteAcceptController extends Controller
             'qty'              => 'nullable|array',
             'qty.*'            => 'nullable|numeric|min:0|max:99999',
         ], [
-            'naam.required'       => 'Vul uw naam in.',
-            'email.required'      => 'Vul uw e-mailadres in.',
-            'email.email'         => 'Vul een geldig e-mailadres in.',
-            'telefoon.required'   => 'Vul uw telefoonnummer in.',
-            'straat.required'     => 'Vul de straatnaam in.',
-            'huisnummer.required' => 'Vul het huisnummer in.',
-            'postcode.required'   => 'Vul uw postcode in.',
-            'postcode.regex'      => 'Vul een geldige postcode in, bijvoorbeeld 1034AB.',
-            'stad.required'       => 'Vul de stad in.',
+            'naam.required'       => __('quote.validation.name'),
+            'email.required'      => __('quote.validation.email'),
+            'email.email'         => __('quote.validation.email_bad'),
+            'telefoon.required'   => __('quote.validation.phone'),
+            'straat.required'     => __('quote.validation.street'),
+            'huisnummer.required' => __('quote.validation.number'),
+            'postcode.required'   => __('quote.validation.postcode'),
+            'postcode.regex'      => __('quote.validation.postcode_bad'),
+            'stad.required'       => __('quote.validation.city'),
         ]);
 
         $postcode = strtoupper(preg_replace('/\s+/', '', $data['postcode']));

@@ -1,5 +1,5 @@
 @extends('public._layout')
-@section('title', 'Offerte '.$order->order_number)
+@section('title', __('quote.title', ['number' => $order->order_number]))
 
 @php
     $isOffer  = !is_null($order->quoted_amount_excl_btw);
@@ -15,26 +15,24 @@
 @section('content')
     @if ($order->quote_accepted_at)
         <div class="banner ok">
-            Deze offerte is al geaccepteerd op {{ $order->quote_accepted_at->format('d-m-Y H:i') }}.
-            Een orderbevestiging is onderweg.
+            {{ __('quote.banner_accepted', ['date' => $order->quote_accepted_at->format('d-m-Y H:i')]) }}
         </div>
     @elseif ($order->isQuoteExpired())
         <div class="banner bad">
-            Deze offerte is verlopen op {{ $order->quote_valid_until->format('d-m-Y') }}.
-            Neem contact op voor een nieuwe offerte.
+            {{ __('quote.banner_expired', ['date' => $order->quote_valid_until->format('d-m-Y')]) }}
         </div>
     @endif
 
-    <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:6px;">Offerte</div>
-    <h1>Uw offerte op maat</h1>
+    <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:6px;">{{ __('quote.eyebrow') }}</div>
+    <h1>{{ __('quote.h1') }}</h1>
     <div class="num">{{ $order->order_number }}</div>
 
-    <h2>Scope en prijs</h2>
+    <h2>{{ __('quote.scope_h') }}</h2>
 
     @if (collect($allLines)->contains(fn ($l) => empty($l['optional'])))
     <table class="lines">
         <thead>
-            <tr><th>Omschrijving</th><th class="r">Aantal</th><th class="r">Prijs</th><th class="r">Subtotaal</th></tr>
+            <tr><th>{{ __('quote.th_desc') }}</th><th class="r">{{ __('quote.th_qty') }}</th><th class="r">{{ __('quote.th_price') }}</th><th class="r">{{ __('quote.th_subtotal') }}</th></tr>
         </thead>
         <tbody>
             @foreach ($allLines as $i => $line)
@@ -65,9 +63,9 @@
         $totalsBlock = function () use ($isOffer, $eur, $baseExcl) {
             if (! $isOffer) return '';
             return '<div class="meta">'
-                .'<div class="row"><span class="k">Bedrag excl. btw</span><span class="v" id="amt-excl">'.$eur($baseExcl).'</span></div>'
-                .'<div class="row"><span class="k">BTW 21%</span><span class="v" id="amt-btw">'.$eur($baseExcl * 0.21).'</span></div>'
-                .'<div class="total"><span id="amt-incl">'.$eur($baseExcl * 1.21).'</span><span class="small">incl. btw</span></div>'
+                .'<div class="row"><span class="k">'.__('quote.amount_excl').'</span><span class="v" id="amt-excl">'.$eur($baseExcl).'</span></div>'
+                .'<div class="row"><span class="k">'.__('quote.vat').'</span><span class="v" id="amt-btw">'.$eur($baseExcl * 0.21).'</span></div>'
+                .'<div class="total"><span id="amt-incl">'.$eur($baseExcl * 1.21).'</span><span class="small">'.__('quote.incl_vat').'</span></div>'
                 .'</div>';
         };
     @endphp
@@ -87,8 +85,8 @@
             @csrf
 
             @if ($hasOptional)
-            <h2>Extra opties</h2>
-            <p class="small">Vink aan wat u wilt toevoegen. Het totaal past zich direct aan.</p>
+            <h2>{{ __('quote.options_h') }}</h2>
+            <p class="small">{{ __('quote.options_help') }}</p>
             <table class="lines">
                 <tbody>
                     @foreach ($allLines as $i => $line)
@@ -122,78 +120,81 @@
             {!! $totalsBlock() !!}
 
             @if ($order->quote_valid_until)
-                <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
+                <p class="small">{{ __('quote.valid_until', ['date' => $order->quote_valid_until->format('d-m-Y')]) }}</p>
             @endif
 
-            <h2>Uw gegevens</h2>
-            <p class="small">Vul het adres in waar wij de opdracht uitvoeren. Daarna plaatst u de opdracht.</p>
+            <h2>{{ __('quote.details_h') }}</h2>
+            <p class="small">{{ __('quote.details_help') }}</p>
 
             <div class="field">
-                <label for="naam">Naam</label>
+                <label for="naam">{{ __('quote.f_name') }}</label>
                 <input type="text" id="naam" name="naam" required
                        value="{{ old('naam', $order->customer_name) }}" autocomplete="name">
             </div>
             <div class="field-row">
                 <div class="field" style="flex:1;">
-                    <label for="email">E-mailadres</label>
+                    <label for="email">{{ __('quote.f_email') }}</label>
                     <input type="email" id="email" name="email" required
                            value="{{ old('email', $order->customer_email) }}" autocomplete="email">
                 </div>
                 <div class="field" style="flex:1;">
-                    <label for="bedrijf">Bedrijf <span style="font-weight:400;color:#999;">(optioneel)</span></label>
+                    <label for="bedrijf">{{ __('quote.f_company') }} <span style="font-weight:400;color:#999;">{{ __('quote.f_optional') }}</span></label>
                     <input type="text" id="bedrijf" name="bedrijf"
                            value="{{ old('bedrijf', optional($order->customer)->company) }}" autocomplete="organization">
                 </div>
             </div>
             <div class="field">
-                <label for="telefoon">Telefoon</label>
+                <label for="telefoon">{{ __('quote.f_phone') }}</label>
                 <input type="tel" id="telefoon" name="telefoon" required
                        value="{{ old('telefoon', $order->customer_phone) }}" autocomplete="tel">
             </div>
             <div class="field-row">
                 <div class="field" style="flex:3;">
-                    <label for="straat">Straatnaam</label>
+                    <label for="straat">{{ __('quote.f_street') }}</label>
                     <input type="text" id="straat" name="straat" required
                            value="{{ old('straat') }}" autocomplete="street-address">
                 </div>
                 <div class="field" style="flex:1;">
-                    <label for="huisnummer">Huisnummer</label>
+                    <label for="huisnummer">{{ __('quote.f_number') }}</label>
                     <input type="text" id="huisnummer" name="huisnummer" required
                            value="{{ old('huisnummer') }}" autocomplete="address-line2">
                 </div>
             </div>
             <div class="field-row">
                 <div class="field" style="flex:1;">
-                    <label for="postcode">Postcode</label>
+                    <label for="postcode">{{ __('quote.f_postcode') }}</label>
                     <input type="text" id="postcode" name="postcode" required
                            value="{{ old('postcode', $order->customer_postcode) }}"
                            pattern="\d{4}\s?[A-Za-z]{2}"
                            style="font-family:monospace;text-transform:uppercase;" autocomplete="postal-code">
                 </div>
                 <div class="field" style="flex:1;">
-                    <label for="stad">Stad</label>
+                    <label for="stad">{{ __('quote.f_city') }}</label>
                     <input type="text" id="stad" name="stad" required
                            value="{{ old('stad', $order->customer_city) }}" autocomplete="address-level2">
                 </div>
             </div>
 
-            <button class="accept-btn" id="accept-btn" style="margin-top:20px;">Plaats opdracht</button>
+            <button class="accept-btn" id="accept-btn" style="margin-top:20px;">{{ __('quote.submit') }}</button>
             <p class="small" style="margin-top:10px;">
-                Door op <strong>Plaats opdracht</strong> te klikken gaat u akkoord met het bedrag
-                van <strong><span id="legal-incl">{{ $inclBtw }}</span></strong> incl. btw
-                en de <a href="{{ $termsUrl ?? 'https://desnipperaar.nl/voorwaarden' }}" target="_blank" style="color:#0A0A0A;">algemene voorwaarden</a>.
-                Uw IP-adres en tijdstip worden vastgelegd als bewijs.
+                {!! __('quote.legal', [
+                    'button' => __('quote.submit'),
+                    'amount' => '<span id="legal-incl">'.e($inclBtw).'</span>',
+                    'terms'  => $termsUrl ?? 'https://desnipperaar.nl/voorwaarden',
+                ]) !!}
             </p>
         </form>
 
         <div id="accept-modal" class="modal-overlay" aria-hidden="true">
             <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="accept-modal-title">
-                <h2 id="accept-modal-title" style="margin-top:0;">Opdracht plaatsen?</h2>
-                <p>U plaatst nu een opdracht op basis van offerte <strong style="font-family:monospace;">{{ $order->order_number }}</strong>.
-                   Dit is een bindende opdracht voor <strong><span id="modal-incl">{{ $inclBtw }}</span></strong> incl. btw.</p>
+                <h2 id="accept-modal-title" style="margin-top:0;">{{ __('quote.modal_h') }}</h2>
+                <p>{!! __('quote.modal_p', [
+                    'number' => e($order->order_number),
+                    'amount' => '<span id="modal-incl">'.e($inclBtw).'</span>',
+                ]) !!}</p>
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="accept-cancel">Annuleer</button>
-                    <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">Ja, plaats opdracht</button>
+                    <button type="button" class="btn-secondary" id="accept-cancel">{{ __('quote.modal_cancel') }}</button>
+                    <button type="button" class="accept-btn" id="accept-confirm" style="width:auto;">{{ __('quote.modal_ok') }}</button>
                 </div>
             </div>
         </div>
@@ -286,7 +287,7 @@
         {!! $totalsBlock() !!}
 
         @if ($order->quote_valid_until)
-            <p class="small">Deze offerte is geldig tot <strong>{{ $order->quote_valid_until->format('d-m-Y') }}</strong>.</p>
+            <p class="small">{{ __('quote.valid_until', ['date' => $order->quote_valid_until->format('d-m-Y')]) }}</p>
         @endif
     @endif
 @endsection
