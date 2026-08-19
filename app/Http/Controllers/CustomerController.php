@@ -73,7 +73,7 @@ class CustomerController extends Controller
             })
             ->orderBy('name')
             ->limit(10)
-            ->get(['id','name','company','email','phone','address','postcode','city','reference']);
+            ->get(['id','name','company','email','phone','address','postcode','city','reference','locale']);
 
         return response()->json($hits);
     }

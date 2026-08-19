@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
+use App\Mail\QuoteRequested;
 use App\Mail\QuoteSent;
 use App\Mail\QuoteValidityUpdated;
 use App\Mail\SubscriptionActivated;
@@ -373,6 +374,133 @@ class OrderController extends Controller
         }
 
         return back()->with('status', $message);
+    }
+
+    /**
+     * Handmatig een offerte-aanvraag vastleggen. Niet elke aanvraag komt via het
+     * formulier op de site binnen: de meeste mailen of bellen gewoon. Zonder deze
+     * pagina moest daarvoor een order worden aangemaakt, die dan van het verkeerde
+     * type was en dus nooit in /offertes verscheen.
+     */
+    public function createOfferte(Request $request)
+    {
+        $preselected = null;
+        if ($request->filled('customer')) {
+            $c = Customer::find($request->integer('customer'));
+            if ($c) {
+                $preselected = [
+                    'id' => $c->id, 'name' => $c->name, 'company' => $c->company,
+                    'email' => $c->email, 'phone' => $c->phone,
+                    'address' => $c->address, 'postcode' => $c->postcode,
+                    'city' => $c->city, 'reference' => $c->reference,
+                    'locale' => $c->locale,
+                ];
+            }
+        }
+
+        return view('offertes.create', compact('preselected'));
+    }
+
+    public function storeOfferte(Request $request)
+    {
+        $rules = [
+            'customer_id'     => 'nullable|exists:customers,id',
+            'locale'          => 'nullable|in:nl,en,fr,es',
+            'delivery_mode'   => 'required|in:ophaal,breng,mobiel',
+            'box_count'       => 'nullable|integer|min:0',
+            'container_count' => 'nullable|integer|min:0',
+            'branche'         => 'nullable|string|max:255',
+            'materiaal'       => 'nullable|string|max:255',
+            'volume'          => 'nullable|string|max:255',
+            'termijn'         => 'nullable|string|max:255',
+            'gevonden_via'    => 'nullable|string|max:255',
+            'bericht'         => 'nullable|string|max:5000',
+            'notify'          => 'nullable|boolean',
+        ];
+
+        if (blank($request->input('customer_id'))) {
+            $rules['new_customer.name']     = 'required|string|max:255';
+            $rules['new_customer.email']    = 'required|email';
+            $rules['new_customer.company']  = 'nullable|string|max:255';
+            $rules['new_customer.phone']    = 'nullable|string|max:50';
+            $rules['new_customer.address']  = 'nullable|string|max:255';
+            $rules['new_customer.postcode'] = ['nullable','string','max:10','regex:/^\d{4}\s?[A-Za-z]{2}$/'];
+            $rules['new_customer.city']     = 'nullable|string|max:100';
+        }
+
+        $validated = $request->validate($rules, [
+            'new_customer.postcode.regex' => 'Postcode moet NL-formaat zijn (bv. 1034 AB).',
+        ]);
+
+        $locale = $validated['locale'] ?? 'nl';
+
+        $customer = filled($validated['customer_id'] ?? null)
+            ? Customer::findOrFail($validated['customer_id'])
+            : Customer::firstOrCreate(
+                ['email' => strtolower(trim($validated['new_customer']['email']))],
+                [
+                    'name'     => $validated['new_customer']['name'],
+                    'company'  => $validated['new_customer']['company']  ?? null,
+                    'phone'    => $validated['new_customer']['phone']    ?? null,
+                    'address'  => $validated['new_customer']['address']  ?? null,
+                    'postcode' => strtoupper(preg_replace('/\s+/', '', $validated['new_customer']['postcode'] ?? '')) ?: null,
+                    'city'     => $validated['new_customer']['city']     ?? null,
+                    'branche'  => $validated['branche'] ?? null,
+                    'locale'   => $locale,
+                ]
+            );
+
+        // Zelfde opbouw als een aanvraag via het formulier op de site, zodat een
+        // handmatig vastgelegde aanvraag op de detailpagina hetzelfde leest.
+        $notes = collect([
+            'Type: offerte op maat (handmatig vastgelegd)',
+            $customer->company                  ? 'Bedrijf: '      . $customer->company         : null,
+            ! empty($validated['branche'])      ? 'Branche: '      . $validated['branche']      : null,
+            ! empty($validated['gevonden_via']) ? 'Gevonden via: ' . $validated['gevonden_via'] : null,
+            ! empty($validated['materiaal'])    ? 'Materiaal: '    . $validated['materiaal']    : null,
+            ! empty($validated['volume'])       ? 'Volume: '       . $validated['volume']       : null,
+            ! empty($validated['termijn'])      ? 'Termijn: '      . $validated['termijn']      : null,
+            ! empty($validated['bericht'])      ? "\n"             . $validated['bericht']      : null,
+        ])->filter()->implode("\n");
+
+        $quoteRef = Order::generateQuoteReference();
+        $order = Order::create([
+            'order_number'       => $quoteRef,
+            'quote_reference'    => $quoteRef,
+            'type'               => Order::TYPE_QUOTE,
+            'customer_id'        => $customer->id,
+            'created_by_user_id' => $request->user()?->id,
+            'customer_name'      => $customer->name,
+            'customer_email'     => $customer->email,
+            'customer_phone'     => $customer->phone,
+            'customer_address'   => $customer->address,
+            'customer_postcode'  => $customer->postcode,
+            'customer_city'      => $customer->city,
+            'customer_reference' => $customer->reference,
+            'delivery_mode'      => $validated['delivery_mode'],
+            'box_count'          => $validated['box_count']       ?? 0,
+            'container_count'    => $validated['container_count'] ?? 0,
+            'notes'              => $notes,
+            'state'              => Order::STATE_NIEUW,
+            'locale'             => $locale,
+        ]);
+
+        $message = 'Offerte-aanvraag '.$order->order_number.' aangemaakt. Stel hieronder de offerte samen en verstuur hem.';
+
+        // De klant heeft ons zelf gemaild, dus een ontvangstbevestiging is hier
+        // een keuze en geen automatisme: bij een mail van vijf minuten geleden is
+        // hij overbodig, bij een telefoontje van vorige week juist niet.
+        if ($request->boolean('notify')) {
+            try {
+                Mail::to($order->customer_email)->send(new QuoteRequested($order, $request->user()));
+                $message .= ' Ontvangstbevestiging verstuurd naar '.$order->customer_email.'.';
+            } catch (\Throwable $e) {
+                report($e);
+                $message .= ' LET OP: de ontvangstbevestiging is NIET verstuurd, zie de logs.';
+            }
+        }
+
+        return redirect()->route('orders.show', $order)->with('status', $message);
     }
 
     public function create(Request $request)

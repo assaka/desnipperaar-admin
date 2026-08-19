@@ -4,7 +4,10 @@
 @section('content')
     <div class="flex justify-between items-baseline mb-4">
         <h1 class="text-2xl font-black">Offertes</h1>
-        <span class="text-sm text-gray-500">Vrijblijvende offerte-aanvragen op maat</span>
+        <div class="flex items-baseline gap-4">
+            <span class="text-sm text-gray-500">Vrijblijvende offerte-aanvragen op maat</span>
+            <a href="{{ route('offertes.create') }}" class="bg-black text-yellow-400 px-3 py-2 text-sm uppercase font-bold">+ Nieuwe offerte</a>
+        </div>
     </div>
 
     <table class="w-full text-left">

@@ -38,6 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/planning/assign-driver', [\App\Http\Controllers\PlanningController::class, 'assignDriver'])->name('planning.assign-driver');
 
     Route::get('/offertes', [\App\Http\Controllers\OrderController::class, 'offertes'])->name('offertes.index');
+    Route::get('/offertes/create', [\App\Http\Controllers\OrderController::class, 'createOfferte'])->name('offertes.create');
+    Route::post('/offertes', [\App\Http\Controllers\OrderController::class, 'storeOfferte'])->name('offertes.store');
     Route::get('/abonnementen', [\App\Http\Controllers\OrderController::class, 'abonnementen'])->name('abonnementen.index');
     Route::get('/abonnementen/{order}', [\App\Http\Controllers\OrderController::class, 'showAbonnement'])->name('abonnementen.show');
     Route::post('/orders/{order}/activate-subscription', [\App\Http\Controllers\OrderController::class, 'activateSubscription'])->name('orders.activate-subscription');

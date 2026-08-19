@@ -36,7 +36,10 @@
     <section>
         <div class="flex justify-between items-baseline mb-2">
             <h2 class="font-black">Orders</h2>
-            <a href="{{ route('orders.create', ['customer' => $customer->id]) }}" class="text-sm underline">+ nieuwe order voor deze klant</a>
+            <div class="flex gap-4">
+                <a href="{{ route('orders.create', ['customer' => $customer->id]) }}" class="text-sm underline">+ nieuwe order voor deze klant</a>
+                <a href="{{ route('offertes.create', ['customer' => $customer->id]) }}" class="text-sm underline">+ nieuwe offerte voor deze klant</a>
+            </div>
         </div>
         <table class="w-full text-left">
             <thead class="border-b">
