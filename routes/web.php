@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/customers/{customer}',       [\App\Http\Controllers\CustomerController::class, 'update'])->name('customers.update');
 
     Route::get('/pricing/quote', [\App\Http\Controllers\PricingController::class, 'quote'])->name('pricing.quote');
+    Route::get('/pricing/snapshot', [\App\Http\Controllers\PricingController::class, 'snapshot'])->name('pricing.snapshot');
 
     Route::get('/planning',        [\App\Http\Controllers\PlanningController::class, 'index'])->name('planning.index');
     Route::get('/planning/dag',    [\App\Http\Controllers\PlanningController::class, 'daily'])->name('planning.daily');

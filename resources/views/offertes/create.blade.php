@@ -22,6 +22,14 @@
           x-data="offerteForm(@js([
               'preselected' => $preselected ?? null,
               'searchUrl' => route('customers.search'),
+              'snapshotUrl' => route('pricing.snapshot'),
+              'mediaKeys' => array_keys(\App\Support\Pricing::MEDIA_LABELS),
+              'mediaTiers' => \App\Support\Pricing::MEDIA_TIERS,
+              'old' => [
+                  'boxes' => (int) old('box_count', 0),
+                  'containers' => (int) old('container_count', 0),
+                  'media' => array_map('intval', (array) old('media', [])),
+              ],
           ]))">
         @csrf
 
@@ -139,21 +147,9 @@
                            placeholder="bv. binnen 2 weken">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold">Aantal dozen</label>
-                    <input type="number" name="box_count" value="{{ old('box_count') }}" min="0" class="w-full border p-2">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold">Rolcontainers 240 L</label>
-                    <input type="number" name="container_count" value="{{ old('container_count') }}" min="0" class="w-full border p-2">
-                </div>
-                <div>
                     <label class="block text-sm font-bold">Gevonden via</label>
                     <input type="text" name="gevonden_via" value="{{ old('gevonden_via') }}" class="w-full border p-2"
                            placeholder="bv. Google, doorverwijzing">
-                </div>
-                <div class="col-span-3 text-xs text-gray-500 italic">
-                    Dozen en containers zijn alleen een richtprijs op de detailpagina. Het bedrag op de offerte
-                    bepaal je daar zelf met offerteregels.
                 </div>
             </div>
             <div class="mt-3">
@@ -168,6 +164,117 @@
             <p class="text-xs text-gray-500 mt-1">
                 Alleen aanvinken als de klant nog niets van ons heeft gehoord. De offerte zelf verstuur je op de volgende pagina.
             </p>
+        </section>
+
+        {{-- ── REKENMACHINE ── --}}
+        <section>
+            <div class="flex justify-between items-baseline mb-3">
+                <h2 class="font-black">Rekenmachine</h2>
+                <span class="text-sm text-gray-500">Zelfde tarieven als het winkelwagentje op /order</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-bold">Archiefdozen</label>
+                            <input type="number" name="box_count" x-model.number="boxes" min="0" class="w-full border p-2">
+                            <p class="text-xs text-gray-500 mt-1">
+                                € {{ number_format(\App\Support\Pricing::BOX_FIRST, 2, ',', '.') }} de eerste,
+                                daarna € {{ number_format(\App\Support\Pricing::BOX_NEXT, 2, ',', '.') }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold">Rolcontainers 240 L</label>
+                            <input type="number" name="container_count" x-model.number="containers" min="0" class="w-full border p-2">
+                            <p class="text-xs text-gray-500 mt-1">
+                                € {{ number_format(\App\Support\Pricing::CONTAINER_FIRST, 2, ',', '.') }} de eerste,
+                                daarna € {{ number_format(\App\Support\Pricing::CONTAINER_NEXT, 2, ',', '.') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-1">Datadragers</label>
+                        <table class="w-full text-sm">
+                            <tbody>
+                                @foreach (\App\Support\Pricing::MEDIA_LABELS as $key => $label)
+                                    <tr class="border-b">
+                                        <td class="py-1">{{ $label }}</td>
+                                        <td class="py-1 w-24">
+                                            <input type="number" name="media[{{ $key }}]" min="0"
+                                                   x-model.number="media['{{ $key }}']"
+                                                   class="w-full border p-1 text-right">
+                                        </td>
+                                        <td class="py-1 w-28 text-right font-mono text-gray-600"
+                                            x-text="unitLabel('{{ $key }}')"></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Staffel per soort drager: 1–24 / 25–99 / 100–499 / 500+. De prijs per stuk zakt mee
+                            zodra het aantal een trede haalt.
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Prijsoverzicht --}}
+                <div class="bg-gray-50 border-l-4 border-yellow-400 p-4 self-start">
+                    <h3 class="font-black mb-2">Prijsoverzicht</h3>
+                    <template x-if="!hasInput">
+                        <p class="text-sm text-gray-500">Vul aantallen in om de prijs te berekenen.</p>
+                    </template>
+                    <table class="w-full text-sm" x-show="hasInput && calc" x-cloak>
+                        <template x-for="line in allLines" :key="line.label">
+                            <tr class="border-b">
+                                <td class="py-1" x-text="line.label"></td>
+                                <td class="py-1 text-right text-gray-500 font-mono" x-text="line.qty + ' × ' + euro(line.unit)"></td>
+                                <td class="py-1 text-right font-mono">
+                                    <span x-text="euro(line.subtotal)"></span>
+                                    <span x-show="line.was_subtotal" class="block text-xs line-through text-gray-400"
+                                          x-text="euro(line.was_subtotal ?? 0)"></span>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td class="pt-2 text-gray-600" colspan="2">Subtotaal excl. btw</td>
+                            <td class="pt-2 text-right font-mono" x-text="euro(calc?.subtotal ?? 0)"></td>
+                        </tr>
+                        <tr x-show="(calc?.discount ?? 0) > 0">
+                            <td class="text-green-700" colspan="2">Waarvan staffelkorting</td>
+                            <td class="text-right font-mono text-green-700" x-text="'− ' + euro(calc?.discount ?? 0)"></td>
+                        </tr>
+                        <tr>
+                            <td class="text-gray-600" colspan="2">Btw 21%</td>
+                            <td class="text-right font-mono" x-text="euro(calc?.vat ?? 0)"></td>
+                        </tr>
+                        <tr class="border-t-2 border-black">
+                            <td class="pt-2 font-bold" colspan="2">Totaal incl. btw</td>
+                            <td class="pt-2 text-right font-bold text-lg font-mono" x-text="euro(calc?.total ?? 0)"></td>
+                        </tr>
+                    </table>
+
+                    <label class="flex items-start gap-2 mt-4 text-sm">
+                        {{-- Standaard aan, maar na een validatiefout telt wat je zelf koos:
+                             een niet-aangevinkt vakje komt niet mee in de POST, dus zonder
+                             deze uitzondering zou old() hem weer aanzetten. --}}
+                        <input type="checkbox" name="draft_lines" value="1" class="mt-1"
+                               @checked(old('draft_lines', $errors->any() ? null : true))>
+                        <span>
+                            Neem de berekening over als concept-offerteregels
+                            <span class="block text-xs text-gray-500">
+                                Het offerteformulier op de volgende pagina staat dan ingevuld. Je kunt daar elke
+                                regel nog wijzigen, en er gaat pas iets naar de klant als je op versturen drukt.
+                            </span>
+                        </span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Ophaalkosten zitten hier niet in. Die hangen aan de afstand en komen op de detailpagina
+                        bij het inplannen van de rit.
+                    </p>
+                </div>
+            </div>
         </section>
 
         <div class="border-t pt-4 flex gap-3">
@@ -185,6 +292,56 @@
                 results: [],
                 selected: cfg.preselected ?? null,
                 locale: cfg.preselected?.locale ?? '{{ old('locale', 'nl') }}',
+
+                snapshotUrl: cfg.snapshotUrl,
+                mediaTiers: cfg.mediaTiers,
+                boxes: cfg.old.boxes || 0,
+                containers: cfg.old.containers || 0,
+                media: Object.fromEntries(cfg.mediaKeys.map(k => [k, cfg.old.media[k] || 0])),
+                calc: null,
+
+                init() {
+                    this.$watch('boxes',      () => this.refresh());
+                    this.$watch('containers', () => this.refresh());
+                    this.$watch('media',      () => this.refresh(), {deep: true});
+                    if (this.hasInput) this.refresh();
+                },
+
+                get hasInput() {
+                    return this.boxes > 0 || this.containers > 0
+                        || Object.values(this.media).some(q => q > 0);
+                },
+
+                get allLines() {
+                    return [...(this.calc?.lines ?? []), ...(this.calc?.media_lines ?? [])];
+                },
+
+                euro(n) {
+                    return '€ ' + (n || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                },
+
+                // De trede waar dit aantal in valt, zodat je ziet zakken wat er zakt
+                // zonder eerst te moeten versturen.
+                unitLabel(key) {
+                    const qty = this.media[key] || 0;
+                    if (qty <= 0) return this.euro(this.mediaTiers[key][0]) + ' p/st';
+                    const tier = qty >= 500 ? 3 : qty >= 100 ? 2 : qty >= 25 ? 1 : 0;
+                    const unit = this.mediaTiers[key][tier];
+                    return this.euro(unit) + ' p/st';
+                },
+
+                async refresh() {
+                    if (!this.hasInput) { this.calc = null; return; }
+                    const p = new URLSearchParams({
+                        boxes: this.boxes || 0,
+                        containers: this.containers || 0,
+                    });
+                    for (const [k, q] of Object.entries(this.media)) {
+                        if (q > 0) p.append('media[' + k + ']', q);
+                    }
+                    const r = await fetch(this.snapshotUrl + '?' + p, {headers:{Accept:'application/json'}});
+                    this.calc = r.ok ? await r.json() : null;
+                },
 
                 async search() {
                     if (this.query.length < 2) { this.results = []; return; }

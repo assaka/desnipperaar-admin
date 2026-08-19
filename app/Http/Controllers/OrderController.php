@@ -409,6 +409,9 @@ class OrderController extends Controller
             'delivery_mode'   => 'required|in:ophaal,breng,mobiel',
             'box_count'       => 'nullable|integer|min:0',
             'container_count' => 'nullable|integer|min:0',
+            'media'           => 'nullable|array:' . implode(',', array_keys(\App\Support\Pricing::MEDIA_TIERS)),
+            'media.*'         => 'nullable|integer|min:0|max:100000',
+            'draft_lines'     => 'nullable|boolean',
             'branche'         => 'nullable|string|max:255',
             'materiaal'       => 'nullable|string|max:255',
             'volume'          => 'nullable|string|max:255',
@@ -463,6 +466,39 @@ class OrderController extends Controller
             ! empty($validated['bericht'])      ? "\n"             . $validated['bericht']      : null,
         ])->filter()->implode("\n");
 
+        // Alleen dragers met een aantal, zodat een order geen rij met nul kwijt
+        // hoeft te bewaren. De rekenmachine op het formulier stuurt ze allemaal.
+        $media = collect($validated['media'] ?? [])
+            ->map(fn ($qty) => (int) $qty)
+            ->filter(fn ($qty) => $qty > 0)
+            ->all();
+
+        $boxes      = (int) ($validated['box_count'] ?? 0);
+        $containers = (int) ($validated['container_count'] ?? 0);
+
+        /**
+         * De berekening als concept-offerteregels, zodat het offerteformulier op
+         * de detailpagina ingevuld openstaat in plaats van leeg. Het blijft een
+         * concept: er gaat niets naar de klant tot je daar op versturen drukt, en
+         * elke regel is daar nog te wijzigen of te verwijderen.
+         */
+        $draftLines = null;
+        if ($request->boolean('draft_lines')) {
+            $snapshot = \App\Support\Pricing::snapshot($boxes, $containers, $media, false, false);
+            $draftLines = collect(array_merge($snapshot['lines'], $snapshot['media_lines']))
+                ->map(fn ($l) => [
+                    'label'    => $l['label'],
+                    'qty'      => (float) $l['qty'],
+                    'unit'     => (float) $l['unit'],
+                    'subtotal' => (float) $l['subtotal'],
+                    'optional' => false,
+                    'editable' => false,
+                ])
+                ->values()
+                ->all();
+            $draftLines = $draftLines ?: null;
+        }
+
         $quoteRef = Order::generateQuoteReference();
         $order = Order::create([
             'order_number'       => $quoteRef,
@@ -478,14 +514,19 @@ class OrderController extends Controller
             'customer_city'      => $customer->city,
             'customer_reference' => $customer->reference,
             'delivery_mode'      => $validated['delivery_mode'],
-            'box_count'          => $validated['box_count']       ?? 0,
-            'container_count'    => $validated['container_count'] ?? 0,
+            'box_count'          => $boxes,
+            'container_count'    => $containers,
+            'media_items'        => $media ?: null,
+            'quote_lines'        => $draftLines,
             'notes'              => $notes,
             'state'              => Order::STATE_NIEUW,
             'locale'             => $locale,
         ]);
 
         $message = 'Offerte-aanvraag '.$order->order_number.' aangemaakt. Stel hieronder de offerte samen en verstuur hem.';
+        if ($draftLines) {
+            $message .= ' De berekening staat als concept in het offerteformulier, er is nog niets verstuurd.';
+        }
 
         // De klant heeft ons zelf gemaild, dus een ontvangstbevestiging is hier
         // een keuze en geen automatisme: bij een mail van vijf minuten geleden is
