@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/transition', [\App\Http\Controllers\OrderController::class, 'transition'])->name('orders.transition');
     Route::post('/orders/{order}/cancel', [\App\Http\Controllers\OrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/mail', [\App\Http\Controllers\OrderController::class, 'mail'])->name('orders.mail');
+    Route::post('/orders/{order}/whatsapp', [\App\Http\Controllers\OrderController::class, 'whatsapp'])->name('orders.whatsapp');
     Route::post('/orders/{order}/send-quote', [\App\Http\Controllers\OrderController::class, 'sendQuote'])->name('orders.send-quote');
     Route::post('/orders/{order}/quote-valid-until', [\App\Http\Controllers\OrderController::class, 'updateQuoteValidUntil'])->name('orders.quote-valid-until');
     Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');

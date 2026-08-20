@@ -235,7 +235,53 @@
                     </div>
                 </form>
             </div>
-            <div>{{ $order->customer_phone }}</div>
+            @php
+                $waNummer    = \App\Support\WhatsApp::normalize($order->customer_phone);
+                $waSjablonen = $waNummer ? \App\Support\WhatsApp::templates($order) : [];
+            @endphp
+            <div x-data="waPanel(@js($waSjablonen), @js($waNummer ? \App\Support\WhatsApp::display($waNummer) : ''))">
+                <div class="flex items-center gap-2">
+                    @if ($order->customer_phone)
+                        <a href="tel:{{ $order->customer_phone }}" class="underline">{{ $order->customer_phone }}</a>
+                    @else
+                        <span class="text-gray-500">geen telefoonnummer</span>
+                    @endif
+                    @if ($waNummer)
+                        <button type="button" @click="open = ! open"
+                                class="bg-gray-200 text-black px-2 py-0.5 text-xs uppercase font-bold">&#9990; WhatsApp</button>
+                    @endif
+                </div>
+
+                @error('whatsapp')
+                    <div class="text-xs text-red-700 mt-1">{{ $message }}</div>
+                @enderror
+
+                @if ($waNummer)
+                    {{-- target="_blank": de doorverwijzing naar wa.me landt in een nieuw tabblad,
+                         zodat deze pagina blijft staan met alles wat erop openstaat, inclusief een
+                         half ingevuld bewerkformulier. --}}
+                    <form method="POST" action="{{ route('orders.whatsapp', $order) }}" target="_blank"
+                          x-show="open" x-cloak class="mt-2 border border-gray-300 bg-gray-50 p-2 max-w-md">
+                        @csrf
+                        <select @change="pick($event.target.value)" class="border p-1 text-xs w-full mb-1">
+                            <template x-for="t in templates" :key="t.key">
+                                <option :value="t.key" x-text="t.label"></option>
+                            </template>
+                        </select>
+                        <textarea name="body" x-model="body" rows="9" required
+                                  class="border p-1 text-xs w-full"></textarea>
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="text" name="to" x-model="number" required
+                                   class="border p-1 text-xs w-36 font-mono">
+                            <button class="bg-black text-yellow-400 px-2 py-0.5 text-xs uppercase font-bold">Open in WhatsApp</button>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">
+                            WhatsApp opent met deze tekst klaar. Verzenden doe je daar zelf. Het bericht komt
+                            na verversen onder Berichten te staan als klaargezet.
+                        </p>
+                    </form>
+                @endif
+            </div>
             <div class="mt-2 text-sm">{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</div>
             @if ($order->customer_reference)
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
@@ -763,7 +809,13 @@
                     <span class="font-bold uppercase">{{ $m->direction === 'in' ? '↓ Van klant' : '↑ Naar klant' }}</span>
                     <span>{{ optional($m->occurred_at)->format('Y-m-d H:i') }}</span>
                 </div>
-                <div class="text-xs text-gray-500 break-all">{{ $m->from_email }} → {{ $m->to_email }}</div>
+                <div class="text-xs text-gray-500 break-all">
+                    @if ($m->channel === 'whatsapp')
+                        <span class="bg-green-700 text-white px-1 uppercase font-bold">WhatsApp</span>
+                        <span class="italic">klaargezet</span>
+                    @endif
+                    {{ $m->from_email }} → {{ $m->to_email }}
+                </div>
                 @if ($m->subject)
                     <div class="text-sm font-bold mt-1">{{ $m->subject }}</div>
                 @endif
@@ -777,6 +829,22 @@
 </div>{{-- einde dirty/editOpen --}}
 
     <script>
+        // Het WhatsApp-paneel bij het telefoonnummer. Houdt alleen de gekozen
+        // tekst bij; het versturen gebeurt in WhatsApp zelf, niet hier.
+        function waPanel(templates, number) {
+            return {
+                open: false,
+                templates: templates,
+                number: number,
+                body: templates.length ? templates[0].text : '',
+
+                pick(key) {
+                    const gekozen = this.templates.find(t => t.key === key);
+                    this.body = gekozen ? gekozen.text : '';
+                },
+            };
+        }
+
         // Het paneel met beschikbare momenten in de sectie "Geplande ophaling".
         // Zoekt pas op verzoek: de berekening kijkt vier weken vooruit en zoekt
         // ontbrekende coördinaten op, en dat hoort niet te hangen aan elke keer

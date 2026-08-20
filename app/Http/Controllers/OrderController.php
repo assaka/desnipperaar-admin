@@ -14,6 +14,8 @@ use App\Models\Bon;
 use App\Models\Customer;
 use App\Models\Driver;
 use App\Models\Order;
+use App\Models\OrderMessage;
+use App\Support\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -1172,6 +1174,48 @@ class OrderController extends Controller
             report($e);
             return back()->withErrors(['mail' => 'Kon mail niet versturen: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Zet een WhatsApp-bericht klaar bij de klant.
+     *
+     * Het formulier heeft target="_blank", dus deze redirect landt in een nieuw
+     * tabblad dat meteen doorgaat naar WhatsApp. De orderpagina zelf blijft
+     * staan waar hij stond, inclusief openstaande wijzigingen in het
+     * bewerkformulier.
+     *
+     * Wij loggen vóór de doorverwijzing, want daarna zijn wij de klant kwijt aan
+     * WhatsApp en horen wij niets meer terug. Wat in Berichten staat is dus wat
+     * jij hebt klaargezet, niet per se wat is verstuurd.
+     */
+    public function whatsapp(Request $request, Order $order)
+    {
+        $data = $request->validate([
+            'to'   => ['required', 'string', 'max:32'],
+            'body' => ['required', 'string', 'max:4000'],
+        ]);
+
+        $number = WhatsApp::normalize($data['to']);
+        if (! $number) {
+            return back()->withErrors(['whatsapp' => 'Dat is geen bruikbaar telefoonnummer voor WhatsApp.']);
+        }
+
+        $body = trim($data['body']);
+
+        OrderMessage::create([
+            'order_id'    => $order->id,
+            'direction'   => 'out',
+            'channel'     => 'whatsapp',
+            'from_email'  => $request->user()?->email,
+            // Kolom heet to_email omdat er tot nu toe alleen mail in ging. Hier
+            // staat het WhatsApp-nummer, en het kanaal ernaast vertelt welke van
+            // de twee het is.
+            'to_email'    => WhatsApp::display($number),
+            'body_text'   => $body,
+            'occurred_at' => now(),
+        ]);
+
+        return redirect()->away(WhatsApp::url($number, $body));
     }
 
     /**
