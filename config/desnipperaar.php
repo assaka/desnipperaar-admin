@@ -67,11 +67,14 @@ return [
         //                     rechte lijn, want treden geven klifjes: op 60 km
         //                     gratis en op 61 km ineens het volle bedrag is niet
         //                     uit te leggen. Nodig = base + (km - base_km) *
-        //                     per_km, dus honderd euro tot 50 km en daarboven
-        //                     vijf euro bestelbedrag per extra kilometer, tot
-        //                     max_km. Elk punt op die lijn geeft ongeveer een
-        //                     tiende van de order weg (9,8% op 50 km oplopend
-        //                     tot 11,4% op 70 km). Blijf in die verhouding.
+        //                     per_km, met cap als plafond, dus honderd euro tot
+        //                     50 km en daarboven vijf euro bestelbedrag per extra
+        //                     kilometer tot max_km, nooit meer dan EUR 400. Die
+        //                     cap valt op 110 km. Tot daar geven wij ongeveer een
+        //                     achtste van de order weg (9,8% op 50 km oplopend
+        //                     tot 12,2%); daarna loopt dat op naar 18,7% op
+        //                     150 km, want de order groeit niet meer mee met de
+        //                     rit. Bewuste keuze, prijs van een ronde drempel.
         //
         // Dezelfde waarden staan op de publieke site in site-config.json, met
         // dezelfde omgevingsvariabelen eroverheen. Zet ze samen om, anders wijkt
@@ -87,17 +90,19 @@ return [
             $raw = trim((string) env('PICKUP_FREE_ABOVE', ''));
             if ($raw !== '') {
                 $n = array_map('trim', explode(':', $raw));
-                if (count($n) === 4 && count(array_filter($n, 'is_numeric')) === 4) {
+                // De cap is de vijfde en mag weg blijven; dan geldt er geen plafond.
+                if (count($n) >= 4 && count(array_filter($n, 'is_numeric')) === count($n)) {
                     return [
                         'base'    => (float) $n[0],
                         'base_km' => (float) $n[1],
                         'per_km'  => (float) $n[2],
                         'max_km'  => (float) $n[3],
+                        'cap'     => isset($n[4]) ? (float) $n[4] : 0.0,
                     ];
                 }
             }
 
-            return ['base' => 100.0, 'base_km' => 50.0, 'per_km' => 5.0, 'max_km' => 70.0];
+            return ['base' => 100.0, 'base_km' => 50.0, 'per_km' => 5.0, 'max_km' => 150.0, 'cap' => 400.0];
         })(),
     ],
 

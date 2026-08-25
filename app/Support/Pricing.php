@@ -51,8 +51,8 @@ class Pricing
      *
      * Een rechte lijn en geen treden, want treden geven klifjes: op 60 km gratis
      * en op 61 km ineens het volle bedrag is niet uit te leggen. Tot base_km het
-     * basisbedrag, daarboven per_km erbij per extra kilometer. Voorbij max_km
-     * valt er niets te halen en geeft dit 0.0.
+     * basisbedrag, daarboven per_km erbij per extra kilometer, met cap als
+     * plafond. Voorbij max_km valt er niets te halen en geeft dit 0.0.
      *
      * Dezelfde lijn staat op de publieke site in site-config.json -> pickup.
      * Loopt hij uiteen, dan wijkt de factuur af van wat de klant zag.
@@ -65,13 +65,19 @@ class Pricing
         $base   = (float) config('desnipperaar.pickup.free_above.base', 100);
         $baseKm = (float) config('desnipperaar.pickup.free_above.base_km', 50);
         $perKm  = (float) config('desnipperaar.pickup.free_above.per_km', 5);
-        $maxKm  = (float) config('desnipperaar.pickup.free_above.max_km', 70);
+        $maxKm  = (float) config('desnipperaar.pickup.free_above.max_km', 150);
+        $cap    = (float) config('desnipperaar.pickup.free_above.cap', 400);
 
         if ($km > $maxKm) {
             return 0.0;
         }
 
-        return round($base + max(0.0, $km - $baseKm) * $perKm, 2);
+        $need = $base + max(0.0, $km - $baseKm) * $perKm;
+        if ($cap > 0) {
+            $need = min($need, $cap);
+        }
+
+        return round($need, 2);
     }
 
     /**
