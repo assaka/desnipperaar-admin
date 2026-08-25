@@ -69,10 +69,10 @@ return [
         //                     uit te leggen. Nodig = base + (km - base_km) *
         //                     per_km, met cap als plafond, dus honderd euro tot
         //                     50 km en daarboven vijf euro bestelbedrag per extra
-        //                     kilometer tot max_km, nooit meer dan EUR 400. Die
-        //                     cap valt op 110 km. Tot daar geven wij ongeveer een
+        //                     kilometer tot max_km, nooit meer dan EUR 500. Die
+        //                     cap valt op 130 km. Tot daar geven wij ongeveer een
         //                     achtste van de order weg (9,8% op 50 km oplopend
-        //                     tot 12,2%); daarna loopt dat op naar 18,7% op
+        //                     tot 12,3%); daarna loopt dat op naar 14,9% op
         //                     150 km, want de order groeit niet meer mee met de
         //                     rit. Bewuste keuze, prijs van een ronde drempel.
         //
@@ -102,7 +102,7 @@ return [
                 }
             }
 
-            return ['base' => 100.0, 'base_km' => 50.0, 'per_km' => 5.0, 'max_km' => 150.0, 'cap' => 400.0];
+            return ['base' => 100.0, 'base_km' => 50.0, 'per_km' => 5.0, 'max_km' => 150.0, 'cap' => 500.0];
         })(),
     ],
 

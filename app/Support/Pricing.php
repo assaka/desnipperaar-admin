@@ -66,7 +66,7 @@ class Pricing
         $baseKm = (float) config('desnipperaar.pickup.free_above.base_km', 50);
         $perKm  = (float) config('desnipperaar.pickup.free_above.per_km', 5);
         $maxKm  = (float) config('desnipperaar.pickup.free_above.max_km', 150);
-        $cap    = (float) config('desnipperaar.pickup.free_above.cap', 400);
+        $cap    = (float) config('desnipperaar.pickup.free_above.cap', 500);
 
         if ($km > $maxKm) {
             return 0.0;
