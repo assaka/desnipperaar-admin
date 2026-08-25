@@ -12,9 +12,10 @@ use Carbon\Carbon;
  * Welke ophaalmomenten kunnen wij deze klant aanbieden.
  *
  * De prijs komt hier niet vandaan. Wat de klant betaalt volgt uit zijn adres en
- * is bij het bestellen al berekend: binnen regio Amsterdam gratis, daarbuiten
- * max(0, km - 20) maal het kilometertarief. Die formule staat op /order en wordt
- * hier alleen overgenomen om te kunnen laten zien wat een rit ons kost.
+ * is bij het bestellen al berekend: binnen de gratis straal niets, daarbuiten
+ * max(0, km - straal) maal het kilometertarief, en niets zodra het mandje boven
+ * de drempel uitkomt. Die formule staat in Pricing en op /order, en wordt hier
+ * alleen overgenomen om te kunnen laten zien wat een rit ons kost.
  *
  * Wat wij hier wél bepalen is welke dagen kunnen, en welke dagen slim zijn:
  *

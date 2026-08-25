@@ -66,9 +66,9 @@ class SendTestOrder extends Command
         }
 
         // Dezelfde rekensom als de bestelpagina, via Pricing, zodat een test niet
-        // stiekem een ander bedrag oplevert dan een echte bestelling.
-        $pickupCost    = \App\Support\Pricing::pickupCost($km, $choice !== 'free');
-        $pickupRushFee = \App\Support\Pricing::pickupRushFee($choice === 'spoed');
+        // stiekem een ander bedrag oplevert dan een echte bestelling. De
+        // grondslag volgt verderop uit de testregels, dus de ophaalkosten staan
+        // hier nog niet vast.
 
         $this->info("Creating test order for {$email} (locale={$locale}, pickup={$choice} @ {$km} km, full=" . ($full ? 'yes' : 'no') . ')');
 
@@ -115,6 +115,21 @@ class SendTestOrder extends Command
                 'notes'     => '[TEST] Automated test customer — desnipperaar:test-order',
             ],
         );
+
+        // Nu de regels vaststaan kan de grondslag berekend worden, en daarmee de
+        // ophaalkosten. Zelfde volgorde als de echte intake in OrderController.
+        $goodsSubtotal = (float) \App\Support\Pricing::snapshot(
+            $boxes,
+            $cntrs,
+            $media,
+            $pilot,
+            false,
+            0.0,
+            0.0,
+        )['subtotal'];
+
+        $pickupCost    = \App\Support\Pricing::pickupCost($km, $choice !== 'free', $goodsSubtotal);
+        $pickupRushFee = \App\Support\Pricing::pickupRushFee($choice === 'spoed');
 
         $order = Order::create([
             'order_number'       => "TEST-O-{$token}",

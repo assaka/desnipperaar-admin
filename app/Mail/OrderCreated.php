@@ -139,16 +139,21 @@ class OrderCreated extends Mailable
                 'pickupRushFee'   => $snap['pickup_rush_fee'] ?? 0,
                 // De gekozen ophaalsnelheid draagt de ophaalregel in het
                 // besteloverzicht. Aan het bedrag hangen kon niet: "gratis" kost
-                // nul, en "eerder" ook zodra de klant binnen de eerste 20 km
+                // nul, en "eerder" ook zodra de klant binnen de gratis straal
                 // woont, en dan viel de regel weg. Handmatige orders hebben geen
                 // keuze en krijgen dus geen ophaalregel.
                 'pickupChoice'    => $this->order->delivery_mode === 'ophaal'
                     ? ($this->order->pickup_choice ?: null)
                     : null,
-                // In de regio Amsterdam viel er niets te kiezen, dus daar noemen
-                // wij niet de wachttijd van twee weken die daar niet geldt.
+                // Binnen de gratis straal viel er niets te kiezen, dus daar
+                // noemen wij niet de wachttijd van twee weken die er niet geldt.
+                //
+                // Dit leest de straal van vandaag en niet die van toen de order
+                // binnenkwam. Het bedrag staat vast op de order, dus dat schuift
+                // niet mee; hoogstens leest een oude bevestiging alsof de klant
+                // altijd al binnen de straal woonde.
                 'pickupInRegion'  => $this->order->pickup_km !== null
-                    && $this->order->pickup_km <= \App\Support\Pricing::PICKUP_FREE_KM,
+                    && $this->order->pickup_km <= \App\Support\Pricing::freeKm(),
                 'subtotal'        => $snap['subtotal'],
                 'subtotalRegular' => $snap['subtotal_regular'],
                 'discount'        => $snap['discount'],

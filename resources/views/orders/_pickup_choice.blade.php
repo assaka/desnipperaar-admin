@@ -18,12 +18,12 @@
 --}}
 @php
     $keuzeInRegio = $order->pickup_km !== null
-        && $order->pickup_km <= \App\Support\Pricing::PICKUP_FREE_KM;
+        && $order->pickup_km <= \App\Support\Pricing::freeKm();
 
     [$keuzeLabel, $keuzeKleur, $keuzeBijschrift] = match ($order->pickup_choice) {
         'spoed'  => ['spoed',  'bg-red-700 text-white',    'binnen 2 werkdagen'],
         'sooner' => ['eerder', 'bg-black text-yellow-400', 'binnen 2 weken'],
-        'free'   => ['gratis', 'bg-gray-300 text-black',   $keuzeInRegio ? 'regio Amsterdam' : 'vanaf 2 weken'],
+        'free'   => ['gratis', 'bg-gray-300 text-black',   $keuzeInRegio ? 'binnen de straal' : 'vanaf 2 weken'],
         default  => [null, null, null],
     };
 @endphp

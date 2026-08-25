@@ -56,6 +56,23 @@ return [
         // een formulier post. Zet ze samen om, anders ziet de klant iets anders
         // dan hij krijgt.
         'rush_mode' => env('PICKUP_RUSH_MODE', 'off'),
+
+        // Ophaalkosten. Alleen "eerder dan 2 weken" kost iets; gratis vanaf 2
+        // weken is landelijk en blijft dat.
+        //
+        //   free_km              tot hier is de rit gratis, hoe snel de klant ook wil
+        //   rate_per_km          daarboven per kilometer, enkele reis
+        //   free_above_subtotal  vanaf dit subtotaal ex btw vervalt die kilometerprijs
+        //   free_above_max_km    maar niet verder dan dit, anders rijden wij het land door
+        //
+        // Dezelfde vier waarden staan op de publieke site in site-config.json,
+        // met dezelfde omgevingsvariabelen eroverheen. Zet ze samen om, anders
+        // wijkt de factuur af van de prijs die de klant op /order zag staan.
+        // Wat hier staat wint: de besteller rekent voor, deze kant rekent na.
+        'free_km'             => (float) env('PICKUP_FREE_KM', 35),
+        'rate_per_km'         => (float) env('PICKUP_RATE_PER_KM', 0.65),
+        'free_above_subtotal' => (float) env('PICKUP_FREE_ABOVE_SUBTOTAL', 100),
+        'free_above_max_km'   => (float) env('PICKUP_FREE_ABOVE_MAX_KM', 50),
     ],
 
     /**

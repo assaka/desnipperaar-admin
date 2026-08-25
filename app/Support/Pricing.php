@@ -24,9 +24,59 @@ class Pricing
     public const VAT_RATE              = 0.21;
 
     // Pickup ("ophaal") surcharge for the "sooner" option outside the free zone.
-    // Regio Amsterdam (first PICKUP_FREE_KM km, one-way road distance) is free.
-    public const PICKUP_FREE_KM        = 20;
+    // De eerste kilometers zijn gratis, ongeacht hoe snel de klant wil.
+    //
+    // Deze twee zijn de terugval en niet de waarheid: de stand van dienst staat
+    // in config/desnipperaar.php -> pickup, met dezelfde omgevingsvariabelen als
+    // de publieke site. Lees ze via freeKm() en ratePerKm() en niet rechtstreeks,
+    // anders rekent deze kant een andere prijs dan de klant op /order zag.
+    public const PICKUP_FREE_KM        = 35;
     public const PICKUP_RATE_PER_KM    = 0.65;
+
+    /** Gratis ophaalstraal in km, enkele reis over de weg. */
+    public static function freeKm(): float
+    {
+        return (float) config('desnipperaar.pickup.free_km', self::PICKUP_FREE_KM);
+    }
+
+    /** Kilometerprijs boven die straal, euro per km enkele reis. */
+    public static function ratePerKm(): float
+    {
+        return (float) config('desnipperaar.pickup.rate_per_km', self::PICKUP_RATE_PER_KM);
+    }
+
+    /**
+     * Vanaf dit subtotaal ex btw vervalt de kilometerprijs voor "eerder ophalen".
+     * Nul of lager zet de vrijstelling uit.
+     */
+    public static function freeAboveSubtotal(): float
+    {
+        return (float) config('desnipperaar.pickup.free_above_subtotal', 100);
+    }
+
+    /** Maar niet verder dan dit, anders rijden wij voor honderd euro het land door. */
+    public static function freeAboveMaxKm(): float
+    {
+        return (float) config('desnipperaar.pickup.free_above_max_km', 50);
+    }
+
+    /**
+     * Valt de kilometerprijs weg voor deze order?
+     *
+     * Twee voorwaarden tegelijk: het mandje is groot genoeg en de klant woont
+     * nog binnen de afstand waarop wij dat kunnen dragen. Het subtotaal is dat
+     * van de goederen ex btw en na coupon, dus zonder de ophaalkosten zelf,
+     * anders zou de vrijstelling zichzelf mede verdienen.
+     */
+    public static function pickupFeeWaived(?int $km, float $goodsSubtotal): bool
+    {
+        $min = self::freeAboveSubtotal();
+
+        return $min > 0
+            && $km !== null
+            && $km <= self::freeAboveMaxKm()
+            && $goodsSubtotal >= $min;
+    }
 
     /**
      * Spoedtoeslag: vast bedrag voor ophalen binnen een paar werkdagen.
@@ -42,14 +92,25 @@ class Pricing
      * Authoritative pickup-cost calculation. The static site sends the km and the
      * chosen option, but the amount is always recomputed here so the client can
      * never dictate the price. Free ("gratis vanaf 2 weken") is always 0; both
-     * "sooner" and "spoed" cost EUR 0,65 per km beyond the first 20 km, one-way.
+     * "sooner" and "spoed" cost the per-km rate beyond the free radius, one-way.
+     *
+     * Boven het drempelbedrag rijden wij dat eerdere ophalen zelf, tot de afstand
+     * waarop dat nog uitkan. Daarom heeft deze som het goederensubtotaal nodig.
+     * Wie hem zonder aanroept krijgt de oude uitkomst, dus zonder vrijstelling:
+     * te veel rekenen valt op, te weinig rekenen niet.
      */
-    public static function pickupCost(?int $km, bool $sooner): float
+    public static function pickupCost(?int $km, bool $sooner, float $goodsSubtotal = 0.0): float
     {
-        if (!$sooner || $km === null || $km <= self::PICKUP_FREE_KM) {
+        $freeKm = self::freeKm();
+
+        if (!$sooner || $km === null || $km <= $freeKm) {
             return 0.0;
         }
-        return round(($km - self::PICKUP_FREE_KM) * self::PICKUP_RATE_PER_KM, 2);
+        if (self::pickupFeeWaived($km, $goodsSubtotal)) {
+            return 0.0;
+        }
+
+        return round(($km - $freeKm) * self::ratePerKm(), 2);
     }
 
     /**

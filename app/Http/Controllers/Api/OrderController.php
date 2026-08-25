@@ -110,7 +110,7 @@ class OrderController extends Controller
         $rushMode = config('desnipperaar.pickup.rush_mode');
         $rushAllowed = match ($rushMode) {
             'all'    => true,
-            'region' => $pickupKm !== null && $pickupKm <= \App\Support\Pricing::PICKUP_FREE_KM,
+            'region' => $pickupKm !== null && $pickupKm <= \App\Support\Pricing::freeKm(),
             default  => false,
         };
 
@@ -118,8 +118,9 @@ class OrderController extends Controller
             $pickupChoice = 'sooner';
         }
 
-        $pickupCost   = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free');
-        $pickupRushFee = \App\Support\Pricing::pickupRushFee($pickupChoice === 'spoed');
+        // De som zelf staat verderop, na de coupon: boven het drempelbedrag
+        // vervalt de kilometerprijs, en dat drempelbedrag is het goederen-
+        // subtotaal na korting. Hier is dat nog niet bekend.
 
         // Volume line dropped — box_count / container_count / media_items carry the same info structurally.
         $notes = collect([
@@ -211,6 +212,26 @@ class OrderController extends Controller
                 $coupon = null;
             }
         }
+
+        // Grondslag voor de vrijstelling op de ophaalkosten: de goederen ex btw,
+        // na korting. Met opzet zonder de ophaalkosten zelf, anders zou die rit
+        // zijn eigen vrijstelling mede verdienen. Het winkelwagentje op /order
+        // rekent met exact dezelfde som, dus wat de klant zag staat er ook op de
+        // factuur.
+        $goodsSubtotal = $coupon
+            ? round($couponBase - $couponDiscount, 2)
+            : (float) \App\Support\Pricing::snapshot(
+                (int) ($data['boxes'] ?? 0),
+                (int) ($data['containers'] ?? 0),
+                $mediaItems,
+                $pilot,
+                $kennismaking,
+                0.0,
+                0.0,
+            )['subtotal'];
+
+        $pickupCost    = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free', $goodsSubtotal);
+        $pickupRushFee = \App\Support\Pricing::pickupRushFee($pickupChoice === 'spoed');
 
         $order = Order::create([
             'order_number'       => Order::generateOrderNumber(),
