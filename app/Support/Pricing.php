@@ -46,62 +46,47 @@ class Pricing
     }
 
     /**
-     * De ladder waarop de kilometerprijs voor "eerder ophalen" vervalt.
+     * Het bestelbedrag ex btw waarboven de kilometerprijs voor "eerder ophalen"
+     * vervalt, voor deze afstand.
      *
-     * Geen enkele drempel maar een reeks: verder rijden mag best gratis zolang
-     * de order het draagt. Elke trede is ['subtotal' => ex btw, 'max_km' => ...],
-     * gesorteerd op afstand, zodat wie hem afloopt de eerste trede vindt die ver
-     * genoeg reikt en dus de goedkoopste die de klant kan halen.
+     * Een rechte lijn en geen treden, want treden geven klifjes: op 60 km gratis
+     * en op 61 km ineens het volle bedrag is niet uit te leggen. Tot base_km het
+     * basisbedrag, daarboven per_km erbij per extra kilometer. Voorbij max_km
+     * valt er niets te halen en geeft dit 0.0.
      *
-     * Dezelfde reeks staat op de publieke site in site-config.json -> pickup.
+     * Dezelfde lijn staat op de publieke site in site-config.json -> pickup.
      * Loopt hij uiteen, dan wijkt de factuur af van wat de klant zag.
      */
-    public static function freeAboveTiers(): array
-    {
-        $tiers = config('desnipperaar.pickup.free_above_tiers', []);
-        $clean = [];
-        foreach (is_array($tiers) ? $tiers : [] as $t) {
-            if (isset($t['subtotal'], $t['max_km'])) {
-                $clean[] = ['subtotal' => (float) $t['subtotal'], 'max_km' => (float) $t['max_km']];
-            }
-        }
-        usort($clean, fn ($a, $b) => $a['max_km'] <=> $b['max_km']);
-
-        return $clean;
-    }
-
-    /**
-     * De trede die deze afstand nog haalt, of null als geen enkele tot hier reikt.
-     */
-    public static function pickupTier(?int $km): ?array
+    public static function freeAboveSubtotal(?int $km): float
     {
         if ($km === null) {
-            return null;
+            return 0.0;
         }
-        foreach (self::freeAboveTiers() as $tier) {
-            if ($km <= $tier['max_km']) {
-                return $tier;
-            }
+        $base   = (float) config('desnipperaar.pickup.free_above.base', 100);
+        $baseKm = (float) config('desnipperaar.pickup.free_above.base_km', 50);
+        $perKm  = (float) config('desnipperaar.pickup.free_above.per_km', 5);
+        $maxKm  = (float) config('desnipperaar.pickup.free_above.max_km', 70);
+
+        if ($km > $maxKm) {
+            return 0.0;
         }
 
-        return null;
+        return round($base + max(0.0, $km - $baseKm) * $perKm, 2);
     }
 
     /**
      * Valt de kilometerprijs weg voor deze order?
      *
-     * Twee voorwaarden tegelijk: er is een trede die tot deze klant reikt, en het
-     * mandje haalt hem. Het subtotaal is dat van de goederen ex btw en na coupon,
+     * Twee voorwaarden tegelijk: de klant woont binnen de afstand waar de
+     * vrijstelling nog geldt, en het mandje haalt het bedrag dat daar hoort. Het subtotaal is dat van de goederen ex btw en na coupon,
      * dus zonder de ophaalkosten zelf, anders zou de vrijstelling zichzelf mede
      * verdienen.
      */
     public static function pickupFeeWaived(?int $km, float $goodsSubtotal): bool
     {
-        $tier = self::pickupTier($km);
+        $need = self::freeAboveSubtotal($km);
 
-        return $tier !== null
-            && $tier['subtotal'] > 0
-            && $goodsSubtotal >= $tier['subtotal'];
+        return $need > 0 && $goodsSubtotal >= $need;
     }
 
     /**

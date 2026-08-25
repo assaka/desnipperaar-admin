@@ -62,13 +62,16 @@ return [
         //
         //   free_km           tot hier is de rit gratis, hoe snel de klant ook wil
         //   rate_per_km       daarboven per kilometer, enkele reis
-        //   free_above_tiers  vanaf welk subtotaal ex btw die kilometerprijs
-        //                     vervalt, en tot hoe ver. Een ladder en geen enkele
-        //                     drempel: verder rijden mag best gratis zolang de
-        //                     order het draagt. De stand van nu geeft per trede
-        //                     ongeveer een tiende van de order weg (100/50 km is
-        //                     EUR 9,75, 150/60 km is EUR 16,25, 200/70 km is
-        //                     EUR 22,75). Blijf in die verhouding.
+        //   free_above        vanaf welk subtotaal ex btw die kilometerprijs
+        //                     vervalt, en tot hoe ver. Geen treden maar een
+        //                     rechte lijn, want treden geven klifjes: op 60 km
+        //                     gratis en op 61 km ineens het volle bedrag is niet
+        //                     uit te leggen. Nodig = base + (km - base_km) *
+        //                     per_km, dus honderd euro tot 50 km en daarboven
+        //                     vijf euro bestelbedrag per extra kilometer, tot
+        //                     max_km. Elk punt op die lijn geeft ongeveer een
+        //                     tiende van de order weg (9,8% op 50 km oplopend
+        //                     tot 11,4% op 70 km). Blijf in die verhouding.
         //
         // Dezelfde waarden staan op de publieke site in site-config.json, met
         // dezelfde omgevingsvariabelen eroverheen. Zet ze samen om, anders wijkt
@@ -77,29 +80,24 @@ return [
         'free_km'     => (float) env('PICKUP_FREE_KM', 35),
         'rate_per_km' => (float) env('PICKUP_RATE_PER_KM', 0.65),
 
-        // In de omgeving als "bedrag:km,bedrag:km", want een lijstje arrays past
-        // niet in een env-regel. Onleesbaar of leeg? Dan blijft de reeks
-        // hieronder staan.
-        'free_above_tiers' => (function () {
-            $raw = trim((string) env('PICKUP_FREE_ABOVE_TIERS', ''));
+        // In de omgeving als "bedrag:km:perKm:maxKm", want vier getallen passen
+        // wel in een env-regel en een array niet. Onleesbaar of leeg? Dan blijft
+        // de lijn hieronder staan.
+        'free_above' => (function () {
+            $raw = trim((string) env('PICKUP_FREE_ABOVE', ''));
             if ($raw !== '') {
-                $tiers = [];
-                foreach (explode(',', $raw) as $pair) {
-                    $parts = array_map('trim', explode(':', $pair));
-                    if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
-                        $tiers[] = ['subtotal' => (float) $parts[0], 'max_km' => (float) $parts[1]];
-                    }
-                }
-                if ($tiers !== []) {
-                    return $tiers;
+                $n = array_map('trim', explode(':', $raw));
+                if (count($n) === 4 && count(array_filter($n, 'is_numeric')) === 4) {
+                    return [
+                        'base'    => (float) $n[0],
+                        'base_km' => (float) $n[1],
+                        'per_km'  => (float) $n[2],
+                        'max_km'  => (float) $n[3],
+                    ];
                 }
             }
 
-            return [
-                ['subtotal' => 100.0, 'max_km' => 50.0],
-                ['subtotal' => 150.0, 'max_km' => 60.0],
-                ['subtotal' => 200.0, 'max_km' => 70.0],
-            ];
+            return ['base' => 100.0, 'base_km' => 50.0, 'per_km' => 5.0, 'max_km' => 70.0];
         })(),
     ],
 
