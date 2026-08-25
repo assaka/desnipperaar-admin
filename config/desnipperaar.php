@@ -60,19 +60,47 @@ return [
         // Ophaalkosten. Alleen "eerder dan 2 weken" kost iets; gratis vanaf 2
         // weken is landelijk en blijft dat.
         //
-        //   free_km              tot hier is de rit gratis, hoe snel de klant ook wil
-        //   rate_per_km          daarboven per kilometer, enkele reis
-        //   free_above_subtotal  vanaf dit subtotaal ex btw vervalt die kilometerprijs
-        //   free_above_max_km    maar niet verder dan dit, anders rijden wij het land door
+        //   free_km           tot hier is de rit gratis, hoe snel de klant ook wil
+        //   rate_per_km       daarboven per kilometer, enkele reis
+        //   free_above_tiers  vanaf welk subtotaal ex btw die kilometerprijs
+        //                     vervalt, en tot hoe ver. Een ladder en geen enkele
+        //                     drempel: verder rijden mag best gratis zolang de
+        //                     order het draagt. De stand van nu geeft per trede
+        //                     ongeveer een tiende van de order weg (100/50 km is
+        //                     EUR 9,75, 150/60 km is EUR 16,25, 200/70 km is
+        //                     EUR 22,75). Blijf in die verhouding.
         //
-        // Dezelfde vier waarden staan op de publieke site in site-config.json,
-        // met dezelfde omgevingsvariabelen eroverheen. Zet ze samen om, anders
-        // wijkt de factuur af van de prijs die de klant op /order zag staan.
-        // Wat hier staat wint: de besteller rekent voor, deze kant rekent na.
-        'free_km'             => (float) env('PICKUP_FREE_KM', 35),
-        'rate_per_km'         => (float) env('PICKUP_RATE_PER_KM', 0.65),
-        'free_above_subtotal' => (float) env('PICKUP_FREE_ABOVE_SUBTOTAL', 100),
-        'free_above_max_km'   => (float) env('PICKUP_FREE_ABOVE_MAX_KM', 50),
+        // Dezelfde waarden staan op de publieke site in site-config.json, met
+        // dezelfde omgevingsvariabelen eroverheen. Zet ze samen om, anders wijkt
+        // de factuur af van de prijs die de klant op /order zag staan. Wat hier
+        // staat wint: de besteller rekent voor, deze kant rekent na.
+        'free_km'     => (float) env('PICKUP_FREE_KM', 35),
+        'rate_per_km' => (float) env('PICKUP_RATE_PER_KM', 0.65),
+
+        // In de omgeving als "bedrag:km,bedrag:km", want een lijstje arrays past
+        // niet in een env-regel. Onleesbaar of leeg? Dan blijft de reeks
+        // hieronder staan.
+        'free_above_tiers' => (function () {
+            $raw = trim((string) env('PICKUP_FREE_ABOVE_TIERS', ''));
+            if ($raw !== '') {
+                $tiers = [];
+                foreach (explode(',', $raw) as $pair) {
+                    $parts = array_map('trim', explode(':', $pair));
+                    if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
+                        $tiers[] = ['subtotal' => (float) $parts[0], 'max_km' => (float) $parts[1]];
+                    }
+                }
+                if ($tiers !== []) {
+                    return $tiers;
+                }
+            }
+
+            return [
+                ['subtotal' => 100.0, 'max_km' => 50.0],
+                ['subtotal' => 150.0, 'max_km' => 60.0],
+                ['subtotal' => 200.0, 'max_km' => 70.0],
+            ];
+        })(),
     ],
 
     /**

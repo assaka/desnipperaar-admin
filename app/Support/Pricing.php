@@ -46,36 +46,62 @@ class Pricing
     }
 
     /**
-     * Vanaf dit subtotaal ex btw vervalt de kilometerprijs voor "eerder ophalen".
-     * Nul of lager zet de vrijstelling uit.
+     * De ladder waarop de kilometerprijs voor "eerder ophalen" vervalt.
+     *
+     * Geen enkele drempel maar een reeks: verder rijden mag best gratis zolang
+     * de order het draagt. Elke trede is ['subtotal' => ex btw, 'max_km' => ...],
+     * gesorteerd op afstand, zodat wie hem afloopt de eerste trede vindt die ver
+     * genoeg reikt en dus de goedkoopste die de klant kan halen.
+     *
+     * Dezelfde reeks staat op de publieke site in site-config.json -> pickup.
+     * Loopt hij uiteen, dan wijkt de factuur af van wat de klant zag.
      */
-    public static function freeAboveSubtotal(): float
+    public static function freeAboveTiers(): array
     {
-        return (float) config('desnipperaar.pickup.free_above_subtotal', 100);
+        $tiers = config('desnipperaar.pickup.free_above_tiers', []);
+        $clean = [];
+        foreach (is_array($tiers) ? $tiers : [] as $t) {
+            if (isset($t['subtotal'], $t['max_km'])) {
+                $clean[] = ['subtotal' => (float) $t['subtotal'], 'max_km' => (float) $t['max_km']];
+            }
+        }
+        usort($clean, fn ($a, $b) => $a['max_km'] <=> $b['max_km']);
+
+        return $clean;
     }
 
-    /** Maar niet verder dan dit, anders rijden wij voor honderd euro het land door. */
-    public static function freeAboveMaxKm(): float
+    /**
+     * De trede die deze afstand nog haalt, of null als geen enkele tot hier reikt.
+     */
+    public static function pickupTier(?int $km): ?array
     {
-        return (float) config('desnipperaar.pickup.free_above_max_km', 50);
+        if ($km === null) {
+            return null;
+        }
+        foreach (self::freeAboveTiers() as $tier) {
+            if ($km <= $tier['max_km']) {
+                return $tier;
+            }
+        }
+
+        return null;
     }
 
     /**
      * Valt de kilometerprijs weg voor deze order?
      *
-     * Twee voorwaarden tegelijk: het mandje is groot genoeg en de klant woont
-     * nog binnen de afstand waarop wij dat kunnen dragen. Het subtotaal is dat
-     * van de goederen ex btw en na coupon, dus zonder de ophaalkosten zelf,
-     * anders zou de vrijstelling zichzelf mede verdienen.
+     * Twee voorwaarden tegelijk: er is een trede die tot deze klant reikt, en het
+     * mandje haalt hem. Het subtotaal is dat van de goederen ex btw en na coupon,
+     * dus zonder de ophaalkosten zelf, anders zou de vrijstelling zichzelf mede
+     * verdienen.
      */
     public static function pickupFeeWaived(?int $km, float $goodsSubtotal): bool
     {
-        $min = self::freeAboveSubtotal();
+        $tier = self::pickupTier($km);
 
-        return $min > 0
-            && $km !== null
-            && $km <= self::freeAboveMaxKm()
-            && $goodsSubtotal >= $min;
+        return $tier !== null
+            && $tier['subtotal'] > 0
+            && $goodsSubtotal >= $tier['subtotal'];
     }
 
     /**
