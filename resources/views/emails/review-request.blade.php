@@ -26,5 +26,5 @@ Zou het erg waarderen als je een review zou kunnen plaatsen. Je zou me hier erg 
 
 <p>Alvast bedankt en nog een fijne dag!</p>
 
-<p>Vriendelijke groet,<br>{{ $afzender }}</p>
+<p>Vriendelijke groet,<br>{{ $afzender }} - DeSnipperaar</p>
 @endcomponent

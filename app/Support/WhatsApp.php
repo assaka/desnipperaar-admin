@@ -283,7 +283,7 @@ class WhatsApp
                 'aanvraag' => "Hallo {naam},\n\nWij hebben uw aanvraag {nummer} in goede orde ontvangen. Wij plannen een ophaalmoment in en laten het u weten.\n\nHeeft u vragen, stel ze gerust hier.\n\nGroet,\n{ik} van DeSnipperaar",
                 'opgehaald' => "Hallo {naam},\n\nWij hebben alles voor opdracht {nummer} opgehaald. Zodra het vernietigd is sturen wij het certificaat per mail.\n\nGroet,\n{ik} van DeSnipperaar",
                 'certificaat' => "Hallo {naam},\n\nAlles van opdracht {nummer} is vernietigd. Het certificaat staat in uw mail.\n\nBedankt voor de opdracht.\n\nGroet,\n{ik} van DeSnipperaar",
-                'review' => "Hallo {naam},\n\nNogmaals bedankt voor het vertrouwen en hopelijk is alles naar wens verlopen.\n\nZou het erg waarderen als je een review zou kunnen plaatsen. Je zou me hier erg mee helpen.\n{review}\n\nAlvast bedankt en nog een fijne dag!\n\nGroet,\n{ik} van DeSnipperaar",
+                'review' => "Hallo {naam},\n\nNogmaals bedankt voor het vertrouwen en hopelijk is alles naar wens verlopen.\n\nZou het erg waarderen als je een review zou kunnen plaatsen. Je zou me hier erg mee helpen.\n{review}\n\nAlvast bedankt en nog een fijne dag!\n\nGroet,\n{ik} - DeSnipperaar",
                 'vrij' => '',
             ],
             'en' => [
