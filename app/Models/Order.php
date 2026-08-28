@@ -107,6 +107,7 @@ class Order extends Model
         'pickup_planned_by_customer_at',
         'pickup_plan_invited_at',
         'review_requested_at',
+        'review_requested_via',
         'duration_minutes',
         'first_box_free',
         'pickup_cost',

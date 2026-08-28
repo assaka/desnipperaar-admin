@@ -34,6 +34,7 @@ class WhatsApp
         'aanvraag'    => 'Aanvraag ontvangen',
         'opgehaald'   => 'Opgehaald',
         'certificaat' => 'Vernietigd, certificaat verstuurd',
+        'review'      => 'Review vragen',
         'vrij'        => 'Eigen bericht',
     ];
 
@@ -133,14 +134,22 @@ class WhatsApp
             '{venster}'=> self::windowLabel($order, $locale),
             '{link}'   => self::planUrl($order),
             '{ik}'     => self::senderName($order),
+            '{review}' => (string) config('desnipperaar.review.url'),
         ];
 
         $out = [];
         foreach (self::relevantKeys($order) as $key) {
+            // De reviewvraag gaat altijd in het Nederlands, ook bij een order in
+            // een andere taal. Achter de link zit een Nederlands bedrijfsprofiel
+            // met een Nederlands schrijfscherm, dus een Spaanse aanhef zou een
+            // verwachting wekken die Google niet waarmaakt. Zie ook
+            // App\Mail\ReviewRequested.
+            $bron = $key === 'review' ? self::lines('nl') : $lines;
+
             $out[] = [
                 'key'   => $key,
                 'label' => self::LABELS[$key],
-                'text'  => trim(strtr($lines[$key] ?? '', $vars)),
+                'text'  => trim(strtr($bron[$key] ?? '', $vars)),
             ];
         }
 
@@ -182,6 +191,16 @@ class WhatsApp
         }
         if (in_array($order->state, [Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
             $keys[] = 'certificaat';
+        }
+
+        // Om een review vragen kan pas als het werk erop zit, en niet bij een
+        // geannuleerde order: die klant heeft ons werk nooit gezien. Zonder link
+        // in de config heeft het sjabloon geen zin, want dan is het een appje
+        // dat om iets vraagt zonder te zeggen waar.
+        if (! $order->isCanceled()
+            && config('desnipperaar.review.url')
+            && in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
+            $keys[] = 'review';
         }
 
         $keys[] = 'vrij';
@@ -264,6 +283,7 @@ class WhatsApp
                 'aanvraag' => "Hallo {naam},\n\nWij hebben uw aanvraag {nummer} in goede orde ontvangen. Wij plannen een ophaalmoment in en laten het u weten.\n\nHeeft u vragen, stel ze gerust hier.\n\nGroet,\n{ik} van DeSnipperaar",
                 'opgehaald' => "Hallo {naam},\n\nWij hebben alles voor opdracht {nummer} opgehaald. Zodra het vernietigd is sturen wij het certificaat per mail.\n\nGroet,\n{ik} van DeSnipperaar",
                 'certificaat' => "Hallo {naam},\n\nAlles van opdracht {nummer} is vernietigd. Het certificaat staat in uw mail.\n\nBedankt voor de opdracht.\n\nGroet,\n{ik} van DeSnipperaar",
+                'review' => "Hallo {naam},\n\nNogmaals bedankt voor het vertrouwen en hopelijk is alles naar wens verlopen.\n\nZou het erg waarderen als je een review zou kunnen plaatsen. Je zou me hier erg mee helpen.\n{review}\n\nAlvast bedankt en nog een fijne dag!\n\nGroet,\n{ik} van DeSnipperaar",
                 'vrij' => '',
             ],
             'en' => [

@@ -7,6 +7,7 @@ use App\Mail\PickupConfirmed;
 use App\Mail\QuoteRequested;
 use App\Mail\QuoteSent;
 use App\Mail\QuoteValidityUpdated;
+use App\Mail\ReviewRequested;
 use App\Mail\SubscriptionActivated;
 use App\Mail\SubscriptionPickupDayChanged;
 use App\Mail\SubscriptionTerminated;
@@ -901,41 +902,87 @@ class OrderController extends Controller
     }
 
     /**
-     * Vraag de klant om een Google-review.
+     * Vraag de klant om een Google-review, per mail of per WhatsApp.
      *
      * Pas als de klus achter de rug is, want daarvoor valt er niets te
      * beoordelen. En niet bij een geannuleerde order: die klant heeft ons werk
      * nooit gezien.
      *
+     * De twee kanalen lopen hier samen omdat de vraag dezelfde is en er maar één
+     * plek mag zijn die vastlegt dat hij gesteld is. Wat erna gebeurt verschilt
+     * wel: de mail gaat direct de deur uit, het appje wordt in WhatsApp
+     * klaargezet en verstuur je daar zelf.
+     *
      * De knop blijft daarna staan zodat je hem bewust nog eens kunt sturen, maar
-     * de orderpagina zet erbij wanneer de vraag eruit ging.
+     * de orderpagina zet erbij wanneer de vraag eruit ging en langs welk kanaal.
      */
-    public function askReview(Order $order)
+    public function askReview(Request $request, Order $order)
     {
+        $channel = $request->input('channel') === 'whatsapp' ? 'whatsapp' : 'mail';
+
         if ($order->isCanceled()) {
             return back()->with('error', 'Deze opdracht is geannuleerd, daar valt niets over te reviewen.');
         }
         if (! in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
             return back()->with('error', 'Het werk is nog niet gedaan. Vraag pas om een review als er is opgehaald.');
         }
-        if (! $order->customer_email) {
-            return back()->with('error', 'Deze order heeft geen e-mailadres.');
-        }
         if (! config('desnipperaar.review.url')) {
             return back()->with('error', 'Er staat geen reviewlink ingesteld (GOOGLE_REVIEW_URL).');
         }
 
+        return $channel === 'whatsapp'
+            ? $this->askReviewViaWhatsApp($request, $order)
+            : $this->askReviewViaMail($request, $order);
+    }
+
+    private function askReviewViaMail(Request $request, Order $order)
+    {
+        if (! $order->customer_email) {
+            return back()->with('error', 'Deze order heeft geen e-mailadres.');
+        }
+
         try {
-            Mail::to($order->customer_email)->send(new \App\Mail\ReviewRequested($order->loadMissing('customer')));
+            Mail::to($order->customer_email)
+                ->send(new ReviewRequested($order->loadMissing('customer'), $request->user()));
         } catch (\Throwable $e) {
             report($e);
 
             return back()->with('error', 'Versturen mislukt: '.$e->getMessage());
         }
 
-        $order->forceFill(['review_requested_at' => now()])->save();
+        $order->forceFill([
+            'review_requested_at'  => now(),
+            'review_requested_via' => 'mail',
+        ])->save();
 
-        return back()->with('status', 'Reviewverzoek gestuurd naar '.$order->customer_email.'.');
+        return back()->with('status', 'Reviewverzoek gemaild naar '.$order->customer_email.'.');
+    }
+
+    /**
+     * Wij versturen niet zelf, wa.me opent met de tekst klaar. Vandaar dat de
+     * stempel hier "klaargezet" betekent en niet "aangekomen", net als bij de
+     * andere WhatsApp-sjablonen.
+     */
+    private function askReviewViaWhatsApp(Request $request, Order $order)
+    {
+        $number = WhatsApp::normalize($order->customer_phone);
+        if (! $number) {
+            return back()->with('error', 'Deze order heeft geen bruikbaar telefoonnummer voor WhatsApp.');
+        }
+
+        $body = collect(WhatsApp::templates($order))->firstWhere('key', 'review')['text'] ?? '';
+        if ($body === '') {
+            return back()->with('error', 'Er is geen reviewsjabloon voor deze order.');
+        }
+
+        $this->logWhatsAppMessage($order, $number, $body, $request->user()?->email);
+
+        $order->forceFill([
+            'review_requested_at'  => now(),
+            'review_requested_via' => 'whatsapp',
+        ])->save();
+
+        return redirect()->away(WhatsApp::url($number, $body));
     }
 
     /**
@@ -1240,11 +1287,24 @@ class OrderController extends Controller
 
         $body = trim($data['body']);
 
+        $this->logWhatsAppMessage($order, $number, $body, $request->user()?->email);
+
+        return redirect()->away(WhatsApp::url($number, $body));
+    }
+
+    /**
+     * Zet een klaargezet WhatsApp-bericht onder Berichten bij de order.
+     *
+     * Gedeeld door het uitklapmenu en de reviewknop, zodat een appje er in het
+     * overzicht hetzelfde uitziet ongeacht welke knop het klaarzette.
+     */
+    private function logWhatsAppMessage(Order $order, string $number, string $body, ?string $fromEmail): void
+    {
         OrderMessage::create([
             'order_id'    => $order->id,
             'direction'   => 'out',
             'channel'     => 'whatsapp',
-            'from_email'  => $request->user()?->email,
+            'from_email'  => $fromEmail,
             // Kolom heet to_email omdat er tot nu toe alleen mail in ging. Hier
             // staat het WhatsApp-nummer, en het kanaal ernaast vertelt welke van
             // de twee het is.
@@ -1252,8 +1312,6 @@ class OrderController extends Controller
             'body_text'   => $body,
             'occurred_at' => now(),
         ]);
-
-        return redirect()->away(WhatsApp::url($number, $body));
     }
 
     /**

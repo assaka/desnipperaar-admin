@@ -14,38 +14,35 @@ use Illuminate\Queue\SerializesModels;
 /**
  * De vraag om een Google-review, na afloop van de klus.
  *
- * Bewust een persoonlijk berichtje en geen nieuwsbrief: geen orderregels, geen
- * bedragen, geen knoppenbalk. Hij komt van de persoon die de order deed en is
- * ondertekend met diens voornaam, want een gunst vraag je op je eigen naam.
- * Daarom staat de link ook uitgeschreven onder de tekst en niet verstopt in een
- * grote gele knop.
+ * Zelfde jas als de rest van onze mail: kop, knop, footer. De toon eronder is
+ * wel persoonlijk, want een gunst vraag je op je eigen naam. Daarom komt hij van
+ * de persoon die de order deed en is hij ondertekend met diens voornaam.
+ *
+ * Als enige klantmail staat deze alleen in het Nederlands, ook bij een order in
+ * een andere taal. Wat achter de knop zit is een Nederlands bedrijfsprofiel met
+ * een Nederlands schrijfscherm, dus een Spaanse aanhef boven een Nederlandse
+ * pagina wekt een verwachting die Google niet waarmaakt.
+ *
+ * De link staat ook uitgeschreven onder de knop. Een review die stukloopt op een
+ * knop die niet rendeert is een review die je niet krijgt.
  *
  * Sturen doen wij met de hand vanaf de orderpagina, zodat wij er zelf naar
- * kijken of de klus goed ging voordat wij erom vragen.
+ * kijken of de klus goed ging voordat wij erom vragen. Wie liever appt gebruikt
+ * daar het WhatsApp-sjabloon "Review vragen", zie App\Support\WhatsApp.
  */
 class ReviewRequested extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public string $mailLocale;
-
     public function __construct(public Order $order, public ?User $sender = null)
     {
         $this->sender ??= $order->senderUser();
-        $this->mailLocale = in_array($order->locale, ['nl', 'en', 'fr', 'es'], true) ? $order->locale : 'nl';
     }
 
     public function envelope(): Envelope
     {
-        $subject = match ($this->mailLocale) {
-            'en' => 'Would you leave us a review?',
-            'fr' => 'Voulez-vous nous laisser un avis ?',
-            'es' => '¿Nos deja una reseña?',
-            default => 'Zou je een review willen achterlaten?',
-        };
-
         return new Envelope(
-            subject: $subject,
+            subject: 'Zou je een review willen achterlaten?',
             from: $this->sender
                 ? new Address($this->sender->email, $this->sender->name)
                 : null,
@@ -56,7 +53,7 @@ class ReviewRequested extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: $this->mailLocale === 'nl' ? 'emails.review-request' : 'emails.'.$this->mailLocale.'.review-request',
+            view: 'emails.review-request',
             with: [
                 'order'     => $this->order,
                 'sender'    => $this->sender,
