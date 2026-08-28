@@ -901,6 +901,44 @@ class OrderController extends Controller
     }
 
     /**
+     * Vraag de klant om een Google-review.
+     *
+     * Pas als de klus achter de rug is, want daarvoor valt er niets te
+     * beoordelen. En niet bij een geannuleerde order: die klant heeft ons werk
+     * nooit gezien.
+     *
+     * De knop blijft daarna staan zodat je hem bewust nog eens kunt sturen, maar
+     * de orderpagina zet erbij wanneer de vraag eruit ging.
+     */
+    public function askReview(Order $order)
+    {
+        if ($order->isCanceled()) {
+            return back()->with('error', 'Deze opdracht is geannuleerd, daar valt niets over te reviewen.');
+        }
+        if (! in_array($order->state, [Order::STATE_OPGEHAALD, Order::STATE_VERNIETIGD, Order::STATE_AFGESLOTEN], true)) {
+            return back()->with('error', 'Het werk is nog niet gedaan. Vraag pas om een review als er is opgehaald.');
+        }
+        if (! $order->customer_email) {
+            return back()->with('error', 'Deze order heeft geen e-mailadres.');
+        }
+        if (! config('desnipperaar.review.url')) {
+            return back()->with('error', 'Er staat geen reviewlink ingesteld (GOOGLE_REVIEW_URL).');
+        }
+
+        try {
+            Mail::to($order->customer_email)->send(new \App\Mail\ReviewRequested($order->loadMissing('customer')));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Versturen mislukt: '.$e->getMessage());
+        }
+
+        $order->forceFill(['review_requested_at' => now()])->save();
+
+        return back()->with('status', 'Reviewverzoek gestuurd naar '.$order->customer_email.'.');
+    }
+
+    /**
      * Annuleer een order. Hij gaat niet door.
      *
      * Voor een klant die afbelt, een dubbele bestelling of een test. Alles wat

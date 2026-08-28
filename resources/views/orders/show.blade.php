@@ -187,6 +187,28 @@
                         </form>
                     @endunless
 
+                    {{-- Om een review vragen. Alleen als er ook echt iets te
+                         beoordelen valt, dus na het ophalen. De knop verdwijnt niet
+                         zodra de vraag eruit is, maar zegt wanneer dat was: een
+                         tweede keer vragen mag, maar dan wel bewust. --}}
+                    @if (! $order->isCanceled()
+                         && in_array($order->state, ['opgehaald', 'vernietigd', 'afgesloten'], true))
+                        @php
+                            $reviewVraag = $order->review_requested_at
+                                ? 'Er is op '.$order->review_requested_at->format('d-m-Y').' al om een review gevraagd. Nog een keer mailen naar '.$order->customer_email.'?'
+                                : 'Reviewverzoek mailen naar '.$order->customer_email.'?';
+                        @endphp
+                        <form method="POST" action="{{ route('orders.ask-review', $order) }}"
+                              onsubmit="return confirm(@js($reviewVraag))">
+                            @csrf
+                            <button class="{{ $order->review_requested_at ? 'bg-gray-200 text-black' : 'bg-gray-800 text-white' }} px-3 py-1 text-xs uppercase font-bold whitespace-nowrap"
+                                    title="{{ $order->review_requested_at ? 'Gevraagd op '.$order->review_requested_at->format('d-m-Y H:i') : 'Vraag de klant om een Google-review' }}"
+                                    @disabled(! $order->customer_email)>
+                                ★ Review{{ $order->review_requested_at ? ' gevraagd' : '' }}
+                            </button>
+                        </form>
+                    @endif
+
                     {{-- Annuleren. Zelfde vorm als Credit hierboven: de knop klapt
                          een reden uit, want een geannuleerde order zonder reden is
                          een raadsel zodra de klant er later over belt. De reden gaat

@@ -8,6 +8,7 @@ use App\Mail\InvoiceSent;
 use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
 use App\Mail\PickupPlannedByCustomer;
+use App\Mail\ReviewRequested;
 use App\Models\Bon;
 use App\Models\Certificate;
 use App\Models\Customer;
@@ -207,6 +208,10 @@ class SendTestOrder extends Command
             $invoice->update(['invoice_number' => "TEST-F-{$token}"]);
             $order->update(['state' => Order::STATE_AFGESLOTEN]);
             $rows[] = ['Invoice', $invoice->invoice_number, $this->mail($email, fn () => new InvoiceSent($invoice, $sender))];
+
+            // Sluit de reeks af zoals hij in het echt afloopt: de klus is klaar en
+            // de factuur is de deur uit, dus dan pas vragen wij om een review.
+            $rows[] = ['Review request', $order->order_number, $this->mail($email, fn () => new ReviewRequested($order->fresh(), $sender))];
         }
 
         if ($reschedule) {

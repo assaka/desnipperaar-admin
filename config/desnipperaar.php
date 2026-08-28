@@ -260,6 +260,13 @@ return [
         'admin_email' => env('ADMIN_NOTIFY_EMAIL',  'sales@desnipperaar.nl'),
     ],
 
+    'review' => [
+        // De korte Google-link uit het bedrijfsprofiel, die het schrijfscherm
+        // meteen opent. Als config-waarde, want hij hangt aan het profiel en
+        // niet aan de code: verandert het profiel, dan is dit één regel.
+        'url' => env('GOOGLE_REVIEW_URL', 'https://g.page/r/CRob0V3HOZ8xEBM/review'),
+    ],
+
     'group_deal' => [
         // Perk applied to the organizer's order at materialization. Currently only
         // 'first_box_free' is wired up; extend the Pricing snapshot helper if more

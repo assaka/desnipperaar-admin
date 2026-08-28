@@ -69,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');
     Route::get('/orders/{order}/slots', [\App\Http\Controllers\OrderController::class, 'slots'])->name('orders.slots');
     Route::post('/orders/{order}/send-plan-link', [\App\Http\Controllers\OrderController::class, 'sendPlanLink'])->name('orders.send-plan-link');
+    Route::post('/orders/{order}/ask-review', [\App\Http\Controllers\OrderController::class, 'askReview'])->name('orders.ask-review');
     Route::post('/orders/{order}/coupon', [\App\Http\Controllers\OrderCouponController::class, 'store'])->name('orders.coupon.store');
     Route::delete('/orders/{order}/coupon', [\App\Http\Controllers\OrderCouponController::class, 'destroy'])->name('orders.coupon.destroy');
     Route::patch('/orders/{order}/details', [\App\Http\Controllers\OrderEditController::class, 'update'])->name('orders.details.update');
