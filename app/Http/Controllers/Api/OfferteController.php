@@ -50,9 +50,14 @@ class OfferteController extends Controller
             !empty($data['volume'])  ? 'Volume: '        . $data['volume']   : null,
             !empty($data['methode']) ? 'Methode: '       . $data['methode']  : null,
             !empty($data['termijn']) ? 'Termijn: '       . $data['termijn']  : null,
+            $this->transportNotes($data),
             !empty($data['bericht']) ? "\n"              . $data['bericht']  : null,
         ])->filter()->implode("\n");
 
+        // Transport A -> B blijft 'ophaal': het materiaal komt bij ons via een rit
+        // op locatie A. De kolom is een enum ['ophaal','breng','mobiel'], dus een
+        // eigen waarde zou een migratie vragen zonder iets toe te voegen. De
+        // dienst is herkenbaar aan 'Methode: transport' in de notities.
         $deliveryMode = match (strtolower($data['methode'] ?? '')) {
             'brengen'            => 'breng',
             'mobiel',
@@ -94,5 +99,37 @@ class OfferteController extends Controller
             'ok' => true,
             'order_number' => $order->order_number,
         ], 201);
+    }
+
+    /**
+     * Het transportblok van het offerteformulier, als leesbaar blok in de
+     * notities. Geeft null terug zodra er geen transportvelden zijn ingevuld,
+     * zodat een gewone vernietigingsofferte er niets van merkt.
+     *
+     * De gemachtigde ontvanger is het enige veld dat de planning echt nodig
+     * heeft: aan niemand anders mag afgeleverd worden.
+     */
+    private function transportNotes(array $data): ?string
+    {
+        $slotLabels = [
+            'standaard' => 'standaard, code door de klant zelf ingesteld',
+            'tracking'  => '4G-slot met live tracking (meerprijs)',
+        ];
+
+        $rows = collect([
+            !empty($data['transport_van'])       ? 'Van: '   . $data['transport_van']  : null,
+            !empty($data['transport_naar'])      ? 'Naar: '  . $data['transport_naar'] : null,
+            !empty($data['transport_ontvanger']) ? 'Gemachtigde ontvanger: ' . $data['transport_ontvanger'] : null,
+            !empty($data['transport_ontvanger_email']) ? 'E-mail ontvanger: ' . $data['transport_ontvanger_email'] : null,
+            !empty($data['transport_colli'])     ? 'Aantal colli: ' . $data['transport_colli'] : null,
+            !empty($data['transport_datum'])     ? 'Gewenste datum: ' . $data['transport_datum'] : null,
+            !empty($data['transport_slot'])      ? 'Slot: ' . ($slotLabels[$data['transport_slot']] ?? $data['transport_slot']) : null,
+        ])->filter();
+
+        if ($rows->isEmpty()) {
+            return null;
+        }
+
+        return "\nTransport A -> B\n" . $rows->implode("\n");
     }
 }

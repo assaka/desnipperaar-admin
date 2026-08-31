@@ -43,6 +43,18 @@ class OfferteRequest extends FormRequest
             'termijn'    => 'nullable|string|max:100',
             'bericht'    => 'nullable|string|max:5000',
 
+            // Vertrouwelijk transport van A naar B (methode = transport). Alleen
+            // gevuld als die tegel gekozen is, dus allemaal nullable: een offerte
+            // voor vernietiging stuurt ze niet mee. Zonder deze regels laat
+            // validated() ze stilletjes vallen.
+            'transport_van'             => 'nullable|string|max:255',
+            'transport_naar'            => 'nullable|string|max:255',
+            'transport_ontvanger'       => 'nullable|string|max:255',
+            'transport_ontvanger_email' => 'nullable|email|max:255',
+            'transport_colli'           => 'nullable|integer|min:1|max:9999',
+            'transport_datum'           => 'nullable|date',
+            'transport_slot'            => 'nullable|in:standaard,tracking',
+
             'akkoord'    => 'required|accepted',
 
             'website'    => 'nullable|string|max:255',
