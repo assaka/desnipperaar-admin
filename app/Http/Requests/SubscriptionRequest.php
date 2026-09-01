@@ -30,9 +30,12 @@ class SubscriptionRequest extends FormRequest
             // ophaalmoment af te stemmen. Het formulier stuurt adres samengesteld
             // uit straatnaam en huisnummer.
             'telefoon'  => 'required|string|max:50',
-            'adres'     => 'required|string|max:255',
+            // Het formulier stuurt adres samengesteld uit straatnaam en
+            // huisnummer. De regex eist minstens één letter, want anders glipt
+            // een los huisnummer als "83" er als volledig adres doorheen.
+            'adres'     => ['required', 'string', 'max:255', 'regex:/\pL/u'],
             'postcode'  => 'required|string|max:20',
-            'plaats'    => 'nullable|string|max:100',
+            'plaats'    => 'required|string|max:100',
             'term'      => ['required', Rule::in(array_keys(Order::SUB_TERMS))],
             'freq'      => ['required', Rule::in(array_keys(Order::SUB_FREQS))],
             'opmerking' => 'nullable|string|max:5000',
@@ -58,7 +61,9 @@ class SubscriptionRequest extends FormRequest
             'email.email'       => 'Vul een geldig e-mailadres in.',
             'telefoon.required' => 'Vul uw telefoonnummer in.',
             'adres.required'    => 'Vul uw straatnaam en huisnummer in.',
+            'adres.regex'       => 'Vul ook de straatnaam in, niet alleen het huisnummer.',
             'postcode.required' => 'Vul uw postcode in.',
+            'plaats.required'   => 'Vul uw plaats in.',
             'term.required'     => 'Kies een looptijd.',
             'term.in'           => 'Kies een geldige looptijd.',
             'freq.required'     => 'Kies een frequentie.',
