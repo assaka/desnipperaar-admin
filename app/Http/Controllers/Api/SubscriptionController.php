@@ -45,6 +45,7 @@ class SubscriptionController extends Controller
                 'address'  => $data['adres']    ?? null,
                 'postcode' => $postcode,
                 'city'     => $data['plaats']   ?? null,
+                'branche'  => $data['branche']  ?? null,
                 'locale'   => $locale,
             ]
         );
@@ -58,6 +59,8 @@ class SubscriptionController extends Controller
             // opvallen in plaats van stilletjes als boekbare aanvraag te landen.
             !empty($data['waitlist']) ? 'LET OP: gemarkeerd als wachtlijst (buiten werkgebied). Niets toezeggen over een startdatum.' : null,
             !empty($data['afstand_km']) ? 'Afstand: ± ' . $data['afstand_km'] . ' km' : null,
+            !empty($data['branche']) ? 'Branche: ' . $data['branche'] : null,
+            !empty($data['gevonden_via']) ? 'Gevonden via: ' . $data['gevonden_via'] : null,
             !empty($data['opmerking']) ? "\n" . $data['opmerking'] : null,
         ])->filter()->implode("\n");
 

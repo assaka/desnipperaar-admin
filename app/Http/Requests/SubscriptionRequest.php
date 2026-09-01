@@ -32,6 +32,10 @@ class SubscriptionRequest extends FormRequest
             'term'      => ['required', Rule::in(array_keys(Order::SUB_TERMS))],
             'freq'      => ['required', Rule::in(array_keys(Order::SUB_FREQS))],
             'opmerking' => 'nullable|string|max:5000',
+            // Staan ook op het offerteformulier. Zonder deze regels laat
+            // validated() ze stilletjes vallen.
+            'branche'      => 'nullable|string|max:100',
+            'gevonden_via' => 'nullable|string|max:100',
             'akkoord'   => 'required|accepted',
             // Door de postcodecheck op het formulier: buiten het werkgebied is
             // dit een wachtlijstregel, geen boekbaar abonnement.
