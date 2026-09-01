@@ -25,8 +25,12 @@ class SubscriptionRequest extends FormRequest
             'naam'      => 'required|string|max:255',
             'bedrijf'   => 'nullable|string|max:255',
             'email'     => 'required|email|max:255',
-            'telefoon'  => 'nullable|string|max:50',
-            'adres'     => 'nullable|string|max:255',
+            // Verplicht, net als op het formulier. Zonder adres valt er geen
+            // container te bezorgen en zonder telefoon is er geen manier om een
+            // ophaalmoment af te stemmen. Het formulier stuurt adres samengesteld
+            // uit straatnaam en huisnummer.
+            'telefoon'  => 'required|string|max:50',
+            'adres'     => 'required|string|max:255',
             'postcode'  => 'required|string|max:20',
             'plaats'    => 'nullable|string|max:100',
             'term'      => ['required', Rule::in(array_keys(Order::SUB_TERMS))],
@@ -52,6 +56,8 @@ class SubscriptionRequest extends FormRequest
             'naam.required'     => 'Vul uw naam in.',
             'email.required'    => 'Vul uw e-mailadres in.',
             'email.email'       => 'Vul een geldig e-mailadres in.',
+            'telefoon.required' => 'Vul uw telefoonnummer in.',
+            'adres.required'    => 'Vul uw straatnaam en huisnummer in.',
             'postcode.required' => 'Vul uw postcode in.',
             'term.required'     => 'Kies een looptijd.',
             'term.in'           => 'Kies een geldige looptijd.',
