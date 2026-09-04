@@ -18,13 +18,13 @@ en wij blijven ophalen. U kiest zelf hoe het verdergaat.</p>
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     @if ($yearlyPrice)
         <tr>
-            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen — nog een jaar vooruit</td>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen, nog een jaar vooruit</td>
             <td>€ {{ number_format($yearlyPrice, 2, ',', '.') }} per jaar excl. btw. De voordeligste optie, u betaalt twaalf maanden in één keer.</td>
         </tr>
     @endif
     @if ($vastPrice)
         <tr>
-            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen — nog een vaste termijn</td>
+            <td style="background:#F5F5F5;font-weight:700;vertical-align:top;">Verlengen, nog een vaste termijn</td>
             <td>€ {{ number_format($vastPrice, 2, ',', '.') }} per 4 weken excl. btw, twaalf maanden. Het voordeeltarief.</td>
         </tr>
     @endif

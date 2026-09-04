@@ -38,7 +38,7 @@
 </table>
 
 @if ($isOphaal)
-    <p style="font-size:13px;color:#555;">De zegelnummers en getekende bon zijn uw bewijs dat het materiaal verzegeld is opgehaald. Bewaar deze mail en PDF in uw dossier — zij vormen samen met het nog te volgen <strong>Certificaat van Vernietiging</strong> de complete audit trail.</p>
+    <p style="font-size:13px;color:#555;">De zegelnummers en getekende bon zijn uw bewijs dat het materiaal verzegeld is opgehaald. Bewaar deze mail en PDF in uw dossier. Zij vormen samen met het nog te volgen <strong>Certificaat van Vernietiging</strong> de complete audit trail.</p>
     <p>Het certificaat ontvangt u binnen 24 uur, nadat het materiaal is vernietigd.</p>
 @elseif ($isBezorg)
     <p>Wij halen periodiek op volgens uw abonnement. U krijgt telkens een dag voor de ophaling een herinnering, en bij elke ophaling een vernietigingscertificaat.</p>
