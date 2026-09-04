@@ -106,6 +106,12 @@
                 <div class="box" style="padding:2mm 0 2mm;height:20mm;text-align:left;">
                     <img src="{{ $customerSigDataUri }}" alt="klant-handtekening" style="max-height:18mm;max-width:60mm;">
                 </div>
+            @elseif ($bon->handtekeningKwijtgescholden())
+                {{-- Geen krabbel, wel een vastgelegde reden. Die is hier het bewijsstuk. --}}
+                <div class="box" style="padding:2mm 0 2mm;min-height:20mm;text-align:left;font-size:8pt;">
+                    <strong style="text-transform:uppercase;">Klant kon niet tekenen</strong><br>
+                    {{ $bon->customer_signature_waiver_reason }}
+                </div>
             @else
                 <div class="box">&nbsp;</div>
             @endif

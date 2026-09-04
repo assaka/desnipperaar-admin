@@ -38,6 +38,9 @@ class Bon extends Model
         'weight_kg',
         'notes',
         'customer_signature_path',
+        'customer_signature_waived_at',
+        'customer_signature_waiver_reason',
+        'customer_signature_waived_by',
         'driver_signature_path',
     ];
 
@@ -46,6 +49,7 @@ class Bon extends Model
         'scheduled_for'    => 'date',
         'reminder_sent_at' => 'datetime',
         'picked_up_at'     => 'datetime',
+        'customer_signature_waived_at' => 'datetime',
         'weight_kg'        => 'decimal:2',
         'actual_boxes'     => 'integer',
         'actual_containers'=> 'integer',
@@ -66,6 +70,24 @@ class Bon extends Model
     public function levertCertificaat(): bool
     {
         return ! in_array($this->mode, self::MODES_ZONDER_VERNIETIGING, true);
+    }
+
+    /**
+     * Kon de klant niet tekenen en is dat met een reden vastgelegd?
+     * Zo'n override telt als aftekening, maar blijft zichtbaar als override.
+     */
+    public function handtekeningKwijtgescholden(): bool
+    {
+        return $this->customer_signature_waived_at !== null;
+    }
+
+    /**
+     * Is de bon door de klant afgetekend? Een echte handtekening OF een
+     * vastgelegde reden waarom die er niet is. Beide sluiten de bon af.
+     */
+    public function isAfgetekend(): bool
+    {
+        return ! empty($this->customer_signature_path) || $this->handtekeningKwijtgescholden();
     }
 
     /** Is deze rit gereden? De handtekening bepaalt dat, niet de planning. */

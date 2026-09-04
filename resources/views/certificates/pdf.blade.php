@@ -274,7 +274,14 @@
                 <div class="sub">Datum:</div>
                 <div class="line">{{ $bon?->picked_up_at?->format('d-m-Y') ?? '' }}</div>
                 <div class="sub">Handtekening:</div>
-                <div class="line">@if ($custSig)<img src="{{ $custSig }}" class="sig-img" alt="handtekening klant">@endif</div>
+                <div class="line">
+                    @if ($custSig)
+                        <img src="{{ $custSig }}" class="sig-img" alt="handtekening klant">
+                    @elseif ($bon?->handtekeningKwijtgescholden())
+                        {{-- Geen krabbel, wel een vastgelegde reden. --}}
+                        <span style="font-size:7pt;">Klant kon niet tekenen &middot; {{ $bon->customer_signature_waiver_reason }}</span>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

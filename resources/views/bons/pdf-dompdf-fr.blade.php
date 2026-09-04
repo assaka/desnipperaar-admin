@@ -102,6 +102,12 @@
                 <div class="sig-box">
                     @if ($bon->customer_signature_path && file_exists(storage_path('app/'.$bon->customer_signature_path)))
                         <img src="data:image/png;base64,{{ base64_encode(file_get_contents(storage_path('app/'.$bon->customer_signature_path))) }}" alt="Signature du client">
+                    @elseif ($bon->handtekeningKwijtgescholden())
+                        {{-- Geen krabbel, wel een vastgelegde reden. Die is hier het bewijsstuk. --}}
+                        <div style="font-size:8pt;text-align:left;">
+                            <strong style="text-transform:uppercase;">Le client n'a pas pu signer</strong><br>
+                            {{ $bon->customer_signature_waiver_reason }}
+                        </div>
                     @else
                         &nbsp;
                     @endif

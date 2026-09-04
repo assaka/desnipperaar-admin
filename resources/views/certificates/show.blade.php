@@ -192,6 +192,9 @@
             <div class="text-sm mt-2"><span class="text-gray-500">Handtekening:</span>
                 @if ($bon?->customer_signature_path)
                     <span class="text-green-700 font-bold">✓ ondertekend op bon</span>
+                @elseif ($bon?->handtekeningKwijtgescholden())
+                    <span class="text-amber-700 font-bold">klant kon niet tekenen</span>
+                    <div class="text-xs text-gray-600 mt-1 whitespace-pre-line">{{ $bon->customer_signature_waiver_reason }}</div>
                 @else
                     <span class="text-gray-400">— niet ondertekend —</span>
                 @endif

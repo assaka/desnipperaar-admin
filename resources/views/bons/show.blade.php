@@ -59,6 +59,12 @@
             'notes' => 'Notities', 'signatures' => 'Handtekeningen', 'signed_check' => '✓ Getekend',
             'sign_again' => 'Opnieuw tekenen', 'clear' => 'Wissen', 'not_assigned' => 'nog niet toegewezen',
             'sign_note' => 'Zodra de klant tekent wordt de ophaaldatum automatisch vastgelegd en gaat de getekende bon als PDF naar de klant. De chauffeur-handtekening wordt automatisch ingevuld vanuit het chauffeur-profiel.',
+            'cannot_sign' => 'Klant kan niet tekenen',
+            'waiver_reason' => 'Reden (verplicht)',
+            'waiver_ph' => 'Bijvoorbeeld geen tekenbevoegd persoon aanwezig. Noteer wie de dozen wel heeft aangenomen.',
+            'waiver_badge' => 'Afgetekend zonder handtekening',
+            'waiver_by' => 'vastgelegd door',
+            'waiver_hint' => 'Zonder handtekening telt deze reden als aftekening. De bon wordt daarna net zo verstuurd en gefactureerd.',
             'confirm_email' => 'Bevestig & mailen', 'more_than' => ' meer dan besteld.', 'less_than' => ' minder dan besteld.',
         ],
         'en' => [
@@ -79,6 +85,12 @@
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signed',
             'sign_again' => 'Sign again', 'clear' => 'Clear', 'not_assigned' => 'not yet assigned',
             'sign_note' => 'Once the customer signs, the pickup date is recorded automatically and the signed bon is sent as a PDF to the customer. The driver signature is filled in automatically from the driver profile.',
+            'cannot_sign' => 'Customer cannot sign',
+            'waiver_reason' => 'Reason (required)',
+            'waiver_ph' => 'For example no authorised person present. Note who did accept the boxes.',
+            'waiver_badge' => 'Signed off without a signature',
+            'waiver_by' => 'recorded by',
+            'waiver_hint' => 'Without a signature this reason counts as sign-off. The bon is then sent and invoiced just the same.',
             'confirm_email' => 'Confirm & email', 'more_than' => ' more than ordered.', 'less_than' => ' less than ordered.',
         ],
         'fr' => [
@@ -99,6 +111,12 @@
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signé',
             'sign_again' => 'Signer à nouveau', 'clear' => 'Effacer', 'not_assigned' => 'pas encore attribué',
             'sign_note' => 'Dès que le client signe, la date d\'enlèvement est enregistrée automatiquement et le bon signé est envoyé en PDF au client. La signature du chauffeur est renseignée automatiquement depuis le profil du chauffeur.',
+            'cannot_sign' => 'Le client ne peut pas signer',
+            'waiver_reason' => 'Motif (obligatoire)',
+            'waiver_ph' => 'Par exemple aucune personne habilitée sur place. Notez qui a réceptionné les boîtes.',
+            'waiver_badge' => 'Validé sans signature',
+            'waiver_by' => 'enregistré par',
+            'waiver_hint' => 'Sans signature, ce motif vaut validation. Le bon est ensuite envoyé et facturé de la même maniere.',
             'confirm_email' => 'Confirmer & envoyer', 'more_than' => ' de plus que commandé.', 'less_than' => ' de moins que commandé.',
         ],
         'es' => [
@@ -119,6 +137,12 @@
             'notes' => 'Notas', 'signatures' => 'Firmas', 'signed_check' => '✓ Firmado',
             'sign_again' => 'Firmar de nuevo', 'clear' => 'Borrar', 'not_assigned' => 'aún sin asignar',
             'sign_note' => 'En cuanto el cliente firma, la fecha de recogida se registra automáticamente y el bon firmado se envía en PDF al cliente. La firma del conductor se rellena automáticamente desde el perfil del conductor.',
+            'cannot_sign' => 'El cliente no puede firmar',
+            'waiver_reason' => 'Motivo (obligatorio)',
+            'waiver_ph' => 'Por ejemplo ninguna persona autorizada presente. Anote quién recibió las cajas.',
+            'waiver_badge' => 'Validado sin firma',
+            'waiver_by' => 'registrado por',
+            'waiver_hint' => 'Sin firma este motivo cuenta como validación. El bon se envía y se factura igualmente.',
             'confirm_email' => 'Confirmar & enviar', 'more_than' => ' más de lo pedido.', 'less_than' => ' menos de lo pedido.',
         ],
     ][$locale];
@@ -146,7 +170,9 @@
             <div class="text-sm text-gray-600">
                 {{ $svc[$bon->mode] ?? (ucfirst($bon->mode) . 'service') }} ·
                 <a href="{{ route('orders.show', $bon->order) }}" class="underline">{{ $bon->order->order_number }}</a>
-                @if ($bon->picked_up_at)
+                @if ($bon->picked_up_at && $bon->handtekeningKwijtgescholden())
+                    · <span class="bg-amber-600 text-white px-2 py-0.5 text-xs font-bold uppercase">{{ $T['waiver_badge'] }} {{ $bon->picked_up_at->format('Y-m-d H:i') }}</span>
+                @elseif ($bon->picked_up_at)
                     · <span class="bg-green-700 text-white px-2 py-0.5 text-xs font-bold uppercase">{{ $T['signed'] }} {{ $bon->picked_up_at->format('Y-m-d H:i') }}</span>
                 @else
                     · <span class="bg-gray-600 text-white px-2 py-0.5 text-xs font-bold uppercase">{{ $T['not_signed'] }}</span>
@@ -190,7 +216,7 @@
         </div>
     </section>
 
-    @php $locked = $bon->picked_up_at && $bon->customer_signature_path; @endphp
+    @php $locked = $bon->picked_up_at && $bon->isAfgetekend(); @endphp
 
     @if ($locked)
         <div class="bg-green-100 border border-green-600 text-green-900 px-3 py-3 mb-4 flex justify-between items-center">
@@ -458,7 +484,7 @@
         <section>
             <h2 class="font-black mb-3">{{ $T['signatures'] }}</h2>
             <div class="grid grid-cols-2 gap-4">
-                <div>
+                <div x-data="{ waived: {{ old('signature_waived', $bon->handtekeningKwijtgescholden()) ? 'true' : 'false' }} }">
                     <label class="block text-sm font-bold mb-2">{{ $T['customer'] }} · {{ $bon->order->customer_name }}</label>
                     @if ($bon->customer_signature_path)
                         <div class="border border-green-600 bg-green-50 p-2 text-center">
@@ -466,14 +492,43 @@
                             <div class="text-xs text-green-800 mt-1 font-bold uppercase">{{ $T['signed_check'] }}</div>
                         </div>
                         <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-cust-wrap').style.display='block';this.style.display='none';">{{ $T['sign_again'] }}</button>
+                    @elseif ($bon->handtekeningKwijtgescholden())
+                        {{-- De klant kon niet tekenen. De vastgelegde reden staat hier in plaats van de krabbel. --}}
+                        <div class="border border-amber-600 bg-amber-50 p-2">
+                            <div class="text-xs text-amber-900 font-bold uppercase">{{ $T['waiver_badge'] }}</div>
+                            <div class="text-sm mt-1 whitespace-pre-line">{{ $bon->customer_signature_waiver_reason }}</div>
+                            <div class="text-xs text-amber-800 mt-1">
+                                {{ $T['waiver_by'] }} {{ $bon->customer_signature_waived_by ?? '—' }} ·
+                                {{ $bon->customer_signature_waived_at?->format('d-m-Y H:i') }}
+                            </div>
+                        </div>
                     @endif
-                    <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
-                        <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
-                        <div class="flex gap-2 mt-1">
-                            <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">{{ $T['clear'] }}</button>
+
+                    {{-- Tekenvlak en override sluiten elkaar uit, één van beide sluit de bon af. --}}
+                    <div x-show="!waived" x-cloak>
+                        <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
+                            <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                            <div class="flex gap-2 mt-1">
+                                <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">{{ $T['clear'] }}</button>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="customer_signature" id="sig-customer-data">
+
+                    {{-- Heeft de klant al echt getekend, dan is de override niet aan de orde. --}}
+                    @if (! $bon->customer_signature_path)
+                    <label class="flex items-start gap-2 mt-2 text-sm">
+                        <input type="checkbox" name="signature_waived" value="1" x-model="waived" class="mt-1">
+                        <span class="font-bold">{{ $T['cannot_sign'] }}</span>
+                    </label>
+                    <div x-show="waived" x-cloak class="mt-2">
+                        <label class="block text-xs font-bold mb-1">{{ $T['waiver_reason'] }}</label>
+                        <textarea name="waiver_reason" rows="4" class="w-full border p-2"
+                                  x-bind:required="waived"
+                                  placeholder="{{ $T['waiver_ph'] }}">{{ old('waiver_reason', $bon->customer_signature_waiver_reason) }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">{{ $T['waiver_hint'] }}</p>
+                    </div>
+                    @endif
                 </div>
                 <div>
                     <label class="block text-sm font-bold mb-2">{{ $T['driver'] }} · {{ $bon->driver_name_snapshot ?? $T['not_assigned'] }}</label>
@@ -555,6 +610,19 @@
         document.addEventListener('touchmove', function (e) {
             if (drawing) e.preventDefault();
         }, { passive: false });
+
+        // Het tekenvlak staat verborgen zolang de override aanstaat, dus het heeft
+        // dan geen afmeting. Wordt het vinkje weer uitgezet, dan meten we opnieuw.
+        var waiveBox = document.querySelector('input[name="signature_waived"]');
+        if (waiveBox) {
+            waiveBox.addEventListener('change', function () {
+                if (this.checked) return;
+                requestAnimationFrame(function () {
+                    fitCanvas(cCanvas);
+                    sigCustomer.clear();
+                });
+            });
+        }
 
         var form = cCanvas.closest('form');
         form.addEventListener('submit', function () {

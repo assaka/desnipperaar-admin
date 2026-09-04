@@ -90,8 +90,9 @@ class BonController extends Controller
 
     public function update(Request $request, Bon $bon)
     {
-        // Lock: once bon is both picked up AND signed by customer, it becomes immutable.
-        if ($bon->picked_up_at && $bon->customer_signature_path) {
+        // Lock: once bon is both picked up AND signed off by the customer, it becomes immutable.
+        // Afgetekend = een echte handtekening OF een vastgelegde reden waarom die ontbreekt.
+        if ($bon->picked_up_at && $bon->isAfgetekend()) {
             return redirect()->route('bons.show', $bon)
                 ->withErrors(['locked' => 'Bon is al bevestigd en getekend — verdere wijzigingen niet toegestaan.']);
         }
@@ -103,6 +104,8 @@ class BonController extends Controller
             'notes'               => 'nullable|string|max:5000',
             'seals'               => 'nullable|string|max:5000',
             'customer_signature'  => 'nullable|string',
+            'signature_waived'    => 'nullable|boolean',
+            'waiver_reason'       => 'nullable|string|max:1000|required_if:signature_waived,1',
             'driver_signature'    => 'nullable|string',
             'actual_boxes'        => 'nullable|integer|min:0|max:500',
             'actual_containers'   => 'nullable|integer|min:0|max:50',
@@ -110,7 +113,7 @@ class BonController extends Controller
             'actual_media.*'      => 'nullable|integer|min:0|max:5000',
         ]);
 
-        $hadSignatureBefore = !empty($bon->customer_signature_path);
+        $hadSignatureBefore = $bon->isAfgetekend();
         $hadPickupBefore    = !empty($bon->picked_up_at);
 
         $patch = [
@@ -153,6 +156,24 @@ class BonController extends Controller
                 $patch['picked_up_at'] = now();
             }
         }
+        // Override: de klant kon niet tekenen. De vrije tekst van de chauffeur is
+        // dan het bewijsstuk, dus die is verplicht, en we leggen vast wie het
+        // invoerde. Een echte handtekening in dezelfde POST wint altijd.
+        $waived = (bool) ($data['signature_waived'] ?? false);
+        if ($waived && empty($patch['customer_signature_path']) && empty($bon->customer_signature_path)) {
+            $patch['customer_signature_waived_at']     = $bon->customer_signature_waived_at ?? now();
+            $patch['customer_signature_waiver_reason'] = trim((string) ($data['waiver_reason'] ?? ''));
+            $patch['customer_signature_waived_by']     = $bon->customer_signature_waived_by ?? $request->user()?->name;
+            if (empty($bon->picked_up_at) && empty($patch['picked_up_at'])) {
+                $patch['picked_up_at'] = now();
+            }
+        } elseif (! $waived || !empty($patch['customer_signature_path'])) {
+            // Vinkje weer uit, of alsnog getekend: de override vervalt.
+            $patch['customer_signature_waived_at']     = null;
+            $patch['customer_signature_waiver_reason'] = null;
+            $patch['customer_signature_waived_by']     = null;
+        }
+
         if (!empty($data['driver_signature']) && str_starts_with($data['driver_signature'], 'data:image/')) {
             $patch['driver_signature_path'] = $this->storeSignature($bon, 'driver', $data['driver_signature']);
         }
@@ -186,7 +207,7 @@ class BonController extends Controller
         }
 
         // Mail signed bon to customer — only once, when signature + pickup are both present.
-        $hasSignatureNow = !empty($bon->fresh()->customer_signature_path);
+        $hasSignatureNow = $bon->fresh()->isAfgetekend();
         $hasPickupNow    = !empty($bon->fresh()->picked_up_at);
         $justSigned      = $hasSignatureNow && $hasPickupNow && (!$hadSignatureBefore || !$hadPickupBefore);
 
