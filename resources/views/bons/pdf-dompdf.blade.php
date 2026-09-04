@@ -112,7 +112,7 @@
                     @elseif ($bon->handtekeningKwijtgescholden())
                         {{-- Geen krabbel, wel een vastgelegde reden. Die is hier het bewijsstuk. --}}
                         <div style="font-size:8pt;text-align:left;">
-                            <strong style="text-transform:uppercase;">Klant kon niet tekenen</strong><br>
+                            <strong style="text-transform:uppercase;">De klant kon niet ondertekenen</strong><br>
                             {{ $bon->customer_signature_waiver_reason }}
                         </div>
                     @else

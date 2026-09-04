@@ -743,7 +743,7 @@
                 <div class="font-mono">
                     <a href="{{ route('bons.show', $bon) }}" class="underline">{{ $bon->bon_number }}</a>
                     @if ($bon->picked_up_at && $bon->handtekeningKwijtgescholden())
-                        <span class="ml-2 bg-amber-600 text-white px-1 text-xs font-bold uppercase" title="{{ $bon->customer_signature_waiver_reason }}">zonder handtekening</span>
+                        <span class="ml-2 bg-amber-600 text-white px-1 text-xs font-bold uppercase" title="{{ $bon->customer_signature_waiver_reason }}">zonder ondertekening</span>
                     @elseif ($bon->picked_up_at)
                         <span class="ml-2 bg-green-700 text-white px-1 text-xs font-bold uppercase">getekend</span>
                     @else
