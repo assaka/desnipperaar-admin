@@ -505,7 +505,7 @@
                     @endif
 
                     {{-- Tekenvlak en override sluiten elkaar uit, één van beide sluit de bon af. --}}
-                    <div x-show="!waived" x-cloak>
+                    <div x-show="!waived" style="{{ $bon->handtekeningKwijtgescholden() ? 'display:none;' : '' }}">
                         <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
                             <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
                             <div class="flex gap-2 mt-1">
@@ -570,9 +570,13 @@
         function fitCanvas(canvas) {
             var ratio = Math.max(window.devicePixelRatio || 1, 1);
             var rect  = canvas.getBoundingClientRect();
+            // Een verborgen vlak meet 0 bij 0. Zo'n maat wegschrijven laat het
+            // canvas dichtklappen, dus die slaan we over en meten later opnieuw.
+            if (rect.width < 1 || rect.height < 1) return false;
             canvas.width  = Math.round(rect.width  * ratio);
             canvas.height = Math.round(rect.height * ratio);
             canvas.getContext('2d').scale(ratio, ratio);
+            return true;
         }
         fitCanvas(cCanvas);
         fitCanvas(dCanvas);
@@ -618,9 +622,26 @@
             waiveBox.addEventListener('change', function () {
                 if (this.checked) return;
                 requestAnimationFrame(function () {
-                    fitCanvas(cCanvas);
-                    sigCustomer.clear();
+                    if (fitCanvas(cCanvas)) sigCustomer.clear();
                 });
+            });
+        }
+
+        // Vangnet voor elk vlak dat bij het laden nog geen afmeting had, of het
+        // nu door de override kwam of doordat de klant al had getekend.
+        if (typeof ResizeObserver !== 'undefined') {
+            var pads = [[cCanvas, function () { return sigCustomer; }],
+                        [dCanvas, function () { return sigDriver; }]];
+            pads.forEach(function (pair) {
+                var canvas = pair[0];
+                if (canvas.width > 0) return;
+                var observer = new ResizeObserver(function () {
+                    if (fitCanvas(canvas)) {
+                        pair[1]().clear();
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(canvas);
             });
         }
 
