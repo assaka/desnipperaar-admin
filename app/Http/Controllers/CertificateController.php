@@ -12,13 +12,13 @@ class CertificateController extends Controller
 {
     public function show(Certificate $certificate)
     {
-        $certificate->load(['order.bons.seals']);
+        $certificate->load(['order.bons.seals', 'bon.seals']);
         return view('certificates.show', compact('certificate'));
     }
 
     public function pdf(Certificate $certificate)
     {
-        $certificate->load(['order.bons.seals']);
+        $certificate->load(['order.bons.seals', 'bon.seals']);
         return view('certificates.pdf', compact('certificate'));
     }
 

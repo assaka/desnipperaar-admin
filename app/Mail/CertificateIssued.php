@@ -54,7 +54,7 @@ class CertificateIssued extends Mailable
 
     public function attachments(): array
     {
-        $this->certificate->loadMissing(['order.bons.seals', 'order.customer']);
+        $this->certificate->loadMissing(['order.bons.seals', 'order.customer', 'bon.seals']);
 
         $name = match ($this->mailLocale) {
             'en' => "certificate-of-destruction-{$this->certificate->certificate_number}.pdf",

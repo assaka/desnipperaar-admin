@@ -41,7 +41,12 @@
 @php
     $order    = $certificate->order;
     $customer = $order->customer;
-    $bon      = $order->bons->first();
+    // Het certificaat verklaart één vernietiging, dus het hoort bij de bon die
+    // bij het aanmaken is vastgelegd. Blind de eerste bon van de order pakken
+    // gaat mis zodra er meer dan één is, bijvoorbeeld bij een abonnement of
+    // wanneer er een bezorgrit voor staat. De terugval is er voor oude
+    // certificaten van voor bon_id.
+    $bon = $certificate->bon ?: $order->bons->first();
     $src      = !empty($bon?->actual_media) ? $bon->actual_media : ($order->media_items ?? []);
     $mi       = fn ($k) => (int) ($src[$k] ?? 0);
     $method   = $certificate->destruction_method ?: 'DIN 66399';
@@ -72,7 +77,7 @@
             'box' => 'doos', 'boxes' => 'dozen', 'cnt' => 'rolcontainer', 'cnts' => 'rolcontainers', 'items' => 'stuks',
             'loc' => 'Locatie van vernietiging', 'onsite' => 'Mobiel op locatie opdrachtgever', 'depot' => 'Bij depot Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar bevestigt hierbij dat de bovenstaande materialen volledig en onomkeerbaar zijn vernietigd, conform AVG, DIN 66399, NEN-15713 en ISO 21964.',
-            'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Opdrachtgever / getuige', 'name' => 'Naam', 'signature' => 'Handtekening', 'noSig' => 'Klant kon niet tekenen',
+            'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Opdrachtgever / getuige', 'name' => 'Naam', 'signature' => 'Handtekening', 'noSig' => 'De klant kon niet ondertekenen',
             'tagline' => 'Mobiele documentvernietiging op locatie binnen 20 km van Amsterdam-Noord (1034DN)',
             'badges' => 'AVG-CONFORM · DIN 66399 · NEN-15713 · ISO 21964 · VERZEKERD · VOG',
         ],
@@ -88,7 +93,7 @@
             'box' => 'box', 'boxes' => 'boxes', 'cnt' => 'roll container', 'cnts' => 'roll containers', 'items' => 'items',
             'loc' => 'Location of destruction', 'onsite' => 'Mobile, at client location', 'depot' => 'At depot Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar hereby confirms that the materials listed above have been fully and irreversibly destroyed, in accordance with GDPR, DIN 66399, NEN-15713 and ISO 21964.',
-            'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Client / witness', 'name' => 'Name', 'signature' => 'Signature', 'noSig' => 'Customer could not sign',
+            'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Client / witness', 'name' => 'Name', 'signature' => 'Signature', 'noSig' => 'The customer was unable to sign',
             'tagline' => 'Mobile document destruction on site within 20 km of Amsterdam-Noord (1034DN)',
             'badges' => 'GDPR · DIN 66399 · NEN-15713 · ISO 21964 · INSURED · VOG-SCREENED',
         ],
@@ -104,7 +109,7 @@
             'box' => 'carton', 'boxes' => 'cartons', 'cnt' => 'conteneur roulant', 'cnts' => 'conteneurs roulants', 'items' => 'unités',
             'loc' => 'Lieu de destruction', 'onsite' => 'Mobile sur le site du donneur d\'ordre', 'depot' => 'Au dépôt Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar confirme par la présente que les matériaux mentionnés ci-dessus ont été détruits de manière complète et irréversible, conformément au RGPD, à la norme DIN 66399, NEN-15713 et ISO 21964.',
-            'operator' => 'Opérateur (DeSnipperaar)', 'witness' => 'Donneur d\'ordre / témoin', 'name' => 'Nom', 'signature' => 'Signature', 'noSig' => "Le client n'a pas pu signer",
+            'operator' => 'Opérateur (DeSnipperaar)', 'witness' => 'Donneur d\'ordre / témoin', 'name' => 'Nom', 'signature' => 'Signature', 'noSig' => "Le client n'était pas en mesure de signer",
             'tagline' => 'Destruction mobile de documents sur site dans un rayon de 20 km autour d\'Amsterdam-Noord (1034DN)',
             'badges' => 'CONFORME RGPD · DIN 66399 · NEN-15713 · ISO 21964 · ASSURÉ · PERSONNEL AVEC VOG',
         ],
@@ -120,7 +125,7 @@
             'box' => 'caja', 'boxes' => 'cajas', 'cnt' => 'contenedor con ruedas', 'cnts' => 'contenedores con ruedas', 'items' => 'unidades',
             'loc' => 'Lugar de destrucción', 'onsite' => 'Móvil en las instalaciones del cliente', 'depot' => 'En el depósito Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar confirma por la presente que los materiales indicados arriba han sido destruidos de forma completa e irreversible, conforme al RGPD, DIN 66399, NEN-15713 e ISO 21964.',
-            'operator' => 'Operario (DeSnipperaar)', 'witness' => 'Cliente / testigo', 'name' => 'Nombre', 'signature' => 'Firma', 'noSig' => 'El cliente no pudo firmar',
+            'operator' => 'Operario (DeSnipperaar)', 'witness' => 'Cliente / testigo', 'name' => 'Nombre', 'signature' => 'Firma', 'noSig' => 'El cliente no estaba en condiciones de firmar',
             'tagline' => 'Destrucción móvil de documentos in situ en un radio de 20 km de Amsterdam-Noord (1034DN)',
             'badges' => 'CONFORME RGPD · DIN 66399 · NEN-15713 · ISO 21964 · ASEGURADO · PERSONAL CON VOG',
         ],

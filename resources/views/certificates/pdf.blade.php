@@ -75,7 +75,12 @@
 @php
     $order       = $certificate->order;
     $customer    = $order->customer;
-    $bon         = $order->bons->first();
+    // Het certificaat verklaart één vernietiging, dus het hoort bij de bon die
+    // bij het aanmaken is vastgelegd. Blind de eerste bon van de order pakken
+    // gaat mis zodra er meer dan één is, bijvoorbeeld bij een abonnement of
+    // wanneer er een bezorgrit voor staat. De terugval is er voor oude
+    // certificaten van voor bon_id.
+    $bon = $certificate->bon ?: $order->bons->first();
     $mediaSource = !empty($bon?->actual_media) ? $bon->actual_media : ($order->media_items ?? []);
     $mediaInt    = fn($k) => (int) ($mediaSource[$k] ?? 0);
     $method      = strtoupper((string) $certificate->destruction_method);
@@ -279,7 +284,7 @@
                         <img src="{{ $custSig }}" class="sig-img" alt="handtekening klant">
                     @elseif ($bon?->handtekeningKwijtgescholden())
                         {{-- Geen krabbel, wel een vastgelegde reden. --}}
-                        <span style="font-size:7pt;">Klant kon niet tekenen &middot; {{ $bon->customer_signature_waiver_reason }}</span>
+                        <span style="font-size:7pt;">De klant kon niet ondertekenen &middot; {{ $bon->customer_signature_waiver_reason }}</span>
                     @endif
                 </div>
             </div>
