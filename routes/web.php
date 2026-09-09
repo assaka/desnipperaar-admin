@@ -19,11 +19,12 @@ Route::get('/b/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'publicP
 Route::get('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::class, 'show'])
     ->name('subscribers.unsubscribe');
 
-// RFC 8058 one-click target for the List-Unsubscribe-Post header. The mailbox
-// provider POSTs here without a session, so the token is the authenticator and
-// the route is CSRF-exempt (see bootstrap/app.php).
-Route::post('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::class, 'oneClick'])
-    ->name('subscribers.unsubscribe.one-click');
+// The actual opt-out. Serves both the confirm button on the page above and the
+// RFC 8058 one-click POST from a mailbox provider. Neither carries a session of
+// ours, so the token is the authenticator and the route is CSRF-exempt (see
+// bootstrap/app.php).
+Route::post('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::class, 'unsubscribe'])
+    ->name('subscribers.unsubscribe.confirm');
 
 
 Route::middleware(['auth'])->group(function () {
