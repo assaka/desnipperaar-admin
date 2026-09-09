@@ -8,6 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -41,6 +42,22 @@ class DesnipperaarDagWelcome extends Mailable
             subject: $subject,
             from: new Address($salesEmail, 'DeSnipperaar'),
         );
+    }
+
+    /**
+     * RFC 8058 one-click unsubscribe. Gmail and Yahoo require bulk mail to
+     * carry these headers, and without them the whole domain gets treated as
+     * an unmanaged list. The URL is the same token link as in the body; the
+     * POST variant is handled by UnsubscribeController::oneClick().
+     */
+    public function headers(): Headers
+    {
+        $url = $this->subscriber->unsubscribeUrl();
+
+        return new Headers(text: [
+            'List-Unsubscribe'      => '<'.$url.'>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ]);
     }
 
     public function content(): Content

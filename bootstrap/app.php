@@ -21,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // The unguessable 64-char quote_token is the authenticator, so the accept
         // POST is CSRF-exempt (same stance as the token-gated /api/* endpoints)
         // and never depends on a session cookie surviving the proxy.
-        $middleware->validateCsrfTokens(except: ['offerte/*']);
+        // Same stance for the one-click unsubscribe POST: the mailbox provider
+        // sends it on the reader's behalf, with the unguessable token as the
+        // only credential and no session cookie of ours.
+        $middleware->validateCsrfTokens(except: ['offerte/*', 'afmelden/*']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
