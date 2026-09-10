@@ -112,8 +112,7 @@ class OfferteController extends Controller
     private function transportNotes(array $data): ?string
     {
         $slotLabels = [
-            'standaard' => 'standaard, code door de klant zelf ingesteld',
-            'tracking'  => '4G-slot met live tracking (meerprijs)',
+            'tracking' => '4G-slot met live tracking (meerprijs)',
         ];
 
         $rows = collect([
