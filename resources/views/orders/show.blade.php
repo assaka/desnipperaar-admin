@@ -520,8 +520,23 @@
 
     @include('orders._coupon')
 
+    @php
+        // Een eigen tijdvak is elk venster met een klok erin dat niet in de
+        // vaste lijst staat, zoals 09:00-13:00. Staat dat op de order, dan moet
+        // het formulier opengaan met dat tijdvak ingevuld en niet stilletjes
+        // terugvallen op "flexibel".
+        $vasteUurblokken = array_map(fn ($hr) => sprintf('%02d:00-%02d:00', $hr, $hr + 1), range(8, 19));
+        $prefillWindow   = $order->pickup_window;
+        $eigenTijdvak    = $prefillWindow
+            && ! in_array($prefillWindow, ['flexibel', 'ochtend', 'middag', 'avond'], true)
+            && ! in_array($prefillWindow, $vasteUurblokken, true)
+            && preg_match('/^\d{2}:00-\d{2}:00$/', $prefillWindow);
+        $eigenStart = $eigenTijdvak ? (int) substr($prefillWindow, 0, 2) : 9;
+        $eigenEind  = $eigenTijdvak ? (int) substr($prefillWindow, 6, 2) : 13;
+    @endphp
+
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
-             x-data="slotPanel({{ $order->state === 'nieuw' ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}')">
+             x-data="slotPanel({{ $order->state === 'nieuw' ? 'true' : 'false' }}, '{{ route('orders.slots', $order) }}', {{ $eigenTijdvak ? 'true' : 'false' }})">
         <div class="flex justify-between items-baseline mb-3">
             <h2 class="font-black">Geplande ophaling</h2>
             @if ($order->state === 'bevestigd')
@@ -613,10 +628,7 @@
                         @endforeach
                     </select>
                 </div>
-                @php
-                    $prefillDate   = $order->pickup_date?->format('Y-m-d');
-                    $prefillWindow = $order->pickup_window;
-                @endphp
+                @php $prefillDate = $order->pickup_date?->format('Y-m-d'); @endphp
                 <div>
                     <label class="block text-sm font-bold">Ophaaldatum *</label>
                     <input type="date" name="pickup_date" required min="{{ now()->toDateString() }}"
@@ -624,8 +636,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold">Dagdeel *</label>
-                    <select name="pickup_window" required class="w-full border p-2" x-ref="window">
-                        <option value="flexibel" @selected($prefillWindow==='flexibel' || !$prefillWindow)>Flexibel</option>
+                    <select name="pickup_window" required class="w-full border p-2" x-ref="window"
+                            @change="eigen = $event.target.value === 'eigen'">
+                        <option value="flexibel" @selected(! $eigenTijdvak && ($prefillWindow==='flexibel' || !$prefillWindow))>Flexibel</option>
                         <option value="ochtend"  @selected($prefillWindow==='ochtend')>Ochtend (08:00–12:00)</option>
                         <option value="middag"   @selected($prefillWindow==='middag')>Middag (12:00–17:00)</option>
                         <option value="avond"    @selected($prefillWindow==='avond')>Avond (17:00–20:00)</option>
@@ -635,7 +648,33 @@
                                 <option value="{{ $slot }}" @selected($prefillWindow===$slot)>{{ sprintf('%02d:00 – %02d:00', $hr, $hr + 1) }}</option>
                             @endforeach
                         </optgroup>
+                        <option value="eigen" @selected($eigenTijdvak)>Eigen tijdvak…</option>
                     </select>
+                </div>
+
+                {{-- Een eigen tijdvak, voor de afspraak die niet op een heel uur
+                     past: "tussen negen en een uur". De server plakt begin en eind aan
+                     elkaar tot dezelfde HH:00-HH:00 die een vast uurblok ook
+                     oplevert, dus alles erachter ziet maar één soort waarde. --}}
+                <div x-show="eigen" x-cloak class="col-span-3 border border-gray-300 bg-white p-3">
+                    <div class="text-sm font-bold">Eigen tijdvak</div>
+                    <div class="mt-2 flex items-center gap-2 text-sm">
+                        <label for="pickup_window_start" class="text-xs uppercase text-gray-500">van</label>
+                        <select id="pickup_window_start" name="pickup_window_start" class="border p-2" :disabled="!eigen">
+                            @foreach (range(6, 22) as $hr)
+                                <option value="{{ $hr }}" @selected($eigenStart === $hr)>{{ sprintf('%02d:00', $hr) }}</option>
+                            @endforeach
+                        </select>
+                        <label for="pickup_window_end" class="text-xs uppercase text-gray-500">tot</label>
+                        <select id="pickup_window_end" name="pickup_window_end" class="border p-2" :disabled="!eigen">
+                            @foreach (range(7, 23) as $hr)
+                                <option value="{{ $hr }}" @selected($eigenEind === $hr)>{{ sprintf('%02d:00', $hr) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-600">
+                        Het einde moet later liggen dan het begin. De klant ziet dit tijdvak terug in de bevestigingsmail.
+                    </p>
                 </div>
             </div>
             <div class="mt-3 grid grid-cols-3 gap-3">
@@ -900,9 +939,12 @@
         // Zoekt pas op verzoek: de berekening kijkt vier weken vooruit en zoekt
         // ontbrekende coördinaten op, en dat hoort niet te hangen aan elke keer
         // dat iemand een order opent.
-        function slotPanel(editing, url) {
+        function slotPanel(editing, url, eigen) {
             return {
                 editing: editing,
+
+                // Staat het dagdeel op "eigen", dan staan de twee uurvelden open.
+                eigen: eigen,
                 loading: false,
                 error: '',
                 result: null,
@@ -946,6 +988,9 @@
                     if (!slot.available) return;
                     this.$refs.date.value = slot.date;
                     this.$refs.window.value = slot.window;
+                    // Een voorgesteld moment is altijd een heel uur, dus de
+                    // velden voor een eigen tijdvak horen dan weer dicht.
+                    this.eigen = false;
                 },
             };
         }

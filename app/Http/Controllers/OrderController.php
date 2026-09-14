@@ -20,6 +20,7 @@ use App\Support\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -565,6 +566,39 @@ class OrderController extends Controller
         return view('orders.create', compact('preselected', 'drivers'));
     }
 
+    /**
+     * Een eigen tijdvak komt in drie velden binnen: de keuze "eigen" in
+     * pickup_window, plus een begin- en een einduur. Achter dit punt kent
+     * pickup_window maar één klokvorm, "HH:00-HH:00", dus zetten wij de drie
+     * velden hier om tot die ene waarde voordat de regex ernaar kijkt.
+     *
+     * Zo staat er in de database, op de bon en in de mail precies één notatie,
+     * of iemand nu een vast uurblok koos of zelf 09:00 tot 13:00 afsprak. De
+     * planning hoeft er dus ook niets voor te leren: occupancy() leest het
+     * bereik dat er staat en zet alle uren ertussen op bezet.
+     */
+    private function mergeCustomWindow(Request $request): void
+    {
+        if ($request->input('pickup_window') !== 'eigen') {
+            return;
+        }
+
+        $start = $request->integer('pickup_window_start');
+        $end   = $request->integer('pickup_window_end');
+
+        // Het einde moet later zijn dan het begin, anders staat er een tijdvak
+        // van nul of van min zoveel uur in de mail naar de klant.
+        if ($start < 0 || $start > 22 || $end < 1 || $end > 23 || $end <= $start) {
+            throw ValidationException::withMessages([
+                'pickup_window' => 'Een eigen tijdvak loopt van een begin- naar een later einduur, binnen 00:00 en 23:00.',
+            ]);
+        }
+
+        $request->merge([
+            'pickup_window' => sprintf('%02d:00-%02d:00', $start, $end),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $rules = [
@@ -589,6 +623,8 @@ class OrderController extends Controller
             $rules['new_customer.postcode'] = ['nullable','string','max:10','regex:/^\d{4}\s?[A-Za-z]{2}$/'];
             $rules['new_customer.city']     = 'nullable|string|max:100';
         }
+
+        $this->mergeCustomWindow($request);
 
         $validated = $request->validate($rules, [
             'new_customer.postcode.regex' => 'Postcode moet NL-formaat zijn (bv. 1034 AB).',
@@ -779,6 +815,8 @@ class OrderController extends Controller
 
     public function confirmPickup(Request $request, Order $order)
     {
+        $this->mergeCustomWindow($request);
+
         $data = $request->validate([
             'driver_id'        => 'required|exists:drivers,id',
             'pickup_date'      => 'required|date|after_or_equal:today',

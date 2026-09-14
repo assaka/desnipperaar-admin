@@ -116,9 +116,10 @@
                     <input type="date" name="pickup_date" x-model="pickupDate"
                            :min="today" class="w-full border p-2">
                 </div>
-                <div>
+                <div x-data="{ eigen: false }">
                     <label class="block text-sm font-bold">Dagdeel</label>
-                    <select name="pickup_window" class="w-full border p-2">
+                    <select name="pickup_window" class="w-full border p-2"
+                            @change="eigen = $event.target.value === 'eigen'">
                         <option value="flexibel">Flexibel</option>
                         <option value="ochtend">Ochtend</option>
                         <option value="middag">Middag</option>
@@ -128,7 +129,26 @@
                                 <option value="{{ sprintf('%02d:00-%02d:00', $hr, $hr + 1) }}">{{ sprintf('%02d:00 – %02d:00', $hr, $hr + 1) }}</option>
                             @endforeach
                         </optgroup>
+                        <option value="eigen">Eigen tijdvak…</option>
                     </select>
+
+                    {{-- Begin- en einduur voor de afspraak die niet op een heel uur
+                         past. De server maakt er dezelfde HH:00-HH:00 van als een
+                         vast uurblok, dus verderop is er maar één soort waarde. --}}
+                    <div x-show="eigen" x-cloak class="mt-2 flex items-center gap-2 text-sm">
+                        <label for="pickup_window_start" class="text-xs uppercase text-gray-500">van</label>
+                        <select id="pickup_window_start" name="pickup_window_start" class="border p-2" :disabled="!eigen">
+                            @foreach (range(6, 22) as $hr)
+                                <option value="{{ $hr }}" @selected($hr === 9)>{{ sprintf('%02d:00', $hr) }}</option>
+                            @endforeach
+                        </select>
+                        <label for="pickup_window_end" class="text-xs uppercase text-gray-500">tot</label>
+                        <select id="pickup_window_end" name="pickup_window_end" class="border p-2" :disabled="!eigen">
+                            @foreach (range(7, 23) as $hr)
+                                <option value="{{ $hr }}" @selected($hr === 13)>{{ sprintf('%02d:00', $hr) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-bold">Kennismaking</label>
