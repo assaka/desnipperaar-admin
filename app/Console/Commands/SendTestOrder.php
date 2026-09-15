@@ -41,7 +41,8 @@ class SendTestOrder extends Command
         {--containers=1 : Number of 240 L roll containers}
         {--pickup=free : Pickup speed the customer picked: free, sooner or spoed}
         {--km=5 : Road distance to the customer in km; drives the pickup cost and the free-region wording}
-        {--media= : Data carriers as key:qty pairs, e.g. hdd:120,usb:600,phone:30 (default hdd:1,usb:2). Use high quantities to exercise the volume staffel.}';
+        {--media= : Data carriers as key:qty pairs, e.g. hdd:120,usb:600,phone:30 (default hdd:1,usb:2). Use high quantities to exercise the volume staffel.}
+        {--pickup-at= : Afwijkend ophaaladres als straat, postcode, plaats. Leeg betekent ophalen bij de klant zelf.}';
 
     protected $description = 'Create a test order (optionally the full pipeline) and send the customer e-mails to a chosen address.';
 
@@ -55,6 +56,15 @@ class SendTestOrder extends Command
         $cntrs  = (int) $this->option('containers');
         $choice = strtolower((string) $this->option('pickup'));
         $km     = (int) $this->option('km');
+
+        // Afwijkend ophaaladres, als drie stukken gescheiden door komma's. Leeg
+        // laten geeft de gewone bestelling, waarbij het klantadres ook het
+        // ophaaladres is.
+        $ophaalAt = array_map('trim', array_filter(explode(',', (string) $this->option('pickup-at')), 'strlen'));
+        if ($ophaalAt !== [] && count($ophaalAt) !== 3) {
+            $this->error('--pickup-at verwacht straat, postcode, plaats. Bijvoorbeeld: --pickup-at="Plein 17, 2511CS, Den Haag"');
+            return self::FAILURE;
+        }
 
         if (! in_array($locale, ['nl', 'en', 'fr', 'es'], true)) {
             $this->error("Invalid locale '{$locale}'. Use one of: nl, en, fr, es.");
@@ -72,6 +82,9 @@ class SendTestOrder extends Command
         // hier nog niet vast.
 
         $this->info("Creating test order for {$email} (locale={$locale}, pickup={$choice} @ {$km} km, full=" . ($full ? 'yes' : 'no') . ')');
+        if ($ophaalAt !== []) {
+            $this->info('Afwijkend ophaaladres: ' . implode(', ', $ophaalAt));
+        }
 
         $sender = User::orderBy('id')->first();
 
@@ -159,6 +172,9 @@ class SendTestOrder extends Command
             'pickup_km'          => $km,
             'pickup_cost'        => $pickupCost,
             'pickup_rush_fee'    => $pickupRushFee > 0 ? $pickupRushFee : null,
+            'pickup_address'     => $ophaalAt[0] ?? null,
+            'pickup_postcode'    => $ophaalAt[1] ?? null,
+            'pickup_city'        => $ophaalAt[2] ?? null,
         ]);
 
         $rows = [];
