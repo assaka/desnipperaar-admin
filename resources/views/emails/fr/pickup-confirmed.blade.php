@@ -51,18 +51,17 @@
 {{-- Twee adressen naast elkaar, zodat in een oogopslag te zien is dat het
      er twee zijn en welk adres waarvoor dient. --}}
 @if ($order->hasSeparatePickupAddress())
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresses</h2>
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
     <tr>
         <td width="50%" valign="top" style="padding:0 12px 0 0;font-size:14px;line-height:1.5;">
-            <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:6px;">Adresse de facturation</div>
+            <div style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresse de facturation</div>
             @if ($order->customer?->company)<strong>{{ $order->customer->company }}</strong><br>@endif
             {{ $order->customer_name }}<br>
             @if ($order->customer_address){{ $order->customer_address }}<br>@endif
             <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span> {{ $order->customer_city }}
         </td>
         <td width="50%" valign="top" style="padding:0 0 0 12px;font-size:14px;line-height:1.5;">
-            <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:6px;">Adresse d'enlèvement</div>
+            <div style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresse d'enlèvement</div>
             @if ($ophaalAdres['address']){{ $ophaalAdres['address'] }}<br>@endif
             <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
         </td>
