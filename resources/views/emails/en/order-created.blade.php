@@ -21,16 +21,43 @@
 We will contact you within one business day to confirm the pickup.</p>
 
 @php $ophaalAdres = $order->pickupLocation(); @endphp
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">{{ $order->hasSeparatePickupAddress() ? 'Pickup address' : 'Address' }}</h2>
+@if ($order->hasSeparatePickupAddress())
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Invoice address</h2>
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;width:140px;">Name</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_name }}</td>
     </tr>
+    @if ($order->customer_address)
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Address</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_address }}</td>
+        </tr>
+    @endif
+    <tr>
+        <td style="padding:4px 0;color:#555;font-size:12px;">Postcode / city</td>
+        <td style="padding:4px 0;font-weight:700;font-size:13px;">
+            <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span>
+            @if ($order->customer_city) &middot; {{ $order->customer_city }} @endif
+        </td>
+    </tr>
+</table>
+@endif
+
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">{{ $order->hasSeparatePickupAddress() ? 'Pickup address' : 'Address' }}</h2>
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
+    @if (! $order->hasSeparatePickupAddress())
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;width:140px;">Name</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_name }}</td>
+        </tr>
+    @endif
     {{-- Hier staat het adres van het bezoek en niet dat van de factuur. Zijn
-         die twee hetzelfde, dan heet de kop hierboven gewoon Adres. Wijken ze
-         af, dan staat het factuuradres er als eigen regel onder. --}}
+         die twee hetzelfde, dan heet de kop hierboven gewoon Adres en staat de
+         naam er nog bij. Wijken ze af, dan heeft het factuuradres een eigen
+         blok hierboven en blijft hier alleen het bezoek staan. --}}
     @if ($ophaalAdres['address'])
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Address</td>
@@ -44,12 +71,6 @@ We will contact you within one business day to confirm the pickup.</p>
             @if ($ophaalAdres['city']) &middot; {{ $ophaalAdres['city'] }} @endif
         </td>
     </tr>
-    @if ($order->hasSeparatePickupAddress())
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Invoice address</td>
-            <td style="padding:4px 0;font-size:13px;">{{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}</td>
-        </tr>
-    @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;">Service type</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>

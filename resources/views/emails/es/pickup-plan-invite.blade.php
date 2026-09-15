@@ -20,16 +20,25 @@ Usted decide cuándo le viene bien.</p>
 
 <p style="font-size:13px;color:#555;">En esa página aparecen las próximas franjas en las que podemos pasar, cada una de una hora. Elige una y queda fijada al momento.</p>
 
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Dirección de recogida</h2>
+@php $ophaalAdres = $order->pickupLocation(); @endphp
+@if ($order->hasSeparatePickupAddress())
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Dirección de facturación</h2>
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
     {{ $order->customer_name }}<br>
-    @php $ophaalAdres = $order->pickupLocation(); @endphp
+    @if ($order->customer_address) {{ $order->customer_address }}<br> @endif
+    <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span> {{ $order->customer_city }}
+</div>
+@endif
+
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Dirección de recogida</h2>
+<div style="font-size:14px;line-height:1.5;">
+    @if (! $order->hasSeparatePickupAddress())
+        @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
+        {{ $order->customer_name }}<br>
+    @endif
     @if ($ophaalAdres['address']) {{ $ophaalAdres['address'] }}<br> @endif
     <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
-    @if ($order->hasSeparatePickupAddress())
-        <div style="font-size:12px;color:#555;margin-top:6px;">La dirección de facturación sigue siendo {{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}.</div>
-    @endif
 </div>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Qué debe preparar</h2>
