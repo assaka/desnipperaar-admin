@@ -43,6 +43,18 @@ class LogSentMessage
                 // some transports don't expose a message id
             }
 
+            // Dezelfde mail mag geen tweede regel opleveren. De unieke sleutel
+            // op de tabel bewaakt dat al, maar een botsing komt hier als een
+            // uitzondering terug en die zegt niets over de mail zelf. Eerst
+            // kijken is rustiger dan achteraf opruimen.
+            if ($externalId !== null
+                && OrderMessage::where('channel', 'email')
+                    ->where('direction', 'out')
+                    ->where('external_id', $externalId)
+                    ->exists()) {
+                return;
+            }
+
             OrderMessage::create([
                 'order_id'    => $order->id,
                 'direction'   => 'out',

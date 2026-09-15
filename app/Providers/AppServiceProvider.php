@@ -2,11 +2,6 @@
 
 namespace App\Providers;
 
-use App\Listeners\AddPlainTextAlternative;
-use App\Listeners\LogSentMessage;
-use Illuminate\Mail\Events\MessageSending;
-use Illuminate\Mail\Events\MessageSent;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,7 +13,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Event::listen(MessageSending::class, AddPlainTextAlternative::class);
-        Event::listen(MessageSent::class, LogSentMessage::class);
+        // AddPlainTextAlternative en LogSentMessage staan hier met opzet NIET.
+        //
+        // Laravel zoekt zelf de luisteraars in app/Listeners op aan de hand van
+        // het type dat handle() verwacht. Wie ze hier dan ook nog aanmeldt,
+        // krijgt ze twee keer: MessageSent had twee luisteraars en dus draaide
+        // LogSentMessage twee keer per mail. De tweede keer liep stuk op de
+        // unieke sleutel van order_messages, wat per verstuurde mail een
+        // foutmelding in de log gooide. Het bericht zelf kwam wel goed in de
+        // geschiedenis, want de eerste ronde had hem al opgeslagen.
     }
 }
