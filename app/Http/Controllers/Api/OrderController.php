@@ -64,6 +64,14 @@ class OrderController extends Controller
             'ophaal_keuze'   => 'nullable|string|max:60',
             'ophaal_km'      => 'nullable|integer|min:0|max:400',
             'ophaal_kosten'  => 'nullable|numeric|min:0|max:1000',
+            // Afwijkend ophaaladres. Het bestelformulier zet deze velden alleen
+            // aan als de klant het vinkje omzet, dus hier allemaal nullable: een
+            // gewone bestelling stuurt ze niet mee.
+            'ophaal_postcode'   => 'nullable|string|max:10|regex:/^\d{4}\s?[A-Za-z]{2}$/',
+            'ophaal_straat'     => 'nullable|string|max:255',
+            'ophaal_huisnummer' => 'nullable|string|max:20',
+            'ophaal_stad'       => 'nullable|string|max:100',
+            'ophaal_adres'      => 'nullable|string|max:255',
         ], [], [
             // De regel heet intern nog 'plaats', maar het formulierveld heet
             // postcode. Zonder deze vertaling krijgt de bezoeker "The plaats
@@ -84,6 +92,20 @@ class OrderController extends Controller
         $pilot   = config('desnipperaar.pilot.enabled')
                 && $numeric >= config('desnipperaar.pilot.postcode_start')
                 && $numeric <= config('desnipperaar.pilot.postcode_end');
+
+        // Afwijkend ophaaladres. Alleen aanhouden als er een postcode én een
+        // straat bij zitten: zonder postcode kan de planning er niets mee en
+        // zonder straat staat er een half adres op de ophaalbon. Is het niet
+        // compleet, dan blijven de kolommen leeg en is het klantadres weer het
+        // ophaaladres, precies zoals voor deze optie bestond.
+        $altPostcode = null;
+        if (preg_match('/\b(\d{4})\s?([A-Za-z]{2})\b/', $data['ophaal_postcode'] ?? '', $mp)) {
+            $altPostcode = $mp[1] . strtoupper($mp[2]);
+        }
+        $altAddress = trim($data['ophaal_adres'] ?? '')
+            ?: trim(($data['ophaal_straat'] ?? '') . ' ' . ($data['ophaal_huisnummer'] ?? ''));
+        $altCity = trim($data['ophaal_stad'] ?? '');
+        $hasAltPickup = $altPostcode !== null && $altAddress !== '';
 
         $loc = strtolower($data['locatie'] ?? '');
         $mode = str_contains($loc, 'brengen') ? 'breng'
@@ -245,6 +267,10 @@ class OrderController extends Controller
             // plaatsnaam, dus die terugval zou een postcode als stad opslaan.
             // 'stad' is verplicht, dus er valt niets terug te vallen.
             'customer_city'      => $data['stad'] ?? null,
+            // Leeg zolang er opgehaald wordt op het adres van de klant zelf.
+            'pickup_address'     => $hasAltPickup ? $altAddress : null,
+            'pickup_postcode'    => $hasAltPickup ? $altPostcode : null,
+            'pickup_city'        => $hasAltPickup ? ($altCity ?: null) : null,
             'locale'             => $locale,
             'customer_reference' => $customer->reference,
             'delivery_mode'      => $mode,

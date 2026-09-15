@@ -27,6 +27,11 @@ class OfferteController extends Controller
             $postcode = $m[1] . strtoupper($m[2] ?? '');
         }
 
+        // Afwijkend ophaaladres. Eén vrije regel, dus alleen pickup_address
+        // krijgt een waarde; postcode en plaats blijven leeg en
+        // Order::pickupLocation() valt daarvoor terug op die van de klant.
+        $pickupAddress = trim($data['ophaal_adres'] ?? '') ?: null;
+
         $customer = Customer::firstOrCreate(
             ['email' => strtolower(trim($data['email']))],
             [
@@ -49,6 +54,7 @@ class OfferteController extends Controller
             !empty($data['type'])    ? 'Materiaal: '     . $data['type']     : null,
             !empty($data['volume'])  ? 'Volume: '        . $data['volume']   : null,
             !empty($data['methode']) ? 'Methode: '       . $data['methode']  : null,
+            $pickupAddress ? 'Ophaaladres: ' . $pickupAddress : null,
             !empty($data['termijn']) ? 'Termijn: '       . $data['termijn']  : null,
             $this->transportNotes($data),
             !empty($data['bericht']) ? "\n"              . $data['bericht']  : null,
@@ -77,6 +83,7 @@ class OfferteController extends Controller
             'customer_address'  => $customer->address,
             'customer_postcode' => $customer->postcode,
             'customer_city'     => $customer->city,
+            'pickup_address'    => $pickupAddress,
             'delivery_mode'     => $deliveryMode,
             'notes'             => $notes,
             'state'             => Order::STATE_NIEUW,

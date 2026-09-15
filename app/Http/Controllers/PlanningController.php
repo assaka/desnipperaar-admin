@@ -66,7 +66,7 @@ class PlanningController extends Controller
                 'window'     => $o->pickup_window ?: 'flexibel',
                 'klant'      => $o->customer_name,
                 'bedrijf'    => $o->customer?->company,
-                'adres'      => trim(($o->customer_address ?? '').', '.($o->customer_postcode ?? '').' '.($o->customer_city ?? ''), ', '),
+                'adres'      => $o->pickupAddressLine(),
                 'chauffeur'  => $o->bons->first()?->driver_name_snapshot,
                 'ref'        => $o->order_number,
                 'url'        => route('orders.show', $o),
@@ -88,7 +88,7 @@ class PlanningController extends Controller
                 'window'     => $b->planned_window ?: 'flexibel',
                 'klant'      => $b->order->customer_name,
                 'bedrijf'    => $b->order->customer?->company,
-                'adres'      => trim(($b->order->customer_address ?? '').', '.($b->order->customer_postcode ?? '').' '.($b->order->customer_city ?? ''), ', '),
+                'adres'      => $b->order->pickupAddressLine(),
                 'chauffeur'  => $b->driver_name_snapshot,
                 'ref'        => $b->bon_number,
                 'url'        => route('bons.show', $b),
@@ -282,6 +282,7 @@ class PlanningController extends Controller
     private function buildEvent(Order $order, string $type, ?int $driverId): array
     {
         $window = $order->pickup_window ?? 'flexibel';
+        $at = $order->pickupLocation();
 
         return $this->formatEvent(
             id: 'order-' . $order->id,
@@ -298,7 +299,7 @@ class PlanningController extends Controller
                 '_driverId' => $driverId,
                 '_orderUrl' => route('orders.show', $order),
                 '_customer' => $order->customer_name,
-                '_address'  => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
+                '_address'  => trim(($at['postcode'] ?? '') . ' ' . ($at['city'] ?? '')),
             ],
         );
     }
@@ -318,6 +319,7 @@ class PlanningController extends Controller
         };
         $order  = $bon->order;
         $window = $bon->planned_window ?: 'flexibel';
+        $at     = $order->pickupLocation();
 
         return $this->formatEvent(
             id: 'bon-' . $bon->id,
@@ -335,7 +337,7 @@ class PlanningController extends Controller
                 '_driverId' => $bon->driver_id,
                 '_orderUrl' => route('bons.show', $bon),
                 '_customer' => $order->customer_name,
-                '_address'  => trim(($order->customer_postcode ?? '') . ' ' . ($order->customer_city ?? '')),
+                '_address'  => trim(($at['postcode'] ?? '') . ' ' . ($at['city'] ?? '')),
             ],
         );
     }

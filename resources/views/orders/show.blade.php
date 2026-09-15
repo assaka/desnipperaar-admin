@@ -332,6 +332,15 @@
                 @endif
             </div>
             <div class="mt-2 text-sm">{{ $order->customer_address }}<br>{{ $order->customer_postcode }} {{ $order->customer_city }}</div>
+            {{-- Een apart ophaaladres springt eruit, want daar staat de chauffeur
+                 straks en niet op het adres hierboven. --}}
+            @if ($order->hasSeparatePickupAddress())
+                @php($ophaalAdres = $order->pickupLocation())
+                <div class="mt-2 border-l-4 border-yellow-400 bg-yellow-50 pl-3 py-2 text-sm">
+                    <span class="block text-xs uppercase font-bold text-gray-600">Ophalen op een ander adres</span>
+                    {{ $ophaalAdres['address'] }}<br>{{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}
+                </div>
+            @endif
             @if ($order->customer_reference)
                 <div class="mt-2 text-sm">Ref: <span class="font-mono">{{ $order->customer_reference }}</span></div>
             @endif

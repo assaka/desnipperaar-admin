@@ -51,8 +51,9 @@
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
     {{ $order->customer_name }}<br>
-    @if ($order->customer_address) {{ $order->customer_address }}<br> @endif
-    <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span> {{ $order->customer_city }}
+    @php($ophaalAdres = $order->pickupLocation())
+    @if ($ophaalAdres['address']) {{ $ophaalAdres['address'] }}<br> @endif
+    <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
 </div>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">What to have ready for us</h2>

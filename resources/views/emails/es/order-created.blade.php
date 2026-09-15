@@ -150,19 +150,29 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
         <td style="padding:4px 0;color:#555;font-size:12px;width:140px;">Nombre</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_name }}</td>
     </tr>
-    @if ($order->customer_address)
+    {{-- De kop hierboven zegt ophaaladres, dus hier hoort het adres van het
+         bezoek te staan en niet dat van de factuur. Wijken ze af, dan staat
+         het factuuradres er als eigen regel onder. --}}
+    @php($ophaalAdres = $order->pickupLocation())
+    @if ($ophaalAdres['address'])
         <tr>
             <td style="padding:4px 0;color:#555;font-size:12px;">Dirección</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_address }}</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $ophaalAdres['address'] }}</td>
         </tr>
     @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;">Código postal / ciudad</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">
-            <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span>
-            @if ($order->customer_city) &middot; {{ $order->customer_city }} @endif
+            <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span>
+            @if ($ophaalAdres['city']) &middot; {{ $ophaalAdres['city'] }} @endif
         </td>
     </tr>
+    @if ($order->hasSeparatePickupAddress())
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Dirección de facturación</td>
+            <td style="padding:4px 0;font-size:13px;">{{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}</td>
+        </tr>
+    @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;">Tipo de servicio</td>
         <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>

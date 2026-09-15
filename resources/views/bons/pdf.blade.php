@@ -59,7 +59,7 @@
         <div>
             <h3>Klant</h3>
             <div class="row"><span class="k">Naam</span><span class="v">{{ $bon->order->customer_name }}</span></div>
-            <div class="row"><span class="k">Adres</span><span class="v">{{ $bon->order->customer_address }}, {{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</span></div>
+            <div class="row"><span class="k">{{ $bon->order->hasSeparatePickupAddress() ? 'Ophaaladres' : 'Adres' }}</span><span class="v">{{ $bon->order->pickupAddressLine() }}</span></div>
             <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
         </div>
         <div style="margin-top:6mm;">

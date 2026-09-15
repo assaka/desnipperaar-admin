@@ -8,7 +8,7 @@ contenedor con ruedas precintado de 240 litros.</p>
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Día de entrega</td><td><strong>{{ $visit->planned_for->format('d-m-Y') }}</strong></td></tr>
-    <tr><td style="background:#F5F5F5;font-weight:700;">Dirección</td><td>{{ $order->customer_address }}, {{ $order->customer_postcode }} {{ $order->customer_city }}</td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Dirección</td><td>{{ $order->pickupAddressLine() }}</td></tr>
     @if ($firstPickup)
         <tr><td style="background:#F5F5F5;font-weight:700;">Primera recogida</td><td><strong>{{ $firstPickup->format('d-m-Y') }}</strong></td></tr>
     @endif

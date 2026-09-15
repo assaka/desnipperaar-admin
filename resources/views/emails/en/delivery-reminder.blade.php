@@ -8,7 +8,7 @@
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Delivery day</td><td><strong>{{ $visit->planned_for->format('d-m-Y') }}</strong></td></tr>
-    <tr><td style="background:#F5F5F5;font-weight:700;">Address</td><td>{{ $order->customer_address }}, {{ $order->customer_postcode }} {{ $order->customer_city }}</td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Address</td><td>{{ $order->pickupAddressLine() }}</td></tr>
     @if ($firstPickup)
         <tr><td style="background:#F5F5F5;font-weight:700;">First pickup</td><td><strong>{{ $firstPickup->format('d-m-Y') }}</strong></td></tr>
     @endif

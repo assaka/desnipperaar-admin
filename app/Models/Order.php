@@ -84,6 +84,11 @@ class Order extends Model
         'customer_address',
         'customer_postcode',
         'customer_city',
+        // Leeg zodra het ophaaladres gelijk is aan dat van de klant. Zie
+        // pickupLocation().
+        'pickup_address',
+        'pickup_postcode',
+        'pickup_city',
         'lat',
         'lon',
         'geocoded_at',
@@ -291,6 +296,59 @@ class Order extends Model
     public function groupDealParticipant()
     {
         return $this->hasOne(GroupDealParticipant::class);
+    }
+
+    /**
+     * Haalt de order op een ander adres op dan waar de klant zit?
+     *
+     * Leeg betekent "hetzelfde adres", dus de gewone order merkt hier niets van.
+     * De postcode telt mee omdat het offerteformulier alleen een vrije regel
+     * stuurt en het bestelformulier een volledig adres.
+     */
+    public function hasSeparatePickupAddress(): bool
+    {
+        return filled($this->pickup_address) || filled($this->pickup_postcode);
+    }
+
+    /**
+     * Waar de wagen heen rijdt. Dat is het aparte ophaaladres zodra dat er is en
+     * anders gewoon het adres van de klant.
+     *
+     * Alles wat over het bezoek gaat hoort dit te gebruiken en niet customer_*:
+     * de ophaalbon, de planning, de kaart en de mails over het ophalen. De
+     * factuur en het certificaat blijven bij customer_*, want die gaan over wie
+     * de opdracht gaf.
+     *
+     * @return array{address: ?string, postcode: ?string, city: ?string}
+     */
+    public function pickupLocation(): array
+    {
+        if (! $this->hasSeparatePickupAddress()) {
+            return [
+                'address'  => $this->customer_address,
+                'postcode' => $this->customer_postcode,
+                'city'     => $this->customer_city,
+            ];
+        }
+
+        // Postcode en plaats kunnen leeg zijn terwijl het adres gevuld is: het
+        // offerteformulier vraagt één regel vrije tekst. Dan maar terugvallen op
+        // die van de klant in plaats van niets te tonen; de vrije regel zelf
+        // noemt de plaats meestal ook.
+        return [
+            'address'  => $this->pickup_address,
+            'postcode' => $this->pickup_postcode ?: $this->customer_postcode,
+            'city'     => $this->pickup_city ?: $this->customer_city,
+        ];
+    }
+
+    /** Het ophaaladres op één regel, zonder komma's om niets heen. */
+    public function pickupAddressLine(): string
+    {
+        $at = $this->pickupLocation();
+
+        return trim(trim((string) $at['address']) . ', '
+            . trim(trim((string) $at['postcode']) . ' ' . trim((string) $at['city'])), ', ');
     }
 
     public function isQuoteExpired(): bool

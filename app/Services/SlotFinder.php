@@ -848,7 +848,7 @@ class SlotFinder
             ->whereNotNull('pickup_date')
             ->whereBetween('pickup_date', [$from->toDateString(), $until->toDateString()])
             ->when($excludeOrderId, fn ($q) => $q->where('id', '!=', $excludeOrderId))
-            ->get(['id', 'order_number', 'customer_city', 'customer_postcode', 'lat', 'lon', 'geocoded_at', 'pickup_date', 'pickup_window', 'duration_minutes']);
+            ->get(['id', 'order_number', 'customer_city', 'customer_postcode', 'pickup_address', 'pickup_postcode', 'pickup_city', 'lat', 'lon', 'geocoded_at', 'pickup_date', 'pickup_window', 'duration_minutes']);
 
         foreach ($orders as $planned) {
             $byDate[$planned->pickup_date->toDateString()][] = [
@@ -856,7 +856,7 @@ class SlotFinder
                 'window_raw' => $planned->pickup_window,
                 'minutes' => (int) ($planned->duration_minutes ?? $defaultDuration),
                 'point'   => $this->pointFor($planned),
-                'label'   => trim($planned->order_number.' '.($planned->customer_city ?? '')),
+                'label'   => trim($planned->order_number.' '.($planned->pickupLocation()['city'] ?? '')),
             ];
         }
 
@@ -864,7 +864,7 @@ class SlotFinder
             ->whereNotNull('planned_for')
             ->whereBetween('planned_for', [$from->toDateString(), $until->toDateString()])
             ->whereHas('order', fn ($q) => $q->where('type', Order::TYPE_ABONNEMENT))
-            ->with(['order' => fn ($q) => $q->select('id', 'order_number', 'customer_city', 'customer_postcode', 'lat', 'lon', 'geocoded_at')])
+            ->with(['order' => fn ($q) => $q->select('id', 'order_number', 'customer_city', 'customer_postcode', 'pickup_address', 'pickup_postcode', 'pickup_city', 'lat', 'lon', 'geocoded_at')])
             ->get(['id', 'bon_number', 'order_id', 'planned_for', 'planned_window']);
 
         foreach ($bons as $bon) {
@@ -873,7 +873,7 @@ class SlotFinder
                 'window_raw' => $bon->planned_window,
                 'minutes' => $defaultDuration,
                 'point'   => $bon->order ? $this->pointFor($bon->order) : null,
-                'label'   => trim($bon->bon_number.' '.($bon->order?->customer_city ?? '')),
+                'label'   => trim($bon->bon_number.' '.($bon->order?->pickupLocation()['city'] ?? '')),
             ];
         }
 

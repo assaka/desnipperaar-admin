@@ -50,6 +50,12 @@ class OrderEditController extends Controller
             'customer_address'  => 'required|string|max:200',
             'customer_postcode' => 'required|string|max:12',
             'customer_city'     => 'required|string|max:100',
+            // Het ophaaladres. Leeg betekent ophalen bij de klant zelf, dus alle
+            // drie nullable. Een offerte kan hier één regel vrije tekst zonder
+            // postcode hebben staan; die mag blijven zoals hij is.
+            'pickup_address'    => 'nullable|string|max:200',
+            'pickup_postcode'   => 'nullable|string|max:12',
+            'pickup_city'       => 'nullable|string|max:100',
             'box_count'         => 'required|integer|min:0|max:500',
             'container_count'   => 'required|integer|min:0|max:50',
             'media'             => 'nullable|array',
@@ -76,10 +82,6 @@ class OrderEditController extends Controller
             ])->withInput();
         }
 
-        $oldPostcode = preg_replace('/\s+/', '', (string) $order->customer_postcode);
-        $newPostcode = preg_replace('/\s+/', '', $data['customer_postcode']);
-        $moved       = strcasecmp($oldPostcode, $newPostcode) !== 0;
-
         $attributes = [
             'customer_name'     => $data['customer_name'],
             'customer_email'    => $data['customer_email'],
@@ -87,19 +89,32 @@ class OrderEditController extends Controller
             'customer_address'  => $data['customer_address'],
             'customer_postcode' => $data['customer_postcode'],
             'customer_city'     => $data['customer_city'],
+            'pickup_address'    => ($data['pickup_address']  ?? null) ?: null,
+            'pickup_postcode'   => ($data['pickup_postcode'] ?? null) ?: null,
+            'pickup_city'       => ($data['pickup_city']     ?? null) ?: null,
             'box_count'         => $data['box_count'],
             'container_count'   => $data['container_count'],
             'media_items'       => $media,
         ];
 
+        // Verhuist het punt waar de wagen heen rijdt? Dat is de postcode van het
+        // ophaaladres, en zolang dat er niet apart staat is dat die van de klant.
+        // Het nieuwe punt wordt op een kopie bepaald, zodat dezelfde regel uit
+        // Order::pickupLocation() geldt en hier geen tweede versie van komt.
+        $oldPostcode = preg_replace('/\s+/', '', (string) $order->pickupLocation()['postcode']);
+        $newPostcode = preg_replace('/\s+/', '', (string) (clone $order)->forceFill($attributes)->pickupLocation()['postcode']);
+        $moved       = strcasecmp($oldPostcode, $newPostcode) !== 0;
+
+        // De pilotkorting hangt aan de klant en niet aan de rit, dus die kijkt
+        // naar het klantadres, ook als er apart opgehaald wordt.
+        $customerMoved = strcasecmp(
+            preg_replace('/\s+/', '', (string) $order->customer_postcode),
+            preg_replace('/\s+/', '', $data['customer_postcode']),
+        ) !== 0;
+
         $notes = [];
 
-        if ($moved) {
-            // Opnieuw opzoeken op het nieuwe adres.
-            $attributes['lat']         = null;
-            $attributes['lon']         = null;
-            $attributes['geocoded_at'] = null;
-
+        if ($customerMoved) {
             $pilot = Pricing::isPilotPostcode($data['customer_postcode']);
             if ((bool) $order->pilot !== $pilot) {
                 $attributes['pilot'] = $pilot;
@@ -107,6 +122,13 @@ class OrderEditController extends Controller
                     ? 'postcode valt nu in de Amsterdam-pilot, de pilotkorting staat aan'
                     : 'postcode valt buiten de Amsterdam-pilot, de pilotkorting staat uit';
             }
+        }
+
+        if ($moved) {
+            // Opnieuw opzoeken op het nieuwe adres.
+            $attributes['lat']         = null;
+            $attributes['lon']         = null;
+            $attributes['geocoded_at'] = null;
 
             if ((float) ($order->pickup_cost ?? 0) > 0) {
                 $notes[] = 'let op: de ophaalkosten van € '

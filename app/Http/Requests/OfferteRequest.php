@@ -33,6 +33,11 @@ class OfferteRequest extends FormRequest
             'huisnummer' => 'nullable|string|max:20',
             'stad'       => 'nullable|string|max:100',
 
+            // Afwijkend ophaaladres, als één regel vrije tekst. Het
+            // offerteformulier kent geen postcodecontrole en de aanvrager weet
+            // soms nog niet meer dan de plaats, dus hier geen losse velden.
+            'ophaal_adres' => 'nullable|string|max:255',
+
             'branche'    => 'nullable|string|max:100',
             // Attributievraag van het formulier. Alleen ter informatie in de
             // notities, dus geen eigen kolom en geen vaste lijst.

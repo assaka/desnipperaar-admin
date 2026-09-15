@@ -73,7 +73,9 @@ class Geocoder
             return null;
         }
 
-        $point = self::forPostcode($order->customer_postcode);
+        // De postcode van het bezoek en niet die van de klant: sinds er een
+        // apart ophaaladres kan staan, zijn dat niet altijd dezelfde.
+        $point = self::forPostcode($order->pickupLocation()['postcode']);
 
         $order->lat = $point['lat'] ?? null;
         $order->lon = $point['lon'] ?? null;

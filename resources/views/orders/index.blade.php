@@ -30,7 +30,15 @@
                         @endif
                     </td>
                     <td>{{ $order->customer_name }}</td>
-                    <td>{{ $order->customer_postcode }}</td>
+                    {{-- De postcode waar de wagen heen moet, want daar plan je op.
+                         Een afwijkend ophaaladres krijgt een merkje, anders lijkt
+                         het in de lijst een gewone order op het klantadres. --}}
+                    <td>
+                        {{ $order->pickupLocation()['postcode'] }}
+                        @if ($order->hasSeparatePickupAddress())
+                            <span class="ml-1 bg-yellow-200 text-yellow-900 px-1 text-xs font-bold uppercase" title="Ophalen op een ander adres dan het klantadres">ophaal</span>
+                        @endif
+                    </td>
                     <td>{{ $order->delivery_mode }}</td>
                     {{-- De ophaalsnelheid hoort naast de ophaaldatum: samen laten
                          ze zien of een order haast heeft en of er al iets staat.

@@ -28,8 +28,12 @@ Het moment kwam uit onze eigen lijst met beschikbare momenten, dus er is ruimte 
 
 <h2 style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 6px;color:#555;">Adres</h2>
 <div style="font-size:14px;line-height:1.7;">
-    {{ $order->customer_address }}<br>
-    {{ $order->customer_postcode }} {{ $order->customer_city }}
+    @php($ophaalAdres = $order->pickupLocation())
+    {{ $ophaalAdres['address'] }}<br>
+    {{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}
+    @if ($order->hasSeparatePickupAddress())
+        <div style="font-size:12px;color:#555;margin-top:4px;">Afwijkend ophaaladres. Factuuradres is {{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}.</div>
+    @endif
 </div>
 
 <h2 style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 6px;color:#555;">Contact</h2>

@@ -44,6 +44,7 @@
         'nl' => [
             'signed' => 'getekend', 'not_signed' => 'nog niet getekend', 'order_link' => '← order',
             'customer' => 'Klant', 'pickup_moment' => 'Ophaalmoment', 'flexible' => 'flexibel',
+            'pickup_address' => 'Ophaaladres', 'invoice_address' => 'Factuuradres',
             'locked_pre' => 'Bon is bevestigd &amp; getekend op', 'locked_post' => 'Alle velden zijn vergrendeld voor audit-integriteit.',
             'view_pdf' => 'Bekijk PDF', 'driver' => 'Chauffeur', 'no_driver' => 'Nog geen chauffeur',
             'actual_collected' => 'Werkelijk opgehaald',
@@ -70,6 +71,7 @@
         'en' => [
             'signed' => 'signed', 'not_signed' => 'not signed yet', 'order_link' => '← order',
             'customer' => 'Customer', 'pickup_moment' => 'Pickup', 'flexible' => 'flexible',
+            'pickup_address' => 'Pickup address', 'invoice_address' => 'Invoice address',
             'locked_pre' => 'Bon confirmed &amp; signed on', 'locked_post' => 'All fields are locked for audit integrity.',
             'view_pdf' => 'View PDF', 'driver' => 'Driver', 'no_driver' => 'No driver yet',
             'actual_collected' => 'Actually collected',
@@ -96,6 +98,7 @@
         'fr' => [
             'signed' => 'signé', 'not_signed' => 'pas encore signé', 'order_link' => '← commande',
             'customer' => 'Client', 'pickup_moment' => 'Enlèvement', 'flexible' => 'flexible',
+            'pickup_address' => "Adresse d'enlèvement", 'invoice_address' => 'Adresse de facturation',
             'locked_pre' => 'Bon confirmé &amp; signé le', 'locked_post' => 'Tous les champs sont verrouillés pour l\'intégrité de l\'audit.',
             'view_pdf' => 'Voir le PDF', 'driver' => 'Chauffeur', 'no_driver' => 'Pas encore de chauffeur',
             'actual_collected' => 'Réellement collecté',
@@ -122,6 +125,7 @@
         'es' => [
             'signed' => 'firmado', 'not_signed' => 'aún sin firmar', 'order_link' => '← pedido',
             'customer' => 'Cliente', 'pickup_moment' => 'Recogida', 'flexible' => 'flexible',
+            'pickup_address' => 'Dirección de recogida', 'invoice_address' => 'Dirección de facturación',
             'locked_pre' => 'Bon confirmado &amp; firmado el', 'locked_post' => 'Todos los campos están bloqueados por integridad de auditoría.',
             'view_pdf' => 'Ver PDF', 'driver' => 'Conductor', 'no_driver' => 'Sin conductor aún',
             'actual_collected' => 'Realmente recogido',
@@ -190,7 +194,15 @@
         <div>
             <h2 class="font-black mb-2">{{ $T['customer'] }}</h2>
             <div>{{ $bon->order->customer_name }}</div>
-            <div class="text-sm">{{ $bon->order->customer_address }}<br>{{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
+            {{-- Waar de wagen heen gaat. Staat er een apart ophaaladres op de
+                 order, dan hoort dat hier en gaat het klantadres eronder als
+                 factuuradres, want de chauffeur staat straks op het eerste. --}}
+            @php($ophaalAdres = $bon->order->pickupLocation())
+            <div class="text-sm">{{ $ophaalAdres['address'] }}<br>{{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}</div>
+            @if ($bon->order->hasSeparatePickupAddress())
+                <div class="text-xs text-gray-500 mt-1">{{ $T['pickup_address'] }}</div>
+                <div class="text-xs text-gray-500 mt-2">{{ $T['invoice_address'] }}: {{ $bon->order->customer_address }}, {{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
+            @endif
         </div>
         <div>
             @php

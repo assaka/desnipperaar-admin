@@ -52,10 +52,13 @@
                     <div class="row"><span class="k">Bedrijf</span><span class="v">{{ $bon->order->customer->company }}</span></div>
                 @endif
                 <div class="row"><span class="k">Naam</span><span class="v">{{ $bon->order->customer_name }}</span></div>
-                @if ($bon->order->customer_address)
-                    <div class="row"><span class="k">Adres</span><span class="v">{{ $bon->order->customer_address }}</span></div>
+                {{-- Het adres waar de wagen heen gaat. Bij een afwijkend ophaaladres
+                     is dat niet het adres van de klant, en dan zegt het label dat ook. --}}
+                @php($ophaalAdres = $bon->order->pickupLocation())
+                @if ($ophaalAdres['address'])
+                    <div class="row"><span class="k">{{ $bon->order->hasSeparatePickupAddress() ? 'Ophaaladres' : 'Adres' }}</span><span class="v">{{ $ophaalAdres['address'] }}</span></div>
                 @endif
-                <div class="row"><span class="k">Postcode</span><span class="v"><span style="font-family:'Courier New',monospace;">{{ $bon->order->customer_postcode }}</span> {{ $bon->order->customer_city }}</span></div>
+                <div class="row"><span class="k">Postcode</span><span class="v"><span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}</span></div>
                 <div class="row"><span class="k">Ordernr</span><span class="v">{{ $bon->order->order_number }}</span></div>
             </td>
             <td class="meta-col">

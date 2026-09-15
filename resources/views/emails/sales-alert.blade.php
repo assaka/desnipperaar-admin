@@ -25,6 +25,9 @@
   <tr><td style="color:#666;">E-mail</td><td>{{ $order->customer_email ?: '-' }}</td></tr>
   <tr><td style="color:#666;">Telefoon</td><td>{{ $order->customer_phone ?: '-' }}</td></tr>
   <tr><td style="color:#666;">Plaats</td><td>{{ $order->customer_city ?: '-' }}</td></tr>
+  @if ($order->hasSeparatePickupAddress())
+    <tr><td style="color:#666;">Ophaaladres</td><td><strong>{{ $order->pickupAddressLine() }}</strong></td></tr>
+  @endif
   @if ($order->delivery_mode)
     <tr><td style="color:#666;">Wijze</td><td>{{ $order->delivery_mode }}</td></tr>
   @endif

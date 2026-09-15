@@ -14,6 +14,7 @@
     $heeftFoutInFormulier = $errors->hasAny([
         'customer_name', 'customer_email', 'customer_phone',
         'customer_address', 'customer_postcode', 'customer_city',
+        'pickup_address', 'pickup_postcode', 'pickup_city',
         'box_count', 'container_count',
     ]);
 @endphp
@@ -73,6 +74,34 @@
                        value="{{ old('customer_city', $order->customer_city) }}"
                        class="w-full border px-2 py-1 text-sm">
             </label>
+        </div>
+
+        {{-- Het ophaaladres, als de wagen ergens anders heen moet dan waar de
+             factuur heen gaat. Leeg laten is de gewone situatie: dan is het
+             adres hierboven ook het ophaaladres. --}}
+        <div class="mb-3">
+            <span class="block text-gray-600 text-sm mb-1">Ophaaladres, alleen als het afwijkt</span>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="text-sm">
+                    <span class="block text-gray-600 mb-1">Adres</span>
+                    <input type="text" name="pickup_address" maxlength="200"
+                           value="{{ old('pickup_address', $order->pickup_address) }}"
+                           class="w-full border px-2 py-1 text-sm">
+                </label>
+                <label class="text-sm">
+                    <span class="block text-gray-600 mb-1">Postcode</span>
+                    <input type="text" name="pickup_postcode" maxlength="12"
+                           value="{{ old('pickup_postcode', $order->pickup_postcode) }}"
+                           class="w-full border px-2 py-1 text-sm font-mono">
+                    @error('pickup_postcode') <span class="text-red-700 text-xs">{{ $message }}</span> @enderror
+                </label>
+                <label class="text-sm">
+                    <span class="block text-gray-600 mb-1">Plaats</span>
+                    <input type="text" name="pickup_city" maxlength="100"
+                           value="{{ old('pickup_city', $order->pickup_city) }}"
+                           class="w-full border px-2 py-1 text-sm">
+                </label>
+            </div>
         </div>
 
         <div class="grid grid-cols-3 gap-3 mb-3">

@@ -39,6 +39,12 @@
         <div class="text-sm text-gray-700">
             {{ $order->customer_address ?: '' }} {{ $order->customer_postcode }} {{ $order->customer_city }}
         </div>
+        @if ($order->hasSeparatePickupAddress())
+            <div class="text-sm text-gray-700 mt-1">
+                <span class="text-xs uppercase font-bold text-gray-600">Ophaaladres</span>
+                {{ $order->pickupAddressLine() }}
+            </div>
+        @endif
     </section>
 
     <section class="mb-6 bg-blue-50 border-l-4 border-blue-600 p-4">
