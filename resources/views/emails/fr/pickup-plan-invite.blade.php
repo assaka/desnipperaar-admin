@@ -20,13 +20,16 @@ C'est vous qui décidez du moment.</p>
 
 <p style="font-size:13px;color:#555;">Cette page affiche les prochains créneaux possibles chez vous, chacun d'une heure. Vous en choisissez un et c'est réservé immédiatement.</p>
 
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresse</h2>
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresse d'enlèvement</h2>
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
     {{ $order->customer_name }}<br>
     @php($ophaalAdres = $order->pickupLocation())
     @if ($ophaalAdres['address']) {{ $ophaalAdres['address'] }}<br> @endif
     <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
+    @if ($order->hasSeparatePickupAddress())
+        <div style="font-size:12px;color:#555;margin-top:6px;">L'adresse de facturation reste {{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}.</div>
+    @endif
 </div>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">À préparer</h2>

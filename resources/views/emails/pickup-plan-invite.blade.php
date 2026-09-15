@@ -20,13 +20,16 @@ op te halen. U kiest zelf wanneer dat uitkomt.</p>
 
 <p style="font-size:13px;color:#555;">Op die pagina staan de eerstvolgende momenten die wij bij u kunnen rijden, met een tijdvak van een uur erbij. U kiest er een en het staat meteen vast.</p>
 
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adres</h2>
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Ophaaladres</h2>
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
     {{ $order->customer_name }}<br>
     @php($ophaalAdres = $order->pickupLocation())
     @if ($ophaalAdres['address']) {{ $ophaalAdres['address'] }}<br> @endif
     <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
+    @if ($order->hasSeparatePickupAddress())
+        <div style="font-size:12px;color:#555;margin-top:6px;">Het factuuradres blijft {{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}.</div>
+    @endif
 </div>
 
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Wat u voor ons klaarzet</h2>

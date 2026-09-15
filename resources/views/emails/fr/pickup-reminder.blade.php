@@ -13,7 +13,7 @@
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Date d'enlèvement</td><td><strong>{{ $visit->planned_for->format('d-m-Y') }}</strong></td></tr>
-    <tr><td style="background:#F5F5F5;font-weight:700;">Adresse</td><td>{{ $order->pickupAddressLine() }}</td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Adresse d'enlèvement</td><td>{{ $order->pickupAddressLine() }}</td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Référence</td><td style="font-family:monospace;">{{ $visit->bon_number }}</td></tr>
 </table>
 

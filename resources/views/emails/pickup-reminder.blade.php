@@ -13,7 +13,7 @@
 
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;margin:16px 0;">
     <tr><td style="background:#F5F5F5;font-weight:700;">Ophaaldatum</td><td><strong>{{ $visit->planned_for->format('d-m-Y') }}</strong></td></tr>
-    <tr><td style="background:#F5F5F5;font-weight:700;">Adres</td><td>{{ $order->pickupAddressLine() }}</td></tr>
+    <tr><td style="background:#F5F5F5;font-weight:700;">Ophaaladres</td><td>{{ $order->pickupAddressLine() }}</td></tr>
     <tr><td style="background:#F5F5F5;font-weight:700;">Referentie</td><td style="font-family:monospace;">{{ $visit->bon_number }}</td></tr>
 </table>
 
