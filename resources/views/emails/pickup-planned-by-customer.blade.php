@@ -28,7 +28,7 @@ Het moment kwam uit onze eigen lijst met beschikbare momenten, dus er is ruimte 
 
 <h2 style="font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 6px;color:#555;">Adres</h2>
 <div style="font-size:14px;line-height:1.7;">
-    @php($ophaalAdres = $order->pickupLocation())
+    @php $ophaalAdres = $order->pickupLocation(); @endphp
     {{ $ophaalAdres['address'] }}<br>
     {{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}
     @if ($order->hasSeparatePickupAddress())

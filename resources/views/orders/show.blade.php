@@ -335,7 +335,7 @@
             {{-- Een apart ophaaladres springt eruit, want daar staat de chauffeur
                  straks en niet op het adres hierboven. --}}
             @if ($order->hasSeparatePickupAddress())
-                @php($ophaalAdres = $order->pickupLocation())
+                @php $ophaalAdres = $order->pickupLocation(); @endphp
                 <div class="mt-2 border-l-4 border-yellow-400 bg-yellow-50 pl-3 py-2 text-sm">
                     <span class="block text-xs uppercase font-bold text-gray-600">Ophalen op een ander adres</span>
                     {{ $ophaalAdres['address'] }}<br>{{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}

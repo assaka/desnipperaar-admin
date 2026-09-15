@@ -47,7 +47,7 @@
 <div style="font-size:14px;line-height:1.5;">
     @if ($order->customer?->company) <strong>{{ $order->customer->company }}</strong><br> @endif
     {{ $order->customer_name }}<br>
-    @php($ophaalAdres = $order->pickupLocation())
+    @php $ophaalAdres = $order->pickupLocation(); @endphp
     @if ($ophaalAdres['address']) {{ $ophaalAdres['address'] }}<br> @endif
     <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> {{ $ophaalAdres['city'] }}
     @if ($order->hasSeparatePickupAddress())

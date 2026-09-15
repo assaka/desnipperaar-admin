@@ -3,8 +3,8 @@
 
 <p>Opdracht
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>
-van <strong>{{ $order->customer_name }}</strong>@if ($order->customer?->company) ({{ $order->customer->company }})@endif
-gaat niet door@if ($canceledBy), geannuleerd door <strong>{{ $canceledBy->name }}</strong>@endif.</p>
+van <strong>{{ $order->customer_name }}</strong>@if ($order->customer?->company) {{ '(' . $order->customer->company . ')' }}@endif
+gaat niet door{!! $canceledBy ? ', geannuleerd door <strong>' . e($canceledBy->name) . '</strong>' : '' !!}.</p>
 
 <div style="background:#F7F7F4;padding:14px 16px;border-left:3px solid #767676;margin:20px 0;">
     <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:6px;">Reden</div>

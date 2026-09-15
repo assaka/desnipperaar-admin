@@ -197,7 +197,7 @@
             {{-- Waar de wagen heen gaat. Staat er een apart ophaaladres op de
                  order, dan hoort dat hier en gaat het klantadres eronder als
                  factuuradres, want de chauffeur staat straks op het eerste. --}}
-            @php($ophaalAdres = $bon->order->pickupLocation())
+            @php $ophaalAdres = $bon->order->pickupLocation(); @endphp
             <div class="text-sm">{{ $ophaalAdres['address'] }}<br>{{ $ophaalAdres['postcode'] }} {{ $ophaalAdres['city'] }}</div>
             @if ($bon->order->hasSeparatePickupAddress())
                 <div class="text-xs text-gray-500 mt-1">{{ $T['pickup_address'] }}</div>
