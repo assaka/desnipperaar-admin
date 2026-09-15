@@ -10,7 +10,6 @@
     .wrap { padding: 8mm 14mm; }
     h1 { font-weight: 900; font-size: 20pt; margin: 0 0 4mm; }
     .num { font-family: 'Courier New', monospace; font-size: 12pt; background: #F5C518; padding: 2mm 4mm; display: inline-block; }
-    .eyebrow { font-family: 'Courier New', monospace; font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: #555; margin-bottom: 2mm; }
     table { width: 100%; border-collapse: collapse; }
     .meta { margin-top: 6mm; border-top: 1px solid #E5E5E5; border-bottom: 1px solid #E5E5E5; padding: 4mm 0; }
     .meta-col { width: 50%; vertical-align: top; padding-right: 6mm; }
@@ -32,9 +31,8 @@
 <div class="brand">DESNIPPERAAR</div>
 
 <div class="wrap">
-    @php $modeLabels = ['ophaal' => 'Pickup', 'breng' => 'Drop-off', 'mobiel' => 'Mobile', 'bezorging' => 'Delivery', 'retour' => 'Return']; $isBezorg = $bon->mode === 'bezorging'; $isRetour = $bon->mode === 'retour'; $isOphaal = ! $isBezorg && ! $isRetour; $bewijs = $isBezorg ? 'Proof of delivery' : ($isRetour ? 'Proof of return' : 'Proof of collection'); $kolomKop = $isBezorg ? 'Delivery' : ($isRetour ? 'Return' : 'Collection'); @endphp
-    <div class="eyebrow">{{ $modeLabels[$bon->mode] ?? ucfirst($bon->mode) }} receipt</div>
-    <h1>{{ $bewijs }}</h1>
+    @php $isBezorg = $bon->mode === 'bezorging'; $isRetour = $bon->mode === 'retour'; $isOphaal = ! $isBezorg && ! $isRetour; $titel = ['ophaal' => 'Pickup receipt', 'breng' => 'Drop-off receipt', 'mobiel' => 'Mobile receipt', 'bezorging' => 'Delivery receipt', 'retour' => 'Return receipt'][$bon->mode] ?? 'Receipt'; $kolomKop = $isBezorg ? 'Delivery' : ($isRetour ? 'Return' : 'Collection'); @endphp
+    <h1>{{ $titel }}</h1>
     <span class="num">{{ $bon->bon_number }}</span>
 
     <table class="meta">
