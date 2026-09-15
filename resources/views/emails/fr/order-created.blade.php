@@ -20,6 +20,53 @@
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.
 Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
 
+@php $ophaalAdres = $order->pickupLocation(); @endphp
+<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">{{ $order->hasSeparatePickupAddress() ? "Adresse d'enlèvement" : 'Adresse' }}</h2>
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
+    <tr>
+        <td style="padding:4px 0;color:#555;font-size:12px;width:140px;">Nom</td>
+        <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_name }}</td>
+    </tr>
+    {{-- Hier staat het adres van het bezoek en niet dat van de factuur. Zijn
+         die twee hetzelfde, dan heet de kop hierboven gewoon Adres. Wijken ze
+         af, dan staat het factuuradres er als eigen regel onder. --}}
+    @if ($ophaalAdres['address'])
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Adresse</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $ophaalAdres['address'] }}</td>
+        </tr>
+    @endif
+    <tr>
+        <td style="padding:4px 0;color:#555;font-size:12px;">Code postal / ville</td>
+        <td style="padding:4px 0;font-weight:700;font-size:13px;">
+            <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span>
+            @if ($ophaalAdres['city']) &middot; {{ $ophaalAdres['city'] }} @endif
+        </td>
+    </tr>
+    @if ($order->hasSeparatePickupAddress())
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Adresse de facturation</td>
+            <td style="padding:4px 0;font-size:13px;">{{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}</td>
+        </tr>
+    @endif
+    <tr>
+        <td style="padding:4px 0;color:#555;font-size:12px;">Type de service</td>
+        <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>
+    </tr>
+    @if ($order->pickup_date)
+        <tr>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Date souhaitée</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">
+                {{ $order->pickup_date->format('d-m-Y') }}
+                @if ($order->pickup_window) ({{ $order->pickup_window }}) @endif
+            </td>
+        </tr>
+    @endif
+</table>
+
+<p style="font-size:12px;color:#555;">Adresse incorrecte ? Répondez à cet e-mail avec les bonnes informations.</p>
+
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Récapitulatif de la commande</h2>
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
@@ -142,53 +189,6 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
         ✨ Offre de bienvenue · premier carton gratuit
     </p>
 @endif
-
-<h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Adresse d'enlèvement</h2>
-
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
-    <tr>
-        <td style="padding:4px 0;color:#555;font-size:12px;width:140px;">Nom</td>
-        <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $order->customer_name }}</td>
-    </tr>
-    {{-- De kop hierboven zegt ophaaladres, dus hier hoort het adres van het
-         bezoek te staan en niet dat van de factuur. Wijken ze af, dan staat
-         het factuuradres er als eigen regel onder. --}}
-    @php($ophaalAdres = $order->pickupLocation())
-    @if ($ophaalAdres['address'])
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Adresse</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $ophaalAdres['address'] }}</td>
-        </tr>
-    @endif
-    <tr>
-        <td style="padding:4px 0;color:#555;font-size:12px;">Code postal / ville</td>
-        <td style="padding:4px 0;font-weight:700;font-size:13px;">
-            <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span>
-            @if ($ophaalAdres['city']) &middot; {{ $ophaalAdres['city'] }} @endif
-        </td>
-    </tr>
-    @if ($order->hasSeparatePickupAddress())
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Adresse de facturation</td>
-            <td style="padding:4px 0;font-size:13px;">{{ trim($order->customer_address . ', ' . trim($order->customer_postcode . ' ' . $order->customer_city), ', ') }}</td>
-        </tr>
-    @endif
-    <tr>
-        <td style="padding:4px 0;color:#555;font-size:12px;">Type de service</td>
-        <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $modeLabels[$order->delivery_mode] ?? ucfirst($order->delivery_mode).' service' }}</td>
-    </tr>
-    @if ($order->pickup_date)
-        <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Date souhaitée</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">
-                {{ $order->pickup_date->format('d-m-Y') }}
-                @if ($order->pickup_window) ({{ $order->pickup_window }}) @endif
-            </td>
-        </tr>
-    @endif
-</table>
-
-<p style="font-size:12px;color:#555;">Adresse incorrecte ? Répondez à cet e-mail avec les bonnes informations.</p>
 
 <p>Des questions ? Appelez le <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>
 ou écrivez à <a href="mailto:sales@desnipperaar.nl" style="color:#0A0A0A;">sales@desnipperaar.nl</a>.</p>
