@@ -55,9 +55,7 @@ class PickupConfirmed extends Mailable
 
         return new Envelope(
             subject: $subject,
-            from: $this->sender
-                ? new Address($this->sender->email, $this->sender->name)
-                : null,
+            from: new Address(config('desnipperaar.notifications.sales_email'), 'DeSnipperaar'),
             replyTo: [new Address(config('desnipperaar.notifications.sales_email'), 'DeSnipperaar')],
         );
     }

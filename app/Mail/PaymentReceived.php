@@ -44,9 +44,7 @@ class PaymentReceived extends Mailable
 
         return new Envelope(
             subject: $subject,
-            from: $this->sender
-                ? new Address($this->sender->email, $this->sender->name)
-                : null,
+            from: new Address($salesEmail, 'DeSnipperaar'),
             replyTo: [new Address($salesEmail, 'DeSnipperaar')],
         );
     }
