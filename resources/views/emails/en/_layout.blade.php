@@ -8,10 +8,10 @@
       <tr><td style="padding:28px;font-size:14px;line-height:1.6;color:#222;">
         {{ $slot }}
       </td></tr>
-      <tr><td style="background:#0A0A0A;color:#BBB;padding:18px 28px;font-size:11px;line-height:1.6;">
-        DeSnipperaar &middot; Amsterdam &middot;
-        <a href="https://desnipperaar.nl" style="color:#F5C518;text-decoration:none;">desnipperaar.nl</a><br>
-        GDPR &middot; DIN 66399 &middot; VOG-screened &middot; Insured
+      <tr><td style="background:#0A0A0A;color:#FFFFFF;padding:18px 28px;font-size:11px;line-height:1.6;">
+        <span style="color:#FFFFFF;">DeSnipperaar &middot; Amsterdam &middot;
+        <a href="https://desnipperaar.nl" style="color:#F5C518;text-decoration:none;">desnipperaar.nl</a></span><br>
+        <span style="color:#FFFFFF;">GDPR &middot; DIN 66399 &middot; VOG-screened &middot; Insured</span>
       </td></tr>
     </table>
   </td></tr>
