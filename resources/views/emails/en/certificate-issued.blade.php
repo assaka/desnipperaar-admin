@@ -7,14 +7,14 @@
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Certificate number</td>
-        <td style="padding:8px 0;text-align:right;font-family:monospace;font-weight:700;">{{ $certificate->certificate_number }}</td></tr>
+        <td style="padding:8px 0 8px 12px;text-align:right;white-space:nowrap;font-family:monospace;font-weight:700;">{{ $certificate->certificate_number }}</td></tr>
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Date of destruction</td>
-        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->destroyed_at?->format('d-m-Y') }}</td></tr>
+        <td style="padding:8px 0 8px 12px;text-align:right;white-space:nowrap;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->destroyed_at?->format('d-m-Y') }}</td></tr>
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Method</td>
-        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->destruction_method }}</td></tr>
+        <td style="padding:8px 0 8px 12px;text-align:right;white-space:nowrap;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->destruction_method }}</td></tr>
     @if ($certificate->weight_kg_final)
         <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Final weight</td>
-            <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->weight_kg_final }} kg</td></tr>
+            <td style="padding:8px 0 8px 12px;text-align:right;white-space:nowrap;font-weight:700;border-top:1px solid #EEE;">{{ $certificate->weight_kg_final }} kg</td></tr>
     @endif
 </table>
 
