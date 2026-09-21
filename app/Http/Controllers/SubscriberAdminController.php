@@ -14,6 +14,34 @@ class SubscriberAdminController extends Controller
         return view('subscribers.index', compact('subscribers', 'total'));
     }
 
+    /**
+     * Handmatig afmelden, bijvoorbeeld na een telefonisch verzoek. De rij blijft
+     * staan met een datum in unsubscribed_at, dus de verzendlijst slaat hem over
+     * en we kunnen later nog terugzien dat en wanneer het gebeurd is.
+     */
+    public function unsubscribe(Subscriber $subscriber)
+    {
+        if (! $subscriber->unsubscribed_at) {
+            $subscriber->unsubscribed_at = now();
+            $subscriber->save();
+        }
+
+        return back()->with('status', "{$subscriber->email} staat nu op afgemeld.");
+    }
+
+    /**
+     * Helemaal weghalen. Bedoeld voor een adres dat bounct: dat bestaat niet
+     * meer, dus er valt ook niets te bewaren, en een bouncend adres blijven
+     * aanschrijven kost ons de reputatie van het verzenddomein.
+     */
+    public function destroy(Subscriber $subscriber)
+    {
+        $email = $subscriber->email;
+        $subscriber->delete();
+
+        return back()->with('status', "{$email} is uit de lijst verwijderd.");
+    }
+
     public function export(): StreamedResponse
     {
         $filename = 'desnipperaar-dag-subscribers-' . now()->format('Y-m-d') . '.csv';

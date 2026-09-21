@@ -2,6 +2,10 @@
 @section('title', 'De SnipperDag aanmeldingen')
 
 @section('content')
+@if (session('status'))
+    <div class="bg-green-100 border border-green-400 text-green-800 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
+@endif
+
 <div class="flex justify-between items-baseline mb-4">
     <h1 class="text-2xl font-black">De SnipperDag <span class="text-gray-400 font-normal text-lg">({{ $total }} actief)</span></h1>
     <a href="{{ route('subscribers.export') }}" class="bg-black text-yellow-400 px-3 py-1 font-bold text-sm uppercase">Exporteer CSV</a>
@@ -17,6 +21,7 @@
             <th class="pr-4">Aangemeld</th>
             <th class="pr-4">Afgemeld</th>
             <th class="pr-4">Status</th>
+            <th class="pr-4"></th>
         </tr>
     </thead>
     <tbody>
@@ -34,9 +39,23 @@
                     {{ $s->unsubscribed_at ? 'afgemeld' : 'actief' }}
                 </span>
             </td>
+            <td class="pr-4 space-x-3 whitespace-nowrap">
+                @unless ($s->unsubscribed_at)
+                <form method="POST" action="{{ route('subscribers.unsubscribe.admin', $s) }}" class="inline"
+                      onsubmit="return confirm('{{ $s->email }} afmelden?')">
+                    @csrf
+                    <button class="underline text-sm">Afmelden</button>
+                </form>
+                @endunless
+                <form method="POST" action="{{ route('subscribers.destroy', $s) }}" class="inline"
+                      onsubmit="return confirm('{{ $s->email }} definitief uit de lijst verwijderen?')">
+                    @csrf @method('DELETE')
+                    <button class="underline text-red-600 text-sm">Verwijder</button>
+                </form>
+            </td>
         </tr>
         @empty
-        <tr><td colspan="7" class="py-8 text-center text-gray-400">Nog geen aanmeldingen.</td></tr>
+        <tr><td colspan="8" class="py-8 text-center text-gray-400">Nog geen aanmeldingen.</td></tr>
         @endforelse
     </tbody>
 </table>
