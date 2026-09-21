@@ -118,6 +118,14 @@ class OfferteController extends Controller
      */
     private function transportNotes(array $data): ?string
     {
+        // Alleen bij de tegel "vertrouwelijk transport". De slotkeuze staat in
+        // het formulier op "standaard" en werd door een verborgen veld altijd
+        // meegestuurd, waardoor een gewone offerte een kopje Transport A -> B
+        // met één nietszeggende regel kreeg.
+        if (strtolower($data['methode'] ?? '') !== 'transport') {
+            return null;
+        }
+
         $slotLabels = [
             'tracking' => '4G-slot met live tracking (meerprijs)',
         ];
@@ -129,7 +137,11 @@ class OfferteController extends Controller
             !empty($data['transport_ontvanger_email']) ? 'E-mail ontvanger: ' . $data['transport_ontvanger_email'] : null,
             !empty($data['transport_colli'])     ? 'Aantal colli: ' . $data['transport_colli'] : null,
             !empty($data['transport_datum'])     ? 'Gewenste datum: ' . $data['transport_datum'] : null,
-            !empty($data['transport_slot'])      ? 'Slot: ' . ($slotLabels[$data['transport_slot']] ?? $data['transport_slot']) : null,
+            // "standaard" is de voorkeuze en zegt niets, dus alleen een
+            // afwijkende slotkeuze verdient een regel.
+            !empty($data['transport_slot']) && $data['transport_slot'] !== 'standaard'
+                ? 'Slot: ' . ($slotLabels[$data['transport_slot']] ?? $data['transport_slot'])
+                : null,
         ])->filter();
 
         if ($rows->isEmpty()) {
