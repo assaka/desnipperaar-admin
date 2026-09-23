@@ -85,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'show'])->name('bons.show');
     Route::patch('/bons/{bon}', [\App\Http\Controllers\BonController::class, 'update'])->name('bons.update');
     Route::get('/bons/{bon}/pdf', [\App\Http\Controllers\BonController::class, 'pdf'])->name('bons.pdf');
+    Route::post('/bons/{bon}/resend', [\App\Http\Controllers\BonController::class, 'resend'])->name('bons.resend');
     Route::get('/bons/{bon}/signature/{role}', [\App\Http\Controllers\BonController::class, 'signature'])
         ->where('role', 'customer|driver')->name('bons.signature');
 

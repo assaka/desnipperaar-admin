@@ -186,6 +186,10 @@
         <a href="{{ route('orders.show', $bon->order) }}" class="text-sm underline">{{ $T['order_link'] }}</a>
     </div>
 
+    @if (session('status'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 mb-4 text-sm">{{ session('status') }}</div>
+    @endif
+
     @if (session('warning'))
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-3 py-2 mb-4 text-sm">{{ session('warning') }}</div>
     @endif
@@ -236,7 +240,16 @@
                 <strong>{!! $T['locked_pre'] !!} {{ $bon->picked_up_at->format('d-m-Y H:i') }}.</strong>
                 {{ $T['locked_post'] }}
             </div>
-            <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold no-underline">{{ $T['view_pdf'] }}</a>
+            <div class="flex gap-2 items-center">
+                {{-- De bon gaat bij het tekenen één keer automatisch de deur uit.
+                     Mislukt dat (geen verbinding), dan kan hij hier opnieuw. --}}
+                <form method="POST" action="{{ route('bons.resend', $bon) }}"
+                      onsubmit="return confirm('Getekende bon opnieuw sturen naar {{ $bon->order->customer_email }}?')">
+                    @csrf
+                    <button class="bg-gray-200 text-black px-3 py-2 text-xs uppercase font-bold whitespace-nowrap">Resend</button>
+                </form>
+                <a href="{{ route('bons.pdf', $bon) }}" target="_blank" class="bg-black text-yellow-400 px-3 py-2 text-xs uppercase font-bold no-underline">{{ $T['view_pdf'] }}</a>
+            </div>
         </div>
     @endif
 

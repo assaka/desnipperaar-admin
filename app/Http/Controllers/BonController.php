@@ -256,6 +256,30 @@ class BonController extends Controller
      * hele reeks mee: het contract, de facturatie en de ophalingen. Anders zou de
      * klant betalen voor een periode waarin er nog geen container stond.
      */
+    /**
+     * Stuur de getekende bon nog een keer naar de klant.
+     *
+     * De bon gaat automatisch maar één keer de deur uit, op het moment van
+     * tekenen. Valt dan de verbinding weg, dan komt hij er nooit meer uit. Alleen
+     * de bon zelf, de factuur loopt apart en gaat hier niet opnieuw mee.
+     */
+    public function resend(Request $request, Bon $bon)
+    {
+        if (! $bon->picked_up_at || ! $bon->isAfgetekend()) {
+            return back()->with('warning', 'Deze bon is nog niet getekend, er is nog niets te versturen.');
+        }
+
+        try {
+            Mail::to($bon->order->customer_email)
+                ->send(new BonSigned($bon->load(['order.customer', 'driver', 'seals']), $request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('warning', 'De bon kon niet worden verstuurd: ' . $e->getMessage());
+        }
+
+        return back()->with('status', "Getekende bon opnieuw verstuurd naar {$bon->order->customer_email}.");
+    }
+
     private function startSubscriptionBilling(Bon $delivery): void
     {
         $order   = $delivery->order;
