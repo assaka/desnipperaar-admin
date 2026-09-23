@@ -11,7 +11,7 @@
 @section('content')
     <h1 class="text-2xl font-black mb-4">Dashboard</h1>
 
-    {{-- Kerncijfers. Omzet is excl. btw en netto, dus na creditfacturen.
+    {{-- Kerncijfers. Omzet is het orderbedrag excl. btw, op aanmaakdatum.
          Openstaand is incl. btw, want dat is wat de klant moet overmaken. --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         <div class="border p-3">
@@ -79,22 +79,19 @@
     <div class="mb-10"></div>
     <h2 class="text-lg font-black mb-2">Omzet per maand</h2>
     <p class="text-xs text-gray-500 mb-2">
-        Gefactureerd op aanmaakdatum, excl. btw, zonder concepten en vervallen facturen.
-        Creditfacturen tellen negatief in de maand waarin ze zijn gemaakt.
-        Ontvangen is incl. btw, op betaaldatum.
+        Orderbedrag op aanmaakdatum van de order, na kortingscode, gefactureerd of niet.
+        Zonder open offertes, geannuleerde orders en abonnementen.
+        Ontvangen is incl. btw, uit betaalde facturen op betaaldatum.
     </p>
     <table class="w-full text-left text-sm mb-10">
         <thead class="border-b">
             <tr>
                 <th class="py-2">Maand</th>
-                <th class="text-right">Facturen</th>
-                <th class="text-right">Gefactureerd</th>
-                <th class="text-right">Credit</th>
-                <th class="text-right">Netto excl.</th>
+                <th class="text-right">Aangemaakt</th>
+                <th class="text-right">Omzet excl.</th>
                 <th class="w-1/4 pl-4"></th>
-                <th class="text-right">Netto incl.</th>
+                <th class="text-right">Omzet incl.</th>
                 <th class="text-right">Ontvangen</th>
-                <th class="text-right">Open</th>
             </tr>
         </thead>
         <tbody>
@@ -102,15 +99,12 @@
                 <tr class="border-b {{ $key === now()->format('Y-m') ? 'bg-yellow-50' : '' }}">
                     <td class="py-2 whitespace-nowrap">{{ $maand($m['month']) }}</td>
                     <td class="text-right">{{ $m['count'] ?: '' }}</td>
-                    <td class="text-right whitespace-nowrap">{{ $m['gross'] ? $eur($m['gross']) : '' }}</td>
-                    <td class="text-right whitespace-nowrap text-red-700">{{ $m['credit'] ? $eur($m['credit']) : '' }}</td>
                     <td class="text-right whitespace-nowrap font-bold">{{ $eur($m['net']) }}</td>
                     <td class="pl-4">
                         <div class="h-3 bg-yellow-400" style="width: {{ max(0, round($m['net'] / $maxNet * 100)) }}%"></div>
                     </td>
                     <td class="text-right whitespace-nowrap">{{ $m['net_incl'] ? $eur($m['net_incl']) : '' }}</td>
                     <td class="text-right whitespace-nowrap text-green-700">{{ $m['received'] ? $eur($m['received']) : '' }}</td>
-                    <td class="text-right whitespace-nowrap">{{ $m['open'] ? $eur($m['open']) : '' }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -118,13 +112,10 @@
             <tr class="font-bold">
                 <td class="py-2">Totaal</td>
                 <td class="text-right">{{ collect($months)->sum('count') }}</td>
-                <td class="text-right whitespace-nowrap">{{ $eur(collect($months)->sum('gross')) }}</td>
-                <td class="text-right whitespace-nowrap text-red-700">{{ $eur(collect($months)->sum('credit')) }}</td>
                 <td class="text-right whitespace-nowrap">{{ $eur(collect($months)->sum('net')) }}</td>
                 <td></td>
                 <td class="text-right whitespace-nowrap">{{ $eur(collect($months)->sum('net_incl')) }}</td>
                 <td class="text-right whitespace-nowrap text-green-700">{{ $eur(collect($months)->sum('received')) }}</td>
-                <td class="text-right whitespace-nowrap">{{ $eur(collect($months)->sum('open')) }}</td>
             </tr>
         </tfoot>
     </table>

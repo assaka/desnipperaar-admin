@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bon;
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Support\Pricing;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -12,61 +13,52 @@ class DashboardController extends Controller
     /**
      * Omzet per maand en de ritten die eraan komen.
      *
-     * Omzet is wat er gefactureerd is, excl. btw, op de maand waarin de
-     * factuur is aangemaakt. Concepten tellen niet mee (de klant heeft ze niet) en een
-     * vervallen factuur ook niet. Een creditfactuur telt wel mee, negatief, in
-     * de maand waarin hij is gemaakt: zo staat de tegenboeking waar hij in de
-     * boeken staat en wordt een oude maand niet achteraf herschreven.
+     * Omzet is het orderbedrag excl. btw (na kortingscode), op de maand waarin
+     * de order is aangemaakt, of er al een factuur is of niet. Een open offerte
+     * telt niet (die is nog niet geaccepteerd; een geaccepteerde offerte wordt
+     * een gewone order), een geannuleerde order ook niet, en een abonnement
+     * niet: dat is terugkerende omzet zonder één orderbedrag.
+     *
+     * Ontvangen komt wel uit de facturen, op betaaldatum: dat is geld dat
+     * binnen is.
      *
      * Groeperen gebeurt in PHP en niet in SQL. Het zijn een paar honderd
-     * facturen, en zo hoeft de maandindeling niet per database anders.
+     * orders, en zo hoeft de maandindeling niet per database anders.
      */
     public function index()
     {
+        $orders = Order::whereNotIn('type', [Order::TYPE_QUOTE, Order::TYPE_ABONNEMENT])
+            ->where('state', '!=', Order::STATE_GEANNULEERD)
+            ->get();
+
         $invoices = Invoice::whereNotIn('status', [Invoice::STATUS_DRAFT, Invoice::STATUS_CANCELED])
-            ->get(['id', 'created_at', 'paid_at', 'status', 'credits_invoice_id',
-                   'amount_excl_btw', 'vat_amount', 'amount_incl_btw']);
+            ->get(['id', 'paid_at', 'status', 'credits_invoice_id', 'amount_incl_btw']);
 
         // Twaalf maanden terug tot en met deze maand, ook als er in een maand
-        // niets is gefactureerd: een gat in de reeks is zelf informatie.
+        // niets is aangemaakt: een gat in de reeks is zelf informatie.
+        $blank = fn (Carbon $m) => ['month' => $m, 'count' => 0, 'net' => 0.0,
+                                    'net_incl' => 0.0, 'received' => 0.0];
+
         $months = [];
         $cursor = now()->startOfMonth()->subMonths(11);
         for ($i = 0; $i < 12; $i++) {
-            $months[$cursor->format('Y-m')] = [
-                'month'    => $cursor->copy(),
-                'count'    => 0,
-                'gross'    => 0.0,
-                'credit'   => 0.0,
-                'net'      => 0.0,
-                'net_incl' => 0.0,
-                'received' => 0.0,
-                'open'     => 0.0,
-            ];
+            $months[$cursor->format('Y-m')] = $blank($cursor->copy());
             $cursor->addMonth();
         }
 
-        $blank = fn (Carbon $m) => ['month' => $m, 'count' => 0, 'gross' => 0.0, 'credit' => 0.0,
-                                    'net' => 0.0, 'net_incl' => 0.0, 'received' => 0.0, 'open' => 0.0];
+        foreach ($orders as $order) {
+            $key = $order->created_at->format('Y-m');
+            $months[$key] ??= $blank($order->created_at->copy()->startOfMonth());
+
+            $excl = $order->amountExclBtw();
+            $months[$key]['count']++;
+            $months[$key]['net']      += $excl;
+            $months[$key]['net_incl'] += round($excl * (1 + Pricing::VAT_RATE), 2);
+        }
 
         foreach ($invoices as $inv) {
-            $key = $inv->created_at->format('Y-m');
-            $months[$key] ??= $blank($inv->created_at->copy()->startOfMonth());
-
-            $excl = (float) $inv->amount_excl_btw;
-            if ($inv->isCreditNote()) {
-                $months[$key]['credit'] += $excl;
-            } else {
-                $months[$key]['count']++;
-                $months[$key]['gross'] += $excl;
-                if ($inv->status === Invoice::STATUS_SENT) {
-                    $months[$key]['open'] += (float) $inv->amount_incl_btw;
-                }
-            }
-            $months[$key]['net']      += $excl;
-            $months[$key]['net_incl'] += (float) $inv->amount_incl_btw;
-
-            // Ontvangen hangt aan de betaaldatum, niet aan de aanmaakdatum: een
-            // factuur van eind maart die in april binnenkomt is geld van april.
+            // Ontvangen hangt aan de betaaldatum: een factuur van eind maart
+            // die in april binnenkomt is geld van april.
             if ($inv->status === Invoice::STATUS_PAID && $inv->paid_at && ! $inv->isCreditNote()) {
                 $pkey = $inv->paid_at->format('Y-m');
                 $months[$pkey] ??= $blank($inv->paid_at->copy()->startOfMonth());

@@ -457,9 +457,8 @@ class Order extends Model
     /**
      * De omzet op deze order, excl. btw, voor de orderlijst.
      *
-     * Zelfde telling als het dashboard: verstuurde, betaalde en gecrediteerde
-     * facturen, met een creditfactuur negatief, dus netto. Staat er alleen nog
-     * een concept, dan komt dat bedrag terug met status 'draft', zodat de lijst
+     * Telt verstuurde, betaalde en gecrediteerde facturen, met een
+     * creditfactuur negatief, dus netto. Staat er alleen nog een concept, dan komt dat bedrag terug met status 'draft', zodat de lijst
      * het als nog niet gefactureerd kan tonen. Zonder factuur valt hij terug op
      * het geoffreerde bedrag, als dat er is.
      *
@@ -484,6 +483,67 @@ class Order extends Model
         }
 
         return ['amount' => null, 'status' => 'none'];
+    }
+
+    /**
+     * De prijsopbouw van deze order zoals de orderbevestiging hem noemt, vóór
+     * een eventuele kortingscode.
+     *
+     * Een geaccepteerde offerte rekent met de afgesproken regels, een
+     * groepsdeal met de vastgezette snapshot, en de rest wordt opnieuw
+     * uitgerekend uit dozen, containers en datadragers.
+     */
+    public function priceSnapshot(): array
+    {
+        if (! empty($this->quote_lines)) {
+            $lines = collect($this->quote_lines)->map(fn ($l) => [
+                'label'    => $l['label'] ?? '',
+                'qty'      => $l['qty'] ?? 1,
+                'unit'     => $l['unit'] ?? 0,
+                'subtotal' => $l['subtotal'] ?? 0,
+            ])->all();
+            $sub = (float) ($this->quoted_amount_excl_btw ?? array_sum(array_column($lines, 'subtotal')));
+            $vat = round($sub * 0.21, 2);
+
+            return [
+                'lines'            => $lines,
+                'media_lines'      => [],
+                'subtotal'         => $sub,
+                'subtotal_regular' => $sub,
+                'discount'         => 0,
+                'vat'              => $vat,
+                'total'            => round($sub + $vat, 2),
+                'pilot'            => false,
+            ];
+        }
+
+        return ($this->quote_locked && $this->price_snapshot)
+            ? $this->price_snapshot
+            : \App\Support\Pricing::snapshot(
+                (int) $this->box_count,
+                (int) $this->container_count,
+                $this->media_items,
+                (bool) $this->pilot,
+                (bool) $this->first_box_free,
+                (float) $this->pickup_cost,
+                (float) $this->pickup_rush_fee,
+            );
+    }
+
+    /**
+     * Het orderbedrag excl. btw, na een kortingscode: wat de klant voor deze
+     * order betaalt, los van of er al een factuur is. Dit is de omzet op het
+     * dashboard.
+     */
+    public function amountExclBtw(): float
+    {
+        $gross = (float) $this->priceSnapshot()['subtotal'];
+
+        if ($this->hasCoupon()) {
+            $gross -= min(round((float) $this->coupon_discount, 2), $gross);
+        }
+
+        return round(max(0, $gross), 2);
     }
 
     public function isCanceled(): bool
