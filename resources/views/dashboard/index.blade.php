@@ -11,6 +11,43 @@
 @section('content')
     <h1 class="text-2xl font-black mb-4">Dashboard</h1>
 
+    <div class="flex justify-between items-baseline mb-2">
+        <h2 class="text-lg font-black">Geplande ophalingen</h2>
+        <a href="{{ route('planning.index') }}" class="text-sm underline">naar het planbord</a>
+    </div>
+    @forelse ($pickups as $date => $rows)
+        @php $d = \Carbon\Carbon::parse($date); @endphp
+        <h3 class="font-bold mt-4 mb-1 {{ $d->isToday() ? 'text-yellow-700' : '' }}">
+            {{ $dagen[$d->dayOfWeek] }} {{ $d->format('d-m-Y') }}
+            @if ($d->isToday()) <span class="text-xs uppercase">vandaag</span>
+            @elseif ($d->isTomorrow()) <span class="text-xs uppercase text-gray-500">morgen</span>
+            @endif
+            <span class="text-xs font-normal text-gray-500">· {{ $rows->count() }} rit(ten)</span>
+        </h3>
+        <table class="w-full text-left text-sm">
+            <tbody>
+                @foreach ($rows as $r)
+                    @include('dashboard._pickup_row', ['r' => $r, 'showDate' => false])
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <p class="text-gray-500 py-4">Er staan geen ritten gepland.</p>
+    @endforelse
+
+    <div class="mb-10"></div>
+
+    @if ($overdue->isNotEmpty())
+        <h2 class="text-lg font-black mb-2 text-red-700">Over datum, nog niet opgehaald</h2>
+        <table class="w-full text-left text-sm mb-10">
+            <tbody>
+                @foreach ($overdue as $r)
+                    @include('dashboard._pickup_row', ['r' => $r, 'showDate' => true])
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
     {{-- Kerncijfers. Omzet is het orderbedrag excl. btw, op aanmaakdatum.
          Openstaand is incl. btw, want dat is wat de klant moet overmaken. --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
@@ -41,42 +78,6 @@
         </div>
     </div>
 
-    @if ($overdue->isNotEmpty())
-        <h2 class="text-lg font-black mb-2 text-red-700">Over datum, nog niet opgehaald</h2>
-        <table class="w-full text-left text-sm mb-10">
-            <tbody>
-                @foreach ($overdue as $r)
-                    @include('dashboard._pickup_row', ['r' => $r, 'showDate' => true])
-                @endforeach
-            </tbody>
-        </table>
-    @endif
-
-    <div class="flex justify-between items-baseline mb-2">
-        <h2 class="text-lg font-black">Geplande ophalingen</h2>
-        <a href="{{ route('planning.index') }}" class="text-sm underline">naar het planbord</a>
-    </div>
-    @forelse ($pickups as $date => $rows)
-        @php $d = \Carbon\Carbon::parse($date); @endphp
-        <h3 class="font-bold mt-4 mb-1 {{ $d->isToday() ? 'text-yellow-700' : '' }}">
-            {{ $dagen[$d->dayOfWeek] }} {{ $d->format('d-m-Y') }}
-            @if ($d->isToday()) <span class="text-xs uppercase">vandaag</span>
-            @elseif ($d->isTomorrow()) <span class="text-xs uppercase text-gray-500">morgen</span>
-            @endif
-            <span class="text-xs font-normal text-gray-500">· {{ $rows->count() }} rit(ten)</span>
-        </h3>
-        <table class="w-full text-left text-sm">
-            <tbody>
-                @foreach ($rows as $r)
-                    @include('dashboard._pickup_row', ['r' => $r, 'showDate' => false])
-                @endforeach
-            </tbody>
-        </table>
-    @empty
-        <p class="text-gray-500 py-4">Er staan geen ritten gepland.</p>
-    @endforelse
-
-    <div class="mb-10"></div>
     <h2 class="text-lg font-black mb-2">Omzet per maand</h2>
     <p class="text-xs text-gray-500 mb-2">
         Orderbedrag op aanmaakdatum van de order, na kortingscode, gefactureerd of niet.
