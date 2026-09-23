@@ -454,6 +454,38 @@ class Order extends Model
         return (string) $this->state;
     }
 
+    /**
+     * De omzet op deze order, excl. btw, voor de orderlijst.
+     *
+     * Zelfde telling als het dashboard: verstuurde, betaalde en gecrediteerde
+     * facturen, met een creditfactuur negatief, dus netto. Staat er alleen nog
+     * een concept, dan komt dat bedrag terug met status 'draft', zodat de lijst
+     * het als nog niet gefactureerd kan tonen. Zonder factuur valt hij terug op
+     * het geoffreerde bedrag, als dat er is.
+     *
+     * Leest de geladen relatie, geen eigen query.
+     *
+     * @return array{amount: ?float, status: string}  status: invoiced|draft|quoted|none
+     */
+    public function revenue(): array
+    {
+        $counted = $this->invoices->whereNotIn('status', [Invoice::STATUS_DRAFT, Invoice::STATUS_CANCELED]);
+        if ($counted->isNotEmpty()) {
+            return ['amount' => round($counted->sum(fn ($i) => (float) $i->amount_excl_btw), 2), 'status' => 'invoiced'];
+        }
+
+        $drafts = $this->invoices->where('status', Invoice::STATUS_DRAFT);
+        if ($drafts->isNotEmpty()) {
+            return ['amount' => round($drafts->sum(fn ($i) => (float) $i->amount_excl_btw), 2), 'status' => 'draft'];
+        }
+
+        if ($this->quoted_amount_excl_btw !== null) {
+            return ['amount' => (float) $this->quoted_amount_excl_btw, 'status' => 'quoted'];
+        }
+
+        return ['amount' => null, 'status' => 'none'];
+    }
+
     public function isCanceled(): bool
     {
         return $this->state === self::STATE_GEANNULEERD;

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/orders');
+    return redirect('/dashboard');
 });
 
 // Public offerte-accept (no auth) — token-gated.
@@ -28,6 +28,8 @@ Route::post('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::c
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/customers',          [\App\Http\Controllers\CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/create',   [\App\Http\Controllers\CustomerController::class, 'create'])->name('customers.create');
     Route::post('/customers',         [\App\Http\Controllers\CustomerController::class, 'store'])->name('customers.store');

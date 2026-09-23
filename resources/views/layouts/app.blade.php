@@ -16,9 +16,10 @@
 <body class="min-h-screen">
     <header class="brand-bar flex justify-between items-center">
         <div class="flex gap-6 items-baseline">
-            <a href="{{ route('orders.index') }}">DESNIPPERAAR ADMIN</a>
+            <a href="{{ route('dashboard') }}">DESNIPPERAAR ADMIN</a>
             @auth
                 <nav class="text-sm font-normal">
+                    <a href="{{ route('dashboard') }}" class="mr-4 {{ request()->routeIs('dashboard') ? 'font-bold underline' : '' }}">Dashboard</a>
                     <a href="{{ route('orders.index') }}" class="mr-4 {{ request()->routeIs('orders.*') ? 'font-bold underline' : '' }}">Orders</a>
                     <a href="{{ route('planning.index') }}" class="mr-4 {{ request()->routeIs('planning.*') ? 'font-bold underline' : '' }}">Planning</a>
                     <a href="{{ route('offertes.index') }}" class="mr-4 {{ request()->routeIs('offertes.*') ? 'font-bold underline' : '' }}">Offertes</a>
