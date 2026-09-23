@@ -12,8 +12,8 @@ class DashboardController extends Controller
     /**
      * Omzet per maand en de ritten die eraan komen.
      *
-     * Omzet is wat er gefactureerd is, excl. btw, op de maand van de
-     * factuurdatum. Concepten tellen niet mee (de klant heeft ze niet) en een
+     * Omzet is wat er gefactureerd is, excl. btw, op de maand waarin de
+     * factuur is aangemaakt. Concepten tellen niet mee (de klant heeft ze niet) en een
      * vervallen factuur ook niet. Een creditfactuur telt wel mee, negatief, in
      * de maand waarin hij is gemaakt: zo staat de tegenboeking waar hij in de
      * boeken staat en wordt een oude maand niet achteraf herschreven.
@@ -24,8 +24,7 @@ class DashboardController extends Controller
     public function index()
     {
         $invoices = Invoice::whereNotIn('status', [Invoice::STATUS_DRAFT, Invoice::STATUS_CANCELED])
-            ->whereNotNull('issued_at')
-            ->get(['id', 'issued_at', 'paid_at', 'status', 'credits_invoice_id',
+            ->get(['id', 'created_at', 'paid_at', 'status', 'credits_invoice_id',
                    'amount_excl_btw', 'vat_amount', 'amount_incl_btw']);
 
         // Twaalf maanden terug tot en met deze maand, ook als er in een maand
@@ -50,8 +49,8 @@ class DashboardController extends Controller
                                     'net' => 0.0, 'net_incl' => 0.0, 'received' => 0.0, 'open' => 0.0];
 
         foreach ($invoices as $inv) {
-            $key = $inv->issued_at->format('Y-m');
-            $months[$key] ??= $blank($inv->issued_at->copy()->startOfMonth());
+            $key = $inv->created_at->format('Y-m');
+            $months[$key] ??= $blank($inv->created_at->copy()->startOfMonth());
 
             $excl = (float) $inv->amount_excl_btw;
             if ($inv->isCreditNote()) {
@@ -66,7 +65,7 @@ class DashboardController extends Controller
             $months[$key]['net']      += $excl;
             $months[$key]['net_incl'] += (float) $inv->amount_incl_btw;
 
-            // Ontvangen hangt aan de betaaldatum, niet aan de factuurdatum: een
+            // Ontvangen hangt aan de betaaldatum, niet aan de aanmaakdatum: een
             // factuur van eind maart die in april binnenkomt is geld van april.
             if ($inv->status === Invoice::STATUS_PAID && $inv->paid_at && ! $inv->isCreditNote()) {
                 $pkey = $inv->paid_at->format('Y-m');

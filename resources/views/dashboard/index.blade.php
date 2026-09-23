@@ -79,7 +79,7 @@
     <div class="mb-10"></div>
     <h2 class="text-lg font-black mb-2">Omzet per maand</h2>
     <p class="text-xs text-gray-500 mb-2">
-        Gefactureerd op factuurdatum, excl. btw, zonder concepten en vervallen facturen.
+        Gefactureerd op aanmaakdatum, excl. btw, zonder concepten en vervallen facturen.
         Creditfacturen tellen negatief in de maand waarin ze zijn gemaakt.
         Ontvangen is incl. btw, op betaaldatum.
     </p>
