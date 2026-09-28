@@ -280,7 +280,8 @@
         },
         get liveQuote() {
             const boxes = this.actBoxes|0, cont = this.actCont|0;
-            const bFirst = this.pilot ? 24 : 30, bNext = this.pilot ? 20 : 25;
+            const bFirstReg = {{ \App\Support\Pricing::BOX_FIRST }}, bNextReg = {{ \App\Support\Pricing::BOX_NEXT }};
+            const bFirst = this.pilot ? 24 : bFirstReg, bNext = this.pilot ? 20 : bNextReg;
             const cFirst = this.pilot ? 96 : 120, cNext = this.pilot ? 36 : 45;
             const mPrices = {hdd:9, ssd:15, usb:6, phone:12, laptop:19};
             const mLabels = this.L.media;
@@ -295,12 +296,12 @@
             const lines = [];
             if (boxes > 0) {
                 if (this.firstBoxFree) {
-                    lines.push(mk(this.L.kennismaking, 1, 0, 30));
-                    if (boxes >= 2) lines.push(mk(this.L.daarnaEerste, 1, bFirst, 30));
-                    if (boxes >= 3) lines.push(mk(this.L.volgendeDozen, boxes-2, bNext, 25));
+                    lines.push(mk(this.L.kennismaking, 1, 0, bFirstReg));
+                    if (boxes >= 2) lines.push(mk(this.L.daarnaEerste, 1, bFirst, bFirstReg));
+                    if (boxes >= 3) lines.push(mk(this.L.volgendeDozen, boxes-2, bNext, bNextReg));
                 } else {
-                    lines.push(mk(this.L.eersteDoos, 1, bFirst, 30));
-                    if (boxes >= 2) lines.push(mk(this.L.volgendeDozen, boxes-1, bNext, 25));
+                    lines.push(mk(this.L.eersteDoos, 1, bFirst, bFirstReg));
+                    if (boxes >= 2) lines.push(mk(this.L.volgendeDozen, boxes-1, bNext, bNextReg));
                 }
             }
             if (cont > 0) {
