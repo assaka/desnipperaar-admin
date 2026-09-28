@@ -5,7 +5,7 @@ namespace App\Support;
 class Pricing
 {
     // Regular rates (excl. BTW)
-    public const BOX_FIRST             = 35.00;
+    public const BOX_FIRST             = 30.00;
     public const BOX_NEXT               = 25.00;
     public const CONTAINER_FIRST       = 120.00;
     public const CONTAINER_NEXT        = 45.00;
