@@ -37,6 +37,8 @@
         'USB / SD'                   => ['nl' => 'USB / SD', 'en' => 'USB / SD', 'fr' => 'USB / SD', 'es' => 'USB / SD'],
         'Telefoon / tablet'          => ['nl' => 'Telefoon / tablet', 'en' => 'Phone / tablet', 'fr' => 'Téléphone / tablette', 'es' => 'Teléfono / tableta'],
         'Laptop'                     => ['nl' => 'Laptop', 'en' => 'Laptop', 'fr' => 'Laptop', 'es' => 'Laptop'],
+        'Printer / kopieerapparaat'  => ['nl' => 'Printer / kopieerapparaat', 'en' => 'Printer / copier', 'fr' => 'Imprimante / copieur', 'es' => 'Impresora / fotocopiadora'],
+        'Backup-tape (LTO)'          => ['nl' => 'Backup-tape (LTO)', 'en' => 'Backup tape (LTO)', 'fr' => 'Bande de sauvegarde (LTO)', 'es' => 'Cinta de copia (LTO)'],
     ];
     $ll = fn ($label) => $lineLabels[$label][$locale] ?? $label;
 
@@ -159,7 +161,7 @@
         'daarnaEerste'  => $ll('Daarna eerste doos'),
         'eersteCont'    => $ll('Eerste rolcontainer 240 L'),
         'volgendeCont'  => $ll('Volgende rolcontainers'),
-        'media'         => ['hdd' => 'HDD', 'ssd' => 'SSD / NVMe', 'usb' => 'USB / SD', 'phone' => $ll('Telefoon / tablet'), 'laptop' => 'Laptop'],
+        'media'         => array_map($ll, \App\Support\Pricing::MEDIA_LABELS),
         'subtotaal'     => $T['subtotal'],
         'subtotaalExcl' => $T['subtotal_excl'],
         'meer'          => $T['more_than'],
@@ -256,7 +258,7 @@
     @php
         $expMedia  = $bon->order->media_items ?? [];
         $actMedia  = !empty($bon->actual_media) ? $bon->actual_media : $expMedia;
-        $mediaKeys = ['hdd','ssd','usb','phone','laptop'];
+        $mediaKeys = array_keys(\App\Support\Pricing::MEDIA_TIERS);
     @endphp
 
     <div x-data="{
@@ -282,8 +284,11 @@
             const boxes = this.actBoxes|0, cont = this.actCont|0;
             const bFirstReg = {{ \App\Support\Pricing::BOX_FIRST }}, bNextReg = {{ \App\Support\Pricing::BOX_NEXT }};
             const bFirst = this.pilot ? 24 : bFirstReg, bNext = this.pilot ? 20 : bNextReg;
-            const cFirst = this.pilot ? 96 : 120, cNext = this.pilot ? 36 : 45;
-            const mPrices = {hdd:9, ssd:15, usb:6, phone:12, laptop:19};
+            const cFirstReg = {{ \App\Support\Pricing::CONTAINER_FIRST }}, cNextReg = {{ \App\Support\Pricing::CONTAINER_NEXT }};
+            const cFirst = this.pilot ? 96 : cFirstReg, cNext = this.pilot ? 36 : cNextReg;
+            // Staffel per soort datadrager, dezelfde tabel als Pricing::mediaLine().
+            const mTiers = {{ \Illuminate\Support\Js::from(\App\Support\Pricing::MEDIA_TIERS) }};
+            const mTier = (q) => q >= 500 ? 3 : q >= 100 ? 2 : q >= 25 ? 1 : 0;
             const mLabels = this.L.media;
             const mk = (label, qty, unit, regularUnit) => {
                 const row = {label, qty, unit, subtotal: unit * qty};
@@ -305,15 +310,18 @@
                 }
             }
             if (cont > 0) {
-                lines.push(mk(this.L.eersteCont, 1, cFirst, 120));
-                if (cont >= 2) lines.push(mk(this.L.volgendeCont, cont-1, cNext, 45));
+                lines.push(mk(this.L.eersteCont, 1, cFirst, cFirstReg));
+                if (cont >= 2) lines.push(mk(this.L.volgendeCont, cont-1, cNext, cNextReg));
             }
-            for (const k of Object.keys(mPrices)) {
+            for (const k of Object.keys(mTiers)) {
                 const q = this.actMedia[k]|0;
-                if (q > 0) lines.push(mk(mLabels[k], q, mPrices[k], mPrices[k]));
+                if (q > 0) lines.push({...mk(mLabels[k], q, mTiers[k][mTier(q)], mTiers[k][0]), media: true});
             }
+            // De staffelprijs van datadragers staat als doorgestreepte prijs op de
+            // regel zelf en telt niet mee als korting, net als in het overzicht op
+            // basis van de bestelling (BonController::show).
             const subtotal             = Math.round(lines.reduce((s,l)=>s+l.subtotal,0) * 100) / 100;
-            const subtotalRegular      = Math.round(lines.reduce((s,l)=>s+(l.was_subtotal ?? l.subtotal),0) * 100) / 100;
+            const subtotalRegular      = Math.round(lines.reduce((s,l)=>s+(l.media ? l.subtotal : (l.was_subtotal ?? l.subtotal)),0) * 100) / 100;
             const discount             = Math.round((subtotalRegular - subtotal) * 100) / 100;
             const discountKennismaking = Math.round(lines.filter(l=>l.unit===0&&l.was_subtotal).reduce((s,l)=>s+l.was_subtotal,0) * 100) / 100;
             const discountPilot        = Math.round((discount - discountKennismaking) * 100) / 100;
@@ -377,7 +385,7 @@
             </div>
             <p class="text-xs text-gray-500 mb-2">{{ $T['adjust_hint'] }}</p>
             @php
-                $mediaCatalog = ['hdd'=>['label'=>'HDD','price'=>9], 'ssd'=>['label'=>'SSD / NVMe','price'=>15], 'usb'=>['label'=>'USB / SD','price'=>6], 'phone'=>['label'=>'Telefoon / tablet','price'=>12], 'laptop'=>['label'=>'Laptop','price'=>19]];
+                $mediaCatalog = array_map(fn ($label) => ['label' => $label], \App\Support\Pricing::MEDIA_LABELS);
                 $actualMedia = !empty($bon->actual_media) ? $bon->actual_media : ($bon->order->media_items ?? []);
             @endphp
             <div class="grid grid-cols-2 gap-3">
@@ -394,7 +402,7 @@
                            class="w-full border p-2">
                 </div>
             </div>
-            <div class="grid grid-cols-5 gap-2 mt-3">
+            <div class="grid grid-cols-4 gap-2 mt-3">
                 @foreach ($mediaCatalog as $key => $item)
                     <div>
                         <label class="block text-xs font-bold">{{ $ll($item['label']) }} <span class="text-gray-500">({{ $bon->order->media_items[$key] ?? 0 }})</span></label>
