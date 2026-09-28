@@ -250,7 +250,7 @@ return [
     'invoice' => [
         'prefix'         => env('DESNIPPERAAR_INVOICE_PREFIX', 'F'),
         'start'          => (int) env('DESNIPPERAAR_INVOICE_START', 1),
-        'payment_terms_days' => (int) env('DESNIPPERAAR_PAYMENT_TERMS_DAYS', 14),
+        'payment_terms_days' => (int) env('DESNIPPERAAR_PAYMENT_TERMS_DAYS', 7),
     ],
 
     'notifications' => [
