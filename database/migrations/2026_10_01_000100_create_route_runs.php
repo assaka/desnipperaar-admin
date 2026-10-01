@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Schema;
  * die route alleen de kilometerprijs of twee weken wachten.
  *
  * Een rit heeft een bestemming (postcode) en een maximale omweg. De datum mag
- * nog open staan: verre ophalingen plannen wij met de hand, dus de klant hoort
- * pas bij de bevestiging wanneer wij komen.
+ * nog open staan en is alleen voor ons: verre ophalingen plannen wij met de
+ * hand, en de datum spreken wij met de klant af.
  *
  * Een order die meerijdt wijst via route_run_id naar zijn rit, zodat de rit op
  * het scherm laat zien wie er al aan hangt.

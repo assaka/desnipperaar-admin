@@ -10,9 +10,9 @@ use Illuminate\Http\Request;
  * Past deze postcode op een open rit? Gevraagd door /order zodra de klant
  * buiten de gratis straal blijkt te wonen.
  *
- * Het antwoord zegt alleen ja of nee en de datum. Geen bestemming, geen omweg
- * en niets over wie er verder meerijdt: dat is de adresgegevens van een andere
- * klant, en hoe wij rijden is onze zaak en niet die van de bezoeker.
+ * Het antwoord zegt alleen ja of nee. Geen datum, want die spreken wij met de
+ * klant zelf af. Geen bestemming, geen omweg en niets over wie er verder
+ * meerijdt: dat zijn adresgegevens van een andere klant.
  */
 class RouteRunController extends Controller
 {
@@ -26,8 +26,6 @@ class RouteRunController extends Controller
 
         $hit = RouteRun::matchFor($postcode);
 
-        return response()->json($hit
-            ? ['match' => true, 'date' => $hit['run']->run_date?->toDateString()]
-            : ['match' => false]);
+        return response()->json(['match' => $hit !== null]);
     }
 }

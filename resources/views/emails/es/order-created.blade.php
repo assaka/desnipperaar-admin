@@ -126,7 +126,7 @@ Le contactaremos en un día laborable para confirmar la recogida.</p>
                 @switch($pickupChoice)
                     @case('spoed') Recogida urgente @break
                     @case('sooner') Recogida anticipada (en 2 semanas) @break
-                    @case('route') Recogida gratuita ({{ $order->routeRun?->run_date ? $order->routeRun->run_date->locale('es')->translatedFormat('j \d\e F') : 'fecha por confirmar' }}) @break
+                    @case('route') Recogida gratuita @break
                     @default {{ $pickupInRegion ? 'Recogida gratuita (región de Ámsterdam)' : 'Recogida gratuita (a partir de 2 semanas)' }}
                 @endswitch
             </td>

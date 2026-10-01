@@ -19,7 +19,7 @@
     <input type="date" name="run_date"
            value="{{ old('run_date', $run->run_date?->format('Y-m-d')) }}"
            class="w-full border p-2">
-    <p class="text-xs text-gray-500 mt-1">Leeg = nog niet bekend; de klant leest dan "datum volgt".</p>
+    <p class="text-xs text-gray-500 mt-1">Alleen voor jezelf. De klant ziet geen datum, die spreek je met de klant af.</p>
 </div>
 
 <div>
