@@ -126,6 +126,7 @@ Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
                 @switch($pickupChoice)
                     @case('spoed') Enlèvement urgent @break
                     @case('sooner') Enlèvement anticipé (sous 2 semaines) @break
+                    @case('route') Enlèvement gratuit ({{ $order->routeRun?->run_date ? $order->routeRun->run_date->locale('fr')->translatedFormat('j F') : 'date à confirmer' }}) @break
                     @default {{ $pickupInRegion ? "Enlèvement gratuit (région d'Amsterdam)" : 'Enlèvement gratuit (à partir de 2 semaines)' }}
                 @endswitch
             </td>

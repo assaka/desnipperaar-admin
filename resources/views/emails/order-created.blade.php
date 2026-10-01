@@ -121,6 +121,7 @@ We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
                 @switch($pickupChoice)
                     @case('spoed') Spoed ophalen @break
                     @case('sooner') Eerder ophalen (binnen 2 weken) @break
+                    @case('route') Gratis ophalen ({{ $order->routeRun?->run_date ? $order->routeRun->run_date->locale('nl')->translatedFormat('j F') : 'datum volgt' }}) @break
                     @default {{ $pickupInRegion ? 'Gratis ophalen (regio Amsterdam)' : 'Gratis ophalen (vanaf 2 weken)' }}
                 @endswitch
             </td>

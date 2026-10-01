@@ -24,6 +24,9 @@
         'spoed'  => ['spoed',  'bg-red-700 text-white',    'binnen 2 werkdagen'],
         'sooner' => ['eerder', 'bg-black text-yellow-400', 'binnen 2 weken'],
         'free'   => ['gratis', 'bg-gray-300 text-black',   $keuzeInRegio ? 'binnen de straal' : 'vanaf 2 weken'],
+        'route'  => ['meerit', 'bg-green-700 text-white',
+            'op '.($order->routeRun?->label ?? 'open rit')
+            .($order->routeRun?->run_date ? ' · '.$order->routeRun->run_date->format('d-m') : '')],
         default  => [null, null, null],
     };
 @endphp

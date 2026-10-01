@@ -22,6 +22,11 @@ Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'st
 Route::get('/eligibility/kennismaking', [\App\Http\Controllers\Api\EligibilityController::class, 'kennismaking'])
     ->middleware('throttle:60,1');
 
+// Ligt deze postcode op een open rit? /order vraagt het voor klanten buiten de
+// gratis straal; ja betekent gratis meerijden op die rit.
+Route::get('/route-runs/match', [\App\Http\Controllers\Api\RouteRunController::class, 'match'])
+    ->middleware('throttle:60,1');
+
 // Coupon code validation (called from /order frontend).
 Route::get('/coupon', [\App\Http\Controllers\Api\CouponController::class, 'validate'])
     ->middleware('throttle:120,1');

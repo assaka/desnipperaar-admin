@@ -252,7 +252,24 @@ class OrderController extends Controller
                 0.0,
             )['subtotal'];
 
-        $pickupCost    = \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free', $goodsSubtotal);
+        // Meerijden op een open rit. De pagina stuurt 'route' als hij een
+        // passende rit vond; wij zoeken hem hier zelf opnieuw op het
+        // ophaaladres, want de klant mag niet zelf een gratis rit claimen. Past
+        // hij (niet meer), bijvoorbeeld omdat de rit intussen dicht is, dan valt
+        // hij terug op gratis vanaf 2 weken: dat is wat hij zonder de rit ook
+        // zonder kosten had gekregen.
+        $routeRun = null;
+        if ($choice === 'route') {
+            $hit = \App\Models\RouteRun::matchFor($hasAltPickup ? $altPostcode : $postcode);
+            if ($hit) {
+                $routeRun = $hit['run'];
+                $pickupChoice = 'route';
+            }
+        }
+
+        $pickupCost    = $pickupChoice === 'route'
+            ? 0.0
+            : \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free', $goodsSubtotal);
         $pickupRushFee = \App\Support\Pricing::pickupRushFee($pickupChoice === 'spoed');
 
         $order = Order::create([
@@ -285,6 +302,7 @@ class OrderController extends Controller
             'pickup_rush_fee'    => $pickupRushFee > 0 ? $pickupRushFee : null,
             'pickup_km'          => $pickupKm,
             'pickup_choice'      => $pickupChoice,
+            'route_run_id'       => $routeRun?->id,
             'coupon_code'        => $coupon ? strtoupper(trim($coupon->code)) : null,
             'coupon_discount'    => $coupon ? $couponDiscount : null,
             'coupon_applied_at'  => $coupon ? now() : null,

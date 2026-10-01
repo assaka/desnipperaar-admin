@@ -200,7 +200,7 @@ class SlotFinder
         $inRegion = $depotKm <= (float) config('desnipperaar.planning.region_km');
 
         if ($inRegion
-            || in_array($order->pickup_choice, ['sooner', 'spoed'], true)
+            || in_array($order->pickup_choice, ['sooner', 'spoed', 'route'], true)
             || (float) ($order->pickup_cost ?? 0) > 0) {
             return $earliest;
         }

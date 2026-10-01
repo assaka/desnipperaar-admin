@@ -28,6 +28,7 @@
                     <a href="{{ route('invoices.index') }}" class="mr-4 {{ request()->routeIs('facturen.*|invoices.*') ? 'font-bold underline' : '' }}">Facturen</a>
                     <a href="{{ route('customers.index') }}" class="mr-4 {{ request()->routeIs('customers.*') ? 'font-bold underline' : '' }}">Klanten</a>
                     <a href="{{ route('group-deals.index') }}" class="mr-4 {{ request()->routeIs('group-deals.*') ? 'font-bold underline' : '' }}">Groepsdeals</a>
+                    <a href="{{ route('route-runs.index') }}" class="mr-4 {{ request()->routeIs('route-runs.*') ? 'font-bold underline' : '' }}">Ritten</a>
                     <a href="{{ route('drivers.index') }}" class="mr-4 {{ request()->routeIs('drivers.*') ? 'font-bold underline' : '' }}">Chauffeurs</a>
                     <a href="{{ route('coupons.index') }}" class="mr-4 {{ request()->routeIs('coupons.*') ? 'font-bold underline' : '' }}">Coupons</a>
                     <a href="{{ route('subscribers.index') }}" class="{{ request()->routeIs('subscribers.*') ? 'font-bold underline' : '' }}">Dag</a>

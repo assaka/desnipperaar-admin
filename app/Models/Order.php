@@ -118,6 +118,7 @@ class Order extends Model
         'pickup_cost',
         'pickup_km',
         'pickup_choice',
+        'route_run_id',
         'pickup_rush_fee',
         'pickup_reminder_sent_at',
         'quoted_amount_excl_btw',
@@ -291,6 +292,12 @@ class Order extends Model
     public function groupDeal()
     {
         return $this->belongsTo(GroupDeal::class);
+    }
+
+    /** De open rit waar deze order gratis op meerijdt, zie RouteRun. */
+    public function routeRun()
+    {
+        return $this->belongsTo(RouteRun::class);
     }
 
     public function groupDealParticipant()

@@ -126,6 +126,7 @@ We will contact you within one business day to confirm the pickup.</p>
                 @switch($pickupChoice)
                     @case('spoed') Rush pickup @break
                     @case('sooner') Earlier pickup (within 2 weeks) @break
+                    @case('route') Free pickup ({{ $order->routeRun?->run_date ? $order->routeRun->run_date->locale('en')->translatedFormat('j F') : 'date to follow' }}) @break
                     @default {{ $pickupInRegion ? 'Free pickup (Amsterdam region)' : 'Free pickup (from 2 weeks)' }}
                 @endswitch
             </td>
