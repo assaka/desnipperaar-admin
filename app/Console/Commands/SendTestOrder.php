@@ -142,7 +142,7 @@ class SendTestOrder extends Command
             0.0,
         )['subtotal'];
 
-        $pickupCost    = \App\Support\Pricing::pickupCost($km, $choice !== 'free', $goodsSubtotal);
+        $pickupCost    = \App\Support\Pricing::pickupCost($km, $choice !== 'free', $goodsSubtotal, $boxes);
         $pickupRushFee = \App\Support\Pricing::pickupRushFee($choice === 'spoed');
 
         $order = Order::create([

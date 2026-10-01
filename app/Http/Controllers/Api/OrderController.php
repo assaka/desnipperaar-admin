@@ -269,7 +269,7 @@ class OrderController extends Controller
 
         $pickupCost    = $pickupChoice === 'route'
             ? 0.0
-            : \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free', $goodsSubtotal);
+            : \App\Support\Pricing::pickupCost($pickupKm, $pickupChoice !== 'free', $goodsSubtotal, (int) ($data['boxes'] ?? 0));
         $pickupRushFee = \App\Support\Pricing::pickupRushFee($pickupChoice === 'spoed');
 
         $order = Order::create([

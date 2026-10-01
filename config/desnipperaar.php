@@ -83,6 +83,11 @@ return [
         'free_km'     => (float) env('PICKUP_FREE_KM', 35),
         'rate_per_km' => (float) env('PICKUP_RATE_PER_KM', 0.65),
 
+        // Vanaf zoveel dozen is eerder ophalen altijd gratis, op elke afstand en
+        // los van het bestelbedrag. 0 zet deze regel uit. Zelfde waarde als
+        // site-config.json -> pickup.freeFromBoxes op de publieke site.
+        'free_from_boxes' => (int) env('PICKUP_FREE_FROM_BOXES', 10),
+
         // In de omgeving als "bedrag:km:perKm:maxKm", want vier getallen passen
         // wel in een env-regel en een array niet. Onleesbaar of leeg? Dan blijft
         // de lijn hieronder staan.

@@ -80,6 +80,12 @@ class Pricing
         return round($need, 2);
     }
 
+    /** Vanaf dit aantal dozen is eerder ophalen altijd gratis. 0 = uit. */
+    public static function freeFromBoxes(): int
+    {
+        return (int) config('desnipperaar.pickup.free_from_boxes', 10);
+    }
+
     /**
      * Valt de kilometerprijs weg voor deze order?
      *
@@ -87,9 +93,17 @@ class Pricing
      * vrijstelling nog geldt, en het mandje haalt het bedrag dat daar hoort. Het subtotaal is dat van de goederen ex btw en na coupon,
      * dus zonder de ophaalkosten zelf, anders zou de vrijstelling zichzelf mede
      * verdienen.
+     *
+     * Daarnaast geldt een vaste regel: vanaf freeFromBoxes() dozen is het
+     * altijd gratis, op elke afstand en bij elk bedrag.
      */
-    public static function pickupFeeWaived(?int $km, float $goodsSubtotal): bool
+    public static function pickupFeeWaived(?int $km, float $goodsSubtotal, int $boxes = 0): bool
     {
+        $minBoxes = self::freeFromBoxes();
+        if ($minBoxes > 0 && $boxes >= $minBoxes) {
+            return true;
+        }
+
         $need = self::freeAboveSubtotal($km);
 
         return $need > 0 && $goodsSubtotal >= $need;
@@ -116,14 +130,14 @@ class Pricing
      * Wie hem zonder aanroept krijgt de oude uitkomst, dus zonder vrijstelling:
      * te veel rekenen valt op, te weinig rekenen niet.
      */
-    public static function pickupCost(?int $km, bool $sooner, float $goodsSubtotal = 0.0): float
+    public static function pickupCost(?int $km, bool $sooner, float $goodsSubtotal = 0.0, int $boxes = 0): float
     {
         $freeKm = self::freeKm();
 
         if (!$sooner || $km === null || $km <= $freeKm) {
             return 0.0;
         }
-        if (self::pickupFeeWaived($km, $goodsSubtotal)) {
+        if (self::pickupFeeWaived($km, $goodsSubtotal, $boxes)) {
             return 0.0;
         }
 
