@@ -43,8 +43,13 @@
 @endphp
 <span class="inline-block px-2 py-1 text-xs font-bold uppercase whitespace-nowrap {{ $statusKleur }}"
       @if ($statusTitel) title="{{ $statusTitel }}" @endif>{{ $statusLabel }}</span>
-{{-- Vinkje: de klant bevestigde dat de ophaalmail voor het huidige moment is
-     aangekomen (knop in die mail, zie PickupReceiptController). --}}
-@if ($order->pickupReceiptConfirmed())
-    <span class="text-green-600 font-bold" title="Ophaalmail ontvangen, bevestigd door klant op {{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }}">&#10003;</span>
-@endif
+{{-- Antwoord van de klant op "past dit moment?" in de ophaalmail (zie
+     PickupReceiptController): vinkje bij akkoord, rood kruisje bij past niet. --}}
+@switch($order->pickupReceiptAnswer())
+    @case(\App\Models\Order::RECEIPT_AKKOORD)
+        <span class="text-green-600 font-bold" title="Klant akkoord met het ophaalmoment ({{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }})">&#10003;</span>
+        @break
+    @case(\App\Models\Order::RECEIPT_PAST_NIET)
+        <span class="text-red-600 font-bold" title="Ophaalmoment past klant niet ({{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }}){{ $order->pickup_receipt_note ? ': '.$order->pickup_receipt_note : '' }}">&#10007;</span>
+        @break
+@endswitch

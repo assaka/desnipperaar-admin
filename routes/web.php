@@ -27,11 +27,11 @@ Route::post('/afmelden/{token}', [\App\Http\Controllers\UnsubscribeController::c
     ->name('subscribers.unsubscribe.confirm');
 
 
-// Ontvangstbevestiging van de ophaalmail (no auth) — token is orders.public_token.
+// "Past dit ophaalmoment?" uit de ophaalmail (no auth) — token is orders.public_token.
 // GET toont alleen een pagina, de knop daarop POST. CSRF-vrij, zie bootstrap/app.php.
 Route::get('/ontvangen/{token}',  [\App\Http\Controllers\PickupReceiptController::class, 'show'])
     ->name('pickup-receipt.show');
-Route::post('/ontvangen/{token}', [\App\Http\Controllers\PickupReceiptController::class, 'confirm'])
+Route::post('/ontvangen/{token}', [\App\Http\Controllers\PickupReceiptController::class, 'answer'])
     ->name('pickup-receipt.confirm');
 
 Route::middleware(['auth'])->group(function () {

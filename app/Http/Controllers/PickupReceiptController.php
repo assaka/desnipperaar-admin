@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PickupReceiptDeclined;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 /**
- * De knop in de ophaalmail waarmee de klant bevestigt dat hij hem ontvangen
- * heeft. Op de orderlijst staat dan een vinkje achter de status.
+ * De vraag in de ophaalmail: past dit moment? De klant antwoordt met "ja" of
+ * "past niet". Op de orderlijst staat dan een vinkje of een kruisje achter de
+ * status, en bij "past niet" krijgen wij een mail met wat de klant schreef.
  *
  * Net als bij afmelden is de link zelf alleen een pagina. Mailscanners
  * (Outlook SafeLinks, bedrijfsgateways) openen elke URL in een bericht, dus een
- * bevestiging op een kale GET zou orders afvinken waar niemand naar keek. De
- * knop op de pagina POST naar confirm().
+ * antwoord op een kale GET zou orders afvinken waar niemand naar keek. De knop
+ * op de pagina POST naar answer().
  *
  * De pagina toont het moment zoals het nu staat. Is de ophaling intussen
- * verzet, dan bevestigt de klant het nieuwe moment, en dat is ook wat hij ziet.
+ * verzet, dan gaat het antwoord over het nieuwe moment, en dat is ook wat de
+ * klant ziet.
  */
 class PickupReceiptController extends Controller
 {
@@ -23,30 +27,48 @@ class PickupReceiptController extends Controller
     {
         $order = $this->order($token);
 
-        return view('pickup-receipt', [
-            'lang'  => $this->lang($request, $order),
-            'state' => $this->state($order),
-            'order' => $order,
-            'token' => $token,
-        ]);
+        return $this->page($request, $order, $token, $this->state($order));
     }
 
-    public function confirm(Request $request, string $token)
+    public function answer(Request $request, string $token)
     {
         $order = $this->order($token);
+        $answer = $request->input('antwoord');
 
-        if ($this->state($order) === 'confirm') {
+        if ($this->state($order) === 'confirm'
+            && in_array($answer, [Order::RECEIPT_AKKOORD, Order::RECEIPT_PAST_NIET], true)) {
+            $note = trim((string) $request->input('note')) ?: null;
+
             $order->update([
                 'pickup_receipt_confirmed_at' => now(),
                 'pickup_receipt_moment'       => $order->pickupMoment(),
+                'pickup_receipt_answer'       => $answer,
+                'pickup_receipt_note'         => $answer === Order::RECEIPT_PAST_NIET ? mb_substr((string) $note, 0, 2000) ?: null : null,
             ]);
+
+            $adminEmail = config('desnipperaar.notifications.admin_email');
+            if ($answer === Order::RECEIPT_PAST_NIET && $adminEmail) {
+                try {
+                    Mail::to($adminEmail)->send(new PickupReceiptDeclined($order->fresh()->load('customer')));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
         }
 
+        return $this->page($request, $order, $token, $this->state($order));
+    }
+
+    private function page(Request $request, ?Order $order, string $token, string $state)
+    {
         return view('pickup-receipt', [
-            'lang'  => $this->lang($request, $order),
-            'state' => $order && $order->pickupReceiptConfirmed() ? 'done' : 'invalid',
-            'order' => $order,
-            'token' => $token,
+            'lang'    => $this->lang($request, $order),
+            'state'   => $state,
+            'order'   => $order,
+            'token'   => $token,
+            // Welke knop de klant in de mail aanklikte, zodat de pagina daarmee
+            // opent. Het is alleen een voorkeur, de klant kan nog wisselen.
+            'gekozen' => $request->query('antwoord') === 'nee' ? Order::RECEIPT_PAST_NIET : Order::RECEIPT_AKKOORD,
         ]);
     }
 
@@ -55,10 +77,11 @@ class PickupReceiptController extends Controller
         return Order::where('public_token', $token)->first();
     }
 
+    /** confirm, akkoord, past_niet of invalid. */
     private function state(?Order $order): string
     {
-        if ($order && $order->pickupReceiptConfirmed()) {
-            return 'done';
+        if ($order && ($answer = $order->pickupReceiptAnswer())) {
+            return $answer;
         }
 
         if (! $order || ! $order->pickup_date || $order->isCanceled() || $order->isPickedUp()) {

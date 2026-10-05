@@ -113,6 +113,8 @@ class Order extends Model
         'pickup_plan_invited_at',
         'pickup_receipt_confirmed_at',
         'pickup_receipt_moment',
+        'pickup_receipt_answer',
+        'pickup_receipt_note',
         'review_requested_at',
         'review_requested_via',
         'duration_minutes',
@@ -369,15 +371,21 @@ class Order extends Model
             : null;
     }
 
+    public const RECEIPT_AKKOORD = 'akkoord';
+    public const RECEIPT_PAST_NIET = 'past_niet';
+
     /**
-     * Heeft de klant de ophaalmail voor het huidige moment bevestigd? Een
-     * bevestiging voor een eerder, inmiddels verzet moment telt niet.
+     * Het antwoord van de klant op de knop in de ophaalmail ("past dit
+     * moment?"), 'akkoord' of 'past_niet'. Null als hij nog niet antwoordde, of
+     * als hij antwoordde op een moment dat inmiddels verzet is.
      */
-    public function pickupReceiptConfirmed(): bool
+    public function pickupReceiptAnswer(): ?string
     {
         return $this->pickup_receipt_confirmed_at
             && $this->pickup_receipt_moment !== null
-            && $this->pickup_receipt_moment === $this->pickupMoment();
+            && $this->pickup_receipt_moment === $this->pickupMoment()
+            ? $this->pickup_receipt_answer
+            : null;
     }
 
     public function isQuoteExpired(): bool

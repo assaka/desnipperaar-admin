@@ -37,13 +37,19 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Laat ons even weten dat deze e-mail is aangekomen.</td>
+        <td align="center" colspan="2" style="font-size:15px;font-weight:700;padding-bottom:10px;">Past dit moment?</td>
     </tr>
     <tr>
-        <td align="center">
-            <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl"
-               style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
-                Ontvangen, klopt
+        <td align="right" width="50%" style="padding-right:6px;">
+            <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;antwoord=ja"
+               style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;padding:13px 20px;text-decoration:none;border:2px solid #0A0A0A;">
+                Ja, dit past
+            </a>
+        </td>
+        <td align="left" width="50%" style="padding-left:6px;">
+            <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;antwoord=nee"
+               style="display:inline-block;background:#FFFFFF;color:#0A0A0A;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;padding:13px 20px;text-decoration:none;border:2px solid #0A0A0A;">
+                Past niet
             </a>
         </td>
     </tr>
