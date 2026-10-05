@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\Validator;
  * staat de datum meteen op de order en gaat er een bevestiging uit, in plaats van
  * "wij laten het u weten".
  *
- * De pagina is bewust nog nergens vandaan gelinkt.
+ * Alleen voor het eerste moment. Is er al een datum, dan is de pagina alleen nog
+ * informatie (status 'planned'); verzetten loopt via ons.
  */
 class PickupPlanController extends Controller
 {
@@ -191,11 +192,10 @@ class PickupPlanController extends Controller
      * Een abonnement heeft een eigen ritme met vaste ophaaldagen, daar valt niets
      * los te kiezen.
      *
-     * Een bestaande afspraak is géén reden om te weigeren. Wijzigen ging vroeger
-     * via de herplanpagina, waar de klant een dag voorstelde en wij binnen een
-     * werkdag lieten weten of het kon. Hier weten wij het meteen, dus is dat een
-     * omweg geworden: wie zijn moment wil verzetten kiest gewoon een ander uit
-     * dezelfde lijst. Eén plek, en een antwoord in plaats van een verzoek.
+     * Een bestaande afspraak is sinds oktober 2026 wel een reden om te weigeren.
+     * Klanten verzetten hun ophaling hier zelf, terwijl wij de rit al hadden
+     * ingedeeld. Nu vraagt de ophaalmail of het moment past; past het niet, dan
+     * belt of mailt de klant en verzetten wij.
      *
      * De dag zelf is te laat. Dan staat de bus geladen en is bellen sneller dan
      * een formulier.
@@ -217,6 +217,13 @@ class PickupPlanController extends Controller
         }
         if ($order->pickup_date && $order->pickup_date->toDateString() <= now()->toDateString()) {
             return 'too_late';
+        }
+        // Staat er al een moment, dan valt er online niets meer te kiezen. De
+        // klant zegt via de knop in de ophaalmail of het past (PickupReceipt-
+        // Controller) of belt; verzetten doen wij. Oude links in mails en
+        // WhatsApp-berichten komen hier dus op een informatiepagina uit.
+        if ($order->pickup_date) {
+            return 'planned';
         }
 
         return 'ok';

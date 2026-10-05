@@ -937,7 +937,7 @@ class OrderController extends Controller
             return back()->with('error', 'Deze opdracht is al opgehaald of afgerond.');
         }
         if ($order->pickup_date) {
-            return back()->with('error', 'Er staat al een ophaalmoment gepland. Maak de datum eerst leeg, of stuur de herplanlink.');
+            return back()->with('error', 'Er staat al een ophaalmoment gepland. Verzetten doen wij zelf; maak de datum eerst leeg als de klant opnieuw moet kiezen.');
         }
         if (! $order->customer_email) {
             return back()->with('error', 'Deze order heeft geen e-mailadres.');
