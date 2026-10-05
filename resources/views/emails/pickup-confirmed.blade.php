@@ -49,7 +49,7 @@
         <td align="left" width="50%" style="padding-left:6px;">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;antwoord=nee"
                style="display:inline-block;background:#FFFFFF;color:#0A0A0A;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;padding:13px 20px;text-decoration:none;border:2px solid #0A0A0A;">
-                Komt niet uit
+                Nee, helaas
             </a>
         </td>
     </tr>
