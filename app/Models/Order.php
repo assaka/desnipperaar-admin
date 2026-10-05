@@ -522,6 +522,33 @@ class Order extends Model
     }
 
     /**
+     * Wat de klant klaarzet, voor een order uit een offerte op maat. Die heeft
+     * geen dozen of datadragers ingevuld, alleen de afgesproken regels, dus de
+     * ophaalmails vallen daarop terug. Regels over ophalen, spoed of korting zijn
+     * geen spullen en blijven weg.
+     *
+     * @return array<int, array{qty: string, label: string}>
+     */
+    public function quoteItemsToHaveReady(): array
+    {
+        if ($this->box_count || $this->container_count || array_filter((array) $this->media_items)) {
+            return [];
+        }
+
+        $geenSpullen = '/ophaal|ophalen|pickup|pick-up|collect|enl[eè]vement|recogida|transport|spoed|rush|urgent|toeslag|surcharge|korting|discount|remise|descuento|\bkm\b/i';
+
+        return collect($this->quote_lines ?? [])
+            ->filter(fn ($l) => trim($l['label'] ?? '') !== '' && (float) ($l['qty'] ?? 0) > 0
+                && ! preg_match($geenSpullen, $l['label']))
+            ->map(fn ($l) => [
+                'qty'   => rtrim(rtrim(number_format((float) $l['qty'], 2, ',', ''), '0'), ','),
+                'label' => $l['label'],
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * De prijsopbouw van deze order zoals de orderbevestiging hem noemt, vóór
      * een eventuele kortingscode.
      *

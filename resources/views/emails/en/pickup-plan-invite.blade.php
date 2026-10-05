@@ -50,9 +50,11 @@ You decide when that suits you.</p>
 </div>
 @endif
 
+@php $quoteItems = $order->quoteItemsToHaveReady(); @endphp
+@if ($order->box_count || $order->container_count || array_filter((array) $order->media_items) || $quoteItems)
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">What to have ready</h2>
 @php
-    $mediaLabels = ['hdd' => 'HDD / hard drive', 'ssd' => 'SSD / NVMe', 'usb' => 'USB stick / SD', 'phone' => 'Phone / tablet', 'laptop' => 'Laptop'];
+    $mediaLabels = ['hdd' => 'HDD / hard drive', 'ssd' => 'SSD / NVMe', 'usb' => 'USB stick / SD', 'phone' => 'Phone / tablet', 'laptop' => 'Laptop', 'printer' => 'Printer / copier', 'tape' => 'Backup tape (LTO)'];
 @endphp
 <ul style="font-size:14px;padding-left:20px;">
     @if ($order->box_count) <li>{{ $order->box_count }} {{ $order->box_count == 1 ? 'box' : 'boxes' }} of paper or files</li> @endif
@@ -62,7 +64,11 @@ You decide when that suits you.</p>
             <li>{{ (int) $order->media_items[$key] }}× {{ $label }}</li>
         @endif
     @endforeach
+    @foreach ($quoteItems as $item)
+        <li>{{ $item['qty'] }}× {{ $item['label'] }}</li>
+    @endforeach
 </ul>
+@endif
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
     None of them work? Call <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a> and we will find a slot together.

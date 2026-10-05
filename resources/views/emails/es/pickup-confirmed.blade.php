@@ -96,9 +96,11 @@
 </div>
 @endif
 
+@php $quoteItems = $order->quoteItemsToHaveReady(); @endphp
+@if ($order->box_count || $order->container_count || array_filter((array) $order->media_items) || $quoteItems)
 <h2 style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Qué dejar preparado</h2>
 @php
-    $mediaLabels = ['hdd' => 'HDD / disco duro', 'ssd' => 'SSD / NVMe', 'usb' => 'Memoria USB / SD', 'phone' => 'Teléfono / tableta', 'laptop' => 'Portátil'];
+    $mediaLabels = ['hdd' => 'HDD / disco duro', 'ssd' => 'SSD / NVMe', 'usb' => 'Memoria USB / SD', 'phone' => 'Teléfono / tableta', 'laptop' => 'Portátil', 'printer' => 'Impresora / copiadora', 'tape' => 'Cinta de copia de seguridad (LTO)'];
 @endphp
 <ul style="font-size:14px;padding-left:20px;">
     @if ($order->box_count) <li>{{ $order->box_count }} {{ $order->box_count == 1 ? 'caja' : 'cajas' }} de papel o expedientes</li> @endif
@@ -108,7 +110,11 @@
             <li>{{ (int) $order->media_items[$key] }}× {{ $label }}</li>
         @endif
     @endforeach
+    @foreach ($quoteItems as $item)
+        <li>{{ $item['qty'] }}× {{ $item['label'] }}</li>
+    @endforeach
 </ul>
+@endif
 
 <p>Hasta entonces.<br>El equipo de DeSnipperaar</p>
 @endcomponent
