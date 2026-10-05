@@ -34,6 +34,22 @@
     </tr>
 </table>
 
+@if ($order->public_token)
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
+    <tr>
+        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Laat ons even weten dat deze e-mail is aangekomen.</td>
+    </tr>
+    <tr>
+        <td align="center">
+            <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl"
+               style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
+                Ontvangen, klopt
+            </a>
+        </td>
+    </tr>
+</table>
+@endif
+
 @if (!empty($order->pickup_note))
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;background:#FFF8E1;border-left:4px solid #F5C518;">
     <tr><td style="padding:14px 18px;font-size:14px;line-height:1.5;">

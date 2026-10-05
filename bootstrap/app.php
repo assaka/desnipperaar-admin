@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Same stance for the one-click unsubscribe POST: the mailbox provider
         // sends it on the reader's behalf, with the unguessable token as the
         // only credential and no session cookie of ours.
-        $middleware->validateCsrfTokens(except: ['offerte/*', 'afmelden/*']);
+        $middleware->validateCsrfTokens(except: ['offerte/*', 'afmelden/*', 'ontvangen/*']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

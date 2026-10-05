@@ -43,3 +43,8 @@
 @endphp
 <span class="inline-block px-2 py-1 text-xs font-bold uppercase whitespace-nowrap {{ $statusKleur }}"
       @if ($statusTitel) title="{{ $statusTitel }}" @endif>{{ $statusLabel }}</span>
+{{-- Vinkje: de klant bevestigde dat de ophaalmail voor het huidige moment is
+     aangekomen (knop in die mail, zie PickupReceiptController). --}}
+@if ($order->pickupReceiptConfirmed())
+    <span class="text-green-600 font-bold" title="Ophaalmail ontvangen, bevestigd door klant op {{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }}">&#10003;</span>
+@endif

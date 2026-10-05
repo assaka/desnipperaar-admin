@@ -111,6 +111,8 @@ class Order extends Model
         'pickup_note',
         'pickup_planned_by_customer_at',
         'pickup_plan_invited_at',
+        'pickup_receipt_confirmed_at',
+        'pickup_receipt_moment',
         'review_requested_at',
         'review_requested_via',
         'duration_minutes',
@@ -191,6 +193,7 @@ class Order extends Model
         'geocoded_at' => 'datetime',
         'pickup_planned_by_customer_at' => 'datetime',
         'pickup_plan_invited_at' => 'datetime',
+        'pickup_receipt_confirmed_at' => 'datetime',
         'review_requested_at' => 'datetime',
         'box_count' => 'integer',
         'container_count' => 'integer',
@@ -356,6 +359,25 @@ class Order extends Model
 
         return trim(trim((string) $at['address']) . ', '
             . trim(trim((string) $at['postcode']) . ' ' . trim((string) $at['city'])), ', ');
+    }
+
+    /** Het geplande ophaalmoment als vaste tekst, of null zonder datum. */
+    public function pickupMoment(): ?string
+    {
+        return $this->pickup_date
+            ? trim($this->pickup_date->format('Y-m-d').' '.($this->pickup_window ?? ''))
+            : null;
+    }
+
+    /**
+     * Heeft de klant de ophaalmail voor het huidige moment bevestigd? Een
+     * bevestiging voor een eerder, inmiddels verzet moment telt niet.
+     */
+    public function pickupReceiptConfirmed(): bool
+    {
+        return $this->pickup_receipt_confirmed_at
+            && $this->pickup_receipt_moment !== null
+            && $this->pickup_receipt_moment === $this->pickupMoment();
     }
 
     public function isQuoteExpired(): bool
