@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PickupFinalized;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * De knop "Ontvangen" in de ophaalmail. De klant bevestigt dat de mail met het
@@ -41,6 +43,14 @@ class PickupReceiptController extends Controller
                 'pickup_receipt_moment'       => $order->pickupMoment(),
                 'pickup_receipt_answer'       => Order::RECEIPT_AKKOORD,
             ]);
+
+            // Alleen bij de eerste klik voor dit moment, dus een tweede klik of
+            // een herladen pagina stuurt niet nog een mail.
+            try {
+                Mail::to($order->customer_email)->send(new PickupFinalized($order->fresh()->load('customer')));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return $this->page($request, $order, $token);

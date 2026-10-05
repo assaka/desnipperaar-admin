@@ -7,6 +7,7 @@ use App\Mail\CertificateIssued;
 use App\Mail\InvoiceSent;
 use App\Mail\OrderCreated;
 use App\Mail\PickupConfirmed;
+use App\Mail\PickupFinalized;
 use App\Mail\PickupPlannedByCustomer;
 use App\Mail\ReviewRequested;
 use App\Models\Bon;
@@ -251,6 +252,8 @@ class SendTestOrder extends Command
             $fresh = $order->fresh()->load('customer');
             $rows[] = ['Pickup moved', $order->order_number, $this->mail($email, fn () => new PickupConfirmed($fresh, $sender, $previous))];
             $rows[] = ['Moved (admin notif)', $order->order_number, $this->mail($email, fn () => new PickupPlannedByCustomer($fresh, $previous))];
+            // Wat de klant krijgt na "Ja, dit schikt" in de ophaalmail.
+            $rows[] = ['Pickup finalized', $order->order_number, $this->mail($email, fn () => new PickupFinalized($fresh))];
         }
 
         $this->newLine();
