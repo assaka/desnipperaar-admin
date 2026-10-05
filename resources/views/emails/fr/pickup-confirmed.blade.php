@@ -41,13 +41,13 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Merci de nous confirmer la bonne réception de cet e-mail.</td>
+        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Dites-nous si ce créneau vous convient.</td>
     </tr>
     <tr>
         <td align="center">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=fr&amp;m={{ rawurlencode((string) $order->pickupMoment()) }}"
                style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
-                Bien reçu
+                Oui, ça me convient
             </a>
         </td>
     </tr>
@@ -108,7 +108,7 @@
 </ul>
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
-    Ce créneau ne vous convient pas ? Envoyez-nous un <a href="https://wa.me/31610229965?text={{ rawurlencode("L'enlèvement ".$order->order_number.' ne me convient pas. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> ou appelez le <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
+    Si ce n'est pas possible, contactez-nous via <a href="https://wa.me/31610229965?text={{ rawurlencode("L'enlèvement ".$order->order_number.' ne me convient pas. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> ou au <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
 </p>
 
 <p>À bientôt.<br>L'équipe DeSnipperaar</p>

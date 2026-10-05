@@ -3,36 +3,36 @@
     // volgt mag niets afvinken.
     $copy = [
         'nl' => [
-            'confirm' => ['t' => 'Ophaalmail ontvangen?', 'm' => 'Bevestig hieronder dat u onze e-mail met het ophaalmoment heeft ontvangen.'],
+            'confirm' => ['t' => 'Schikt dit ophaalmoment?', 'm' => 'Laat ons even weten of dit schikt.'],
             'done'    => ['t' => 'Bedankt', 'm' => 'Fijn, dan zien wij u op het afgesproken moment.'],
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Deze link is niet (meer) geldig. Vragen? Stuur ons een WhatsApp of bel 06-10229965.'],
-            'moment' => 'Ophaalmoment', 'knop' => 'Ontvangen', 'site' => 'Naar desnipperaar.nl',
+            'moment' => 'Ophaalmoment', 'knop' => 'Ja, dit schikt', 'site' => 'Naar desnipperaar.nl',
             'gewijzigd' => 'Let op, uw ophaalmoment is intussen gewijzigd. Dit is het actuele moment.',
-            'nietUit' => 'Komt dit moment niet uit?', 'wa' => 'Stuur ons een WhatsApp', 'waTekst' => 'Ophaalmoment :nr komt niet uit. ',
+            'nietUit' => 'Mocht het niet uitkomen, neem dan even contact met ons op via', 'wa' => 'WhatsApp', 'bel' => 'of 06-10229965.', 'waTekst' => 'Ophaalmoment :nr komt niet uit. ',
         ],
         'en' => [
-            'confirm' => ['t' => 'Pickup e-mail received?', 'm' => 'Please confirm below that you received our e-mail with the pickup date.'],
+            'confirm' => ['t' => 'Does this pickup slot suit you?', 'm' => 'Please let us know whether this suits you.'],
             'done'    => ['t' => 'Thank you', 'm' => 'Great, see you at the agreed time.'],
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'This link is not (or no longer) valid. Questions? Send us a WhatsApp or call +31 6 10229965.'],
-            'moment' => 'Pickup', 'knop' => 'Received', 'site' => 'Go to desnipperaar.nl',
+            'moment' => 'Pickup', 'knop' => 'Yes, this suits me', 'site' => 'Go to desnipperaar.nl',
             'gewijzigd' => 'Please note, your pickup has been rescheduled since. This is the current slot.',
-            'nietUit' => 'Doesn\'t this slot suit you?', 'wa' => 'Send us a WhatsApp', 'waTekst' => 'Pickup :nr does not suit me. ',
+            'nietUit' => 'If it doesn\'t suit you, please get in touch via', 'wa' => 'WhatsApp', 'bel' => 'or +31 6 10229965.', 'waTekst' => 'Pickup :nr does not suit me. ',
         ],
         'fr' => [
-            'confirm' => ['t' => 'E-mail d\'enlèvement reçu ?', 'm' => 'Confirmez ci-dessous que vous avez bien reçu notre e-mail avec la date d\'enlèvement.'],
+            'confirm' => ['t' => 'Ce créneau vous convient-il ?', 'm' => 'Dites-nous si ce créneau vous convient.'],
             'done'    => ['t' => 'Merci', 'm' => 'Parfait, à bientôt au moment convenu.'],
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Ce lien n\'est pas (ou plus) valide. Des questions ? Envoyez-nous un WhatsApp ou appelez le +31 6 10229965.'],
-            'moment' => 'Enlèvement', 'knop' => 'Bien reçu', 'site' => 'Aller sur desnipperaar.nl',
+            'moment' => 'Enlèvement', 'knop' => 'Oui, ça me convient', 'site' => 'Aller sur desnipperaar.nl',
             'gewijzigd' => 'Attention, votre enlèvement a été modifié entre-temps. Voici le créneau actuel.',
-            'nietUit' => 'Ce créneau ne vous convient pas ?', 'wa' => 'Envoyez-nous un WhatsApp', 'waTekst' => 'L\'enlèvement :nr ne me convient pas. ',
+            'nietUit' => 'Si ce n\'est pas possible, contactez-nous via', 'wa' => 'WhatsApp', 'bel' => 'ou au +31 6 10229965.', 'waTekst' => 'L\'enlèvement :nr ne me convient pas. ',
         ],
         'es' => [
-            'confirm' => ['t' => '¿Ha recibido el correo de recogida?', 'm' => 'Confirme abajo que ha recibido nuestro correo con la fecha de recogida.'],
+            'confirm' => ['t' => '¿Le viene bien este momento?', 'm' => 'Indíquenos si le viene bien.'],
             'done'    => ['t' => 'Gracias', 'm' => 'Perfecto, hasta el momento acordado.'],
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Este enlace no es (o ya no es) válido. ¿Preguntas? Envíenos un WhatsApp o llame al +31 6 10229965.'],
-            'moment' => 'Recogida', 'knop' => 'Recibido', 'site' => 'Ir a desnipperaar.nl',
+            'moment' => 'Recogida', 'knop' => 'Sí, me viene bien', 'site' => 'Ir a desnipperaar.nl',
             'gewijzigd' => 'Atención, su recogida ha cambiado mientras tanto. Este es el momento actual.',
-            'nietUit' => '¿No le viene bien este momento?', 'wa' => 'Envíenos un WhatsApp', 'waTekst' => 'La recogida :nr no me viene bien. ',
+            'nietUit' => 'Si no le viene bien, contáctenos por', 'wa' => 'WhatsApp', 'bel' => 'o al +31 6 10229965.', 'waTekst' => 'La recogida :nr no me viene bien. ',
         ],
     ];
     $all = $copy[$lang] ?? $copy['nl'];
@@ -85,7 +85,7 @@
             <a class="btn" href="https://desnipperaar.nl">{{ $all['site'] }}</a>
         @endif
         @if ($toonMoment)
-            <p class="wa">{{ $all['nietUit'] }} <a href="{{ $waUrl }}">{{ $all['wa'] }}</a></p>
+            <p class="wa">{{ $all['nietUit'] }} <a href="{{ $waUrl }}">{{ $all['wa'] }}</a> {{ $all['bel'] }}</p>
         @endif
     </div>
 </body>

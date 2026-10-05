@@ -37,13 +37,13 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Laat ons even weten dat u deze e-mail heeft ontvangen.</td>
+        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Laat ons even weten of dit schikt.</td>
     </tr>
     <tr>
         <td align="center">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;m={{ rawurlencode((string) $order->pickupMoment()) }}"
                style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
-                Ontvangen
+                Ja, dit schikt
             </a>
         </td>
     </tr>
@@ -104,7 +104,7 @@
 </ul>
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
-    Komt dit moment niet uit? Stuur ons een <a href="https://wa.me/31610229965?text={{ rawurlencode('Ophaalmoment '.$order->order_number.' komt niet uit. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> of bel <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
+    Mocht het niet uitkomen, neem dan even contact met ons op via <a href="https://wa.me/31610229965?text={{ rawurlencode('Ophaalmoment '.$order->order_number.' komt niet uit. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> of <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
 </p>
 
 <p>Tot dan.<br>Team DeSnipperaar</p>

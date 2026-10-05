@@ -41,13 +41,13 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Confírmenos que ha recibido este correo.</td>
+        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Indíquenos si le viene bien.</td>
     </tr>
     <tr>
         <td align="center">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=es&amp;m={{ rawurlencode((string) $order->pickupMoment()) }}"
                style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
-                Recibido
+                Sí, me viene bien
             </a>
         </td>
     </tr>
@@ -108,7 +108,7 @@
 </ul>
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
-    ¿No le viene bien este momento? Envíenos un <a href="https://wa.me/31610229965?text={{ rawurlencode('La recogida '.$order->order_number.' no me viene bien. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> o llame al <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
+    Si no le viene bien, contáctenos por <a href="https://wa.me/31610229965?text={{ rawurlencode('La recogida '.$order->order_number.' no me viene bien. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> o al <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
 </p>
 
 <p>Hasta entonces.<br>El equipo de DeSnipperaar</p>

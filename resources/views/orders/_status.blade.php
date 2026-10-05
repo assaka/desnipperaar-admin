@@ -46,5 +46,5 @@
 {{-- Vinkje: de klant bevestigde met de knop in de ophaalmail dat die mail voor
      het huidige moment is aangekomen (zie PickupReceiptController). --}}
 @if ($order->pickupReceiptAnswer())
-    <span class="text-green-600 font-bold" title="Ophaalmail ontvangen, bevestigd door klant op {{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }}">&#10003;</span>
+    <span class="text-green-600 font-bold" title="Klant bevestigde dat het ophaalmoment schikt, op {{ $order->pickup_receipt_confirmed_at->format('d-m-Y H:i') }}">&#10003;</span>
 @endif

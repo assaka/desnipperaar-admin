@@ -41,13 +41,13 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Please let us know you received this e-mail.</td>
+        <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Please let us know whether this suits you.</td>
     </tr>
     <tr>
         <td align="center">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=en&amp;m={{ rawurlencode((string) $order->pickupMoment()) }}"
                style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:14px;padding:14px 28px;text-decoration:none;">
-                Received
+                Yes, this suits me
             </a>
         </td>
     </tr>
@@ -108,7 +108,7 @@
 </ul>
 
 <p style="font-size:13px;color:#555;margin-top:20px;">
-    Doesn't this slot suit you? Send us a <a href="https://wa.me/31610229965?text={{ rawurlencode('Pickup '.$order->order_number.' does not suit me. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> or call <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
+    If it doesn't suit you, please get in touch via <a href="https://wa.me/31610229965?text={{ rawurlencode('Pickup '.$order->order_number.' does not suit me. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> or <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
 </p>
 
 <p>See you then.<br>Team DeSnipperaar</p>
