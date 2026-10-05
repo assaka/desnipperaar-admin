@@ -3,12 +3,12 @@
     // volgt mag niets afvinken. Na een antwoord toont de pagina dat antwoord.
     $copy = [
         'nl' => [
-            'confirm'   => ['t' => 'Past dit ophaalmoment?', 'm' => 'Laat ons weten of dit moment u uitkomt.'],
-            'akkoord'   => ['t' => 'Bedankt', 'm' => 'Fijn dat het past. Tot dan.'],
+            'confirm'   => ['t' => 'Komt dit ophaalmoment u uit?', 'm' => 'Laat ons weten of dit moment u schikt.'],
+            'akkoord'   => ['t' => 'Bedankt', 'm' => 'Fijn, dan zien wij u op het afgesproken moment.'],
             'past_niet' => ['t' => 'Bedankt voor het laten weten', 'm' => 'Wij nemen zo snel mogelijk contact met u op om een ander moment af te spreken. Liever direct bellen? 06-10229965.'],
             'invalid'   => ['t' => 'DeSnipperaar', 'm' => 'Deze link is niet (meer) geldig. Vragen? Bel 06-10229965.'],
-            'moment' => 'Ophaalmoment', 'ja' => 'Ja, dit past', 'nee_open' => 'Past dit moment niet?',
-            'nee_label' => 'Welke dagen of tijden komen beter uit? (optioneel)', 'nee' => 'Verstuur: past niet', 'site' => 'Naar desnipperaar.nl',
+            'moment' => 'Ophaalmoment', 'ja' => 'Ja, komt goed uit', 'nee_open' => 'Komt dit moment niet uit?',
+            'nee_label' => 'Welke dagen of tijden komen beter uit? (optioneel)', 'nee' => 'Verstuur', 'site' => 'Naar desnipperaar.nl',
         ],
         'en' => [
             'confirm'   => ['t' => 'Does this pickup slot suit you?', 'm' => 'Let us know whether this slot works for you.'],

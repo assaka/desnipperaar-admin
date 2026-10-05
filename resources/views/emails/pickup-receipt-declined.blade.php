@@ -1,5 +1,5 @@
-@component('emails._layout', ['title' => 'Ophaalmoment past niet '.$order->order_number])
-<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Ophaalmoment past de klant niet.</h1>
+@component('emails._layout', ['title' => 'Ophaalmoment komt niet uit '.$order->order_number])
+<h1 style="font-size:22px;font-weight:900;margin:0 0 12px;">Ophaalmoment komt de klant niet uit.</h1>
 
 <p>Klant <strong>{{ $order->customer_name }}</strong>@if ($order->customer?->company) ({{ $order->customer->company }})@endif
 gaf in de ophaalmail aan dat het moment voor opdracht

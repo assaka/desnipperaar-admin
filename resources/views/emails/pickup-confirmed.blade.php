@@ -37,19 +37,19 @@
 @if ($order->public_token)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
     <tr>
-        <td align="center" colspan="2" style="font-size:15px;font-weight:700;padding-bottom:10px;">Past dit moment?</td>
+        <td align="center" colspan="2" style="font-size:15px;font-weight:700;padding-bottom:10px;">Komt dit moment u uit?</td>
     </tr>
     <tr>
         <td align="right" width="50%" style="padding-right:6px;">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;antwoord=ja"
                style="display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;padding:13px 20px;text-decoration:none;border:2px solid #0A0A0A;">
-                Ja, dit past
+                Ja, komt goed uit
             </a>
         </td>
         <td align="left" width="50%" style="padding-left:6px;">
             <a href="{{ config('desnipperaar.public_url') }}/ontvangen/{{ $order->public_token }}?lang=nl&amp;antwoord=nee"
                style="display:inline-block;background:#FFFFFF;color:#0A0A0A;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;font-size:13px;padding:13px 20px;text-decoration:none;border:2px solid #0A0A0A;">
-                Past niet
+                Komt niet uit
             </a>
         </td>
     </tr>

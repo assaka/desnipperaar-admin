@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Interne melding: de klant klikte in de ophaalmail op "past niet". Het moment
+ * Interne melding: de klant klikte in de ophaalmail op "komt niet uit". Het moment
  * staat nog op de order; wij bellen of mailen de klant en plannen opnieuw.
  */
 class PickupReceiptDeclined extends Mailable
@@ -22,7 +22,7 @@ class PickupReceiptDeclined extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Ophaalmoment past niet {$this->order->order_number} — {$this->order->customer_name}",
+            subject: "Ophaalmoment komt niet uit {$this->order->order_number} — {$this->order->customer_name}",
         );
     }
 
