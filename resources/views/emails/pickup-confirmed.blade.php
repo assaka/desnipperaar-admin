@@ -35,7 +35,7 @@
 </table>
 
 @if ($order->public_token)
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 10px;">
     <tr>
         <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Laat ons even weten of dit schikt.</td>
     </tr>
@@ -49,6 +49,9 @@
     </tr>
 </table>
 @endif
+<p style="font-size:13px;color:#555;text-align:center;margin:0 0 20px;">
+    Mocht het niet uitkomen, neem dan even contact met ons op via <a href="https://wa.me/31610229965?text={{ rawurlencode('Ophaalmoment '.$order->order_number.' komt niet uit. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> of <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
+</p>
 
 @if (!empty($order->pickup_note))
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;background:#FFF8E1;border-left:4px solid #F5C518;">
@@ -102,10 +105,6 @@
         @endif
     @endforeach
 </ul>
-
-<p style="font-size:13px;color:#555;margin-top:20px;">
-    Mocht het niet uitkomen, neem dan even contact met ons op via <a href="https://wa.me/31610229965?text={{ rawurlencode('Ophaalmoment '.$order->order_number.' komt niet uit. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> of <a href="tel:+31610229965" style="color:#0A0A0A;">06-10229965</a>.
-</p>
 
 <p>Tot dan.<br>Team DeSnipperaar</p>
 @endcomponent

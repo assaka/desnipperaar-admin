@@ -8,7 +8,7 @@
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Deze link is niet (meer) geldig. Vragen? Stuur ons een WhatsApp of bel 06-10229965.'],
             'moment' => 'Ophaalmoment', 'knop' => 'Ja, dit schikt', 'site' => 'Naar desnipperaar.nl',
             'gewijzigd' => 'Let op, uw ophaalmoment is intussen gewijzigd. Dit is het actuele moment.',
-            'nietUit' => 'Mocht het niet uitkomen, neem dan even contact met ons op via', 'wa' => 'WhatsApp', 'bel' => 'of 06-10229965.', 'waTekst' => 'Ophaalmoment :nr komt niet uit. ',
+            'nietUit' => 'Mocht het niet uitkomen, neem dan even contact met ons op via', 'wa' => 'WhatsApp', 'bel' => 'of 06-10229965.', 'nietUitDone' => 'Komt het toch niet uit? Neem dan binnen 24 uur contact met ons op via', 'waTekst' => 'Ophaalmoment :nr komt niet uit. ',
         ],
         'en' => [
             'confirm' => ['t' => 'Does this pickup slot suit you?', 'm' => 'Please let us know whether this suits you.'],
@@ -16,7 +16,7 @@
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'This link is not (or no longer) valid. Questions? Send us a WhatsApp or call +31 6 10229965.'],
             'moment' => 'Pickup', 'knop' => 'Yes, this suits me', 'site' => 'Go to desnipperaar.nl',
             'gewijzigd' => 'Please note, your pickup has been rescheduled since. This is the current slot.',
-            'nietUit' => 'If it doesn\'t suit you, please get in touch via', 'wa' => 'WhatsApp', 'bel' => 'or +31 6 10229965.', 'waTekst' => 'Pickup :nr does not suit me. ',
+            'nietUit' => 'If it doesn\'t suit you, please get in touch via', 'wa' => 'WhatsApp', 'bel' => 'or +31 6 10229965.', 'nietUitDone' => 'Does it not suit you after all? Then please contact us within 24 hours via', 'waTekst' => 'Pickup :nr does not suit me. ',
         ],
         'fr' => [
             'confirm' => ['t' => 'Ce créneau vous convient-il ?', 'm' => 'Dites-nous si ce créneau vous convient.'],
@@ -24,7 +24,7 @@
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Ce lien n\'est pas (ou plus) valide. Des questions ? Envoyez-nous un WhatsApp ou appelez le +31 6 10229965.'],
             'moment' => 'Enlèvement', 'knop' => 'Oui, ça me convient', 'site' => 'Aller sur desnipperaar.nl',
             'gewijzigd' => 'Attention, votre enlèvement a été modifié entre-temps. Voici le créneau actuel.',
-            'nietUit' => 'Si ce n\'est pas possible, contactez-nous via', 'wa' => 'WhatsApp', 'bel' => 'ou au +31 6 10229965.', 'waTekst' => 'L\'enlèvement :nr ne me convient pas. ',
+            'nietUit' => 'Si ce n\'est pas possible, contactez-nous via', 'wa' => 'WhatsApp', 'bel' => 'ou au +31 6 10229965.', 'nietUitDone' => 'Finalement, cela ne vous convient pas ? Contactez-nous dans les 24 heures via', 'waTekst' => 'L\'enlèvement :nr ne me convient pas. ',
         ],
         'es' => [
             'confirm' => ['t' => '¿Le viene bien este momento?', 'm' => 'Indíquenos si le viene bien.'],
@@ -32,7 +32,7 @@
             'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Este enlace no es (o ya no es) válido. ¿Preguntas? Envíenos un WhatsApp o llame al +31 6 10229965.'],
             'moment' => 'Recogida', 'knop' => 'Sí, me viene bien', 'site' => 'Ir a desnipperaar.nl',
             'gewijzigd' => 'Atención, su recogida ha cambiado mientras tanto. Este es el momento actual.',
-            'nietUit' => 'Si no le viene bien, contáctenos por', 'wa' => 'WhatsApp', 'bel' => 'o al +31 6 10229965.', 'waTekst' => 'La recogida :nr no me viene bien. ',
+            'nietUit' => 'Si no le viene bien, contáctenos por', 'wa' => 'WhatsApp', 'bel' => 'o al +31 6 10229965.', 'nietUitDone' => '¿Al final no le viene bien? Contáctenos en un plazo de 24 horas por', 'waTekst' => 'La recogida :nr no me viene bien. ',
         ],
     ];
     $all = $copy[$lang] ?? $copy['nl'];
@@ -85,7 +85,7 @@
             <a class="btn" href="https://desnipperaar.nl">{{ $all['site'] }}</a>
         @endif
         @if ($toonMoment)
-            <p class="wa">{{ $all['nietUit'] }} <a href="{{ $waUrl }}">{{ $all['wa'] }}</a> {{ $all['bel'] }}</p>
+            <p class="wa">{{ $state === 'done' ? $all['nietUitDone'] : $all['nietUit'] }} <a href="{{ $waUrl }}">{{ $all['wa'] }}</a> {{ $all['bel'] }}</p>
         @endif
     </div>
 </body>

@@ -39,7 +39,7 @@
 </table>
 
 @if ($order->public_token)
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 10px;">
     <tr>
         <td align="center" style="font-size:13px;color:#555;padding-bottom:10px;">Please let us know whether this suits you.</td>
     </tr>
@@ -53,6 +53,9 @@
     </tr>
 </table>
 @endif
+<p style="font-size:13px;color:#555;text-align:center;margin:0 0 20px;">
+    If it doesn't suit you, please get in touch via <a href="https://wa.me/31610229965?text={{ rawurlencode('Pickup '.$order->order_number.' does not suit me. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> or <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
+</p>
 
 @if (!empty($order->pickup_note))
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;background:#FFF8E1;border-left:4px solid #F5C518;">
@@ -106,10 +109,6 @@
         @endif
     @endforeach
 </ul>
-
-<p style="font-size:13px;color:#555;margin-top:20px;">
-    If it doesn't suit you, please get in touch via <a href="https://wa.me/31610229965?text={{ rawurlencode('Pickup '.$order->order_number.' does not suit me. ') }}" style="color:#0A0A0A;font-weight:700;">WhatsApp</a> or <a href="tel:+31610229965" style="color:#0A0A0A;">+31 6 10229965</a>.
-</p>
 
 <p>See you then.<br>Team DeSnipperaar</p>
 @endcomponent
