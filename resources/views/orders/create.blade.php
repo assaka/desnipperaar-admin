@@ -132,22 +132,16 @@
                         <option value="eigen">Eigen tijdvak…</option>
                     </select>
 
-                    {{-- Begin- en einduur voor de afspraak die niet op een heel uur
-                         past. De server maakt er dezelfde HH:00-HH:00 van als een
+                    {{-- Begin- en eindtijd voor de afspraak die niet op een heel uur
+                         past, ook 09:30. De server maakt er dezelfde HH:MM-HH:MM van als een
                          vast uurblok, dus verderop is er maar één soort waarde. --}}
                     <div x-show="eigen" x-cloak class="mt-2 flex items-center gap-2 text-sm">
                         <label for="pickup_window_start" class="text-xs uppercase text-gray-500">van</label>
-                        <select id="pickup_window_start" name="pickup_window_start" class="border p-2" :disabled="!eigen">
-                            @foreach (range(6, 22) as $hr)
-                                <option value="{{ $hr }}" @selected($hr === 9)>{{ sprintf('%02d:00', $hr) }}</option>
-                            @endforeach
-                        </select>
+                        <input type="time" id="pickup_window_start" name="pickup_window_start" step="300"
+                               value="09:00" class="border p-2" :disabled="!eigen" :required="eigen">
                         <label for="pickup_window_end" class="text-xs uppercase text-gray-500">tot</label>
-                        <select id="pickup_window_end" name="pickup_window_end" class="border p-2" :disabled="!eigen">
-                            @foreach (range(7, 23) as $hr)
-                                <option value="{{ $hr }}" @selected($hr === 13)>{{ sprintf('%02d:00', $hr) }}</option>
-                            @endforeach
-                        </select>
+                        <input type="time" id="pickup_window_end" name="pickup_window_end" step="300"
+                               value="13:00" class="border p-2" :disabled="!eigen" :required="eigen">
                     </div>
                 </div>
                 <div>

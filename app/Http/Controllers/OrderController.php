@@ -568,14 +568,17 @@ class OrderController extends Controller
 
     /**
      * Een eigen tijdvak komt in drie velden binnen: de keuze "eigen" in
-     * pickup_window, plus een begin- en een einduur. Achter dit punt kent
-     * pickup_window maar één klokvorm, "HH:00-HH:00", dus zetten wij de drie
+     * pickup_window, plus een begin- en een eindtijd. Achter dit punt kent
+     * pickup_window maar één klokvorm, "HH:MM-HH:MM", dus zetten wij de drie
      * velden hier om tot die ene waarde voordat de regex ernaar kijkt.
      *
+     * De velden zijn tijdinvoer, zodat ook 09:30 of 13:15 kan. De browser
+     * stuurt "09:30", maar 9.30 of 9 met de hand nemen wij ook aan.
+     *
      * Zo staat er in de database, op de bon en in de mail precies één notatie,
-     * of iemand nu een vast uurblok koos of zelf 09:00 tot 13:00 afsprak. De
+     * of iemand nu een vast uurblok koos of zelf 09:30 tot 13:00 afsprak. De
      * planning hoeft er dus ook niets voor te leren: occupancy() leest het
-     * bereik dat er staat en zet alle uren ertussen op bezet.
+     * bereik dat er staat en zet alle blokken ertussen op bezet.
      */
     private function mergeCustomWindow(Request $request): void
     {
@@ -583,20 +586,37 @@ class OrderController extends Controller
             return;
         }
 
-        $start = $request->integer('pickup_window_start');
-        $end   = $request->integer('pickup_window_end');
+        $start = $this->minutesOfDay($request->input('pickup_window_start'));
+        $end   = $this->minutesOfDay($request->input('pickup_window_end'));
 
         // Het einde moet later zijn dan het begin, anders staat er een tijdvak
         // van nul of van min zoveel uur in de mail naar de klant.
-        if ($start < 0 || $start > 22 || $end < 1 || $end > 23 || $end <= $start) {
+        if ($start === null || $end === null || $end <= $start) {
             throw ValidationException::withMessages([
-                'pickup_window' => 'Een eigen tijdvak loopt van een begin- naar een later einduur, binnen 00:00 en 23:00.',
+                'pickup_window' => 'Een eigen tijdvak loopt van een begin- naar een latere eindtijd, binnen 00:00 en 23:59.',
             ]);
         }
 
         $request->merge([
-            'pickup_window' => sprintf('%02d:00-%02d:00', $start, $end),
+            'pickup_window' => sprintf('%02d:%02d-%02d:%02d',
+                intdiv($start, 60), $start % 60, intdiv($end, 60), $end % 60),
         ]);
+    }
+
+    /**
+     * "09:30", "9.30", "9:30" of "9" als minuten na middernacht, of null als
+     * het geen tijd op één dag is.
+     */
+    private function minutesOfDay(mixed $value): ?int
+    {
+        if (! preg_match('/^\s*(\d{1,2})(?:[:.](\d{2}))?\s*$/', (string) $value, $m)) {
+            return null;
+        }
+
+        $h = (int) $m[1];
+        $i = (int) ($m[2] ?? 0);
+
+        return ($h <= 23 && $i <= 59) ? $h * 60 + $i : null;
     }
 
     public function store(Request $request)
@@ -607,7 +627,7 @@ class OrderController extends Controller
             'box_count'      => 'nullable|integer|min:0',
             'container_count'=> 'nullable|integer|min:0',
             'pickup_date'    => 'nullable|date|after_or_equal:today',
-            'pickup_window'  => ['nullable', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
+            'pickup_window'  => ['nullable', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)$/'],
             'first_box_free' => 'nullable|boolean',
             'notes'          => 'nullable|string|max:5000',
             'driver_id'      => 'nullable|exists:drivers,id',
@@ -820,7 +840,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'driver_id'        => 'required|exists:drivers,id',
             'pickup_date'      => 'required|date|after_or_equal:today',
-            'pickup_window'    => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
+            'pickup_window'    => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)$/'],
             'duration_minutes' => 'nullable|integer|min:5|max:480',
             'pickup_note'      => 'nullable|string|max:2000',
         ]);

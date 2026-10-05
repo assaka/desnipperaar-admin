@@ -22,7 +22,7 @@
             <div style="font-family:'Courier New',monospace;font-size:10pt;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:6px;">Nous serons à votre porte le</div>
             <div style="font-weight:900;font-size:20pt;line-height:1.1;">{{ $order->pickup_date->locale('fr')->translatedFormat('l d F Y') }}</div>
             <div style="margin-top:4px;font-size:14px;">
-                @if (preg_match('/^\d{2}:00-\d{2}:00$/', (string) $order->pickup_window))
+                @if (preg_match('/^\d{2}:\d{2}-\d{2}:\d{2}$/', (string) $order->pickup_window))
                     Créneau horaire : <strong>{{ str_replace('-', ' – ', $order->pickup_window) }}</strong>
                 @else
                     Moment de la journée : <strong>{{ $winLabel }}</strong>

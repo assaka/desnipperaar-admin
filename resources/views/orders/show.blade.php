@@ -531,7 +531,7 @@
 
     @php
         // Een eigen tijdvak is elk venster met een klok erin dat niet in de
-        // vaste lijst staat, zoals 09:00-13:00. Staat dat op de order, dan moet
+        // vaste lijst staat, zoals 09:30-13:00. Staat dat op de order, dan moet
         // het formulier opengaan met dat tijdvak ingevuld en niet stilletjes
         // terugvallen op "flexibel".
         $vasteUurblokken = array_map(fn ($hr) => sprintf('%02d:00-%02d:00', $hr, $hr + 1), range(8, 19));
@@ -539,9 +539,9 @@
         $eigenTijdvak    = $prefillWindow
             && ! in_array($prefillWindow, ['flexibel', 'ochtend', 'middag', 'avond'], true)
             && ! in_array($prefillWindow, $vasteUurblokken, true)
-            && preg_match('/^\d{2}:00-\d{2}:00$/', $prefillWindow);
-        $eigenStart = $eigenTijdvak ? (int) substr($prefillWindow, 0, 2) : 9;
-        $eigenEind  = $eigenTijdvak ? (int) substr($prefillWindow, 6, 2) : 13;
+            && preg_match('/^\d{2}:\d{2}-\d{2}:\d{2}$/', $prefillWindow);
+        $eigenStart = $eigenTijdvak ? substr($prefillWindow, 0, 5) : '09:00';
+        $eigenEind  = $eigenTijdvak ? substr($prefillWindow, 6, 5) : '13:00';
     @endphp
 
     <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4"
@@ -662,24 +662,18 @@
                 </div>
 
                 {{-- Een eigen tijdvak, voor de afspraak die niet op een heel uur
-                     past: "tussen negen en een uur". De server plakt begin en eind aan
-                     elkaar tot dezelfde HH:00-HH:00 die een vast uurblok ook
+                     past: "tussen half tien en een uur". De server plakt begin en eind aan
+                     elkaar tot dezelfde HH:MM-HH:MM die een vast uurblok ook
                      oplevert, dus alles erachter ziet maar één soort waarde. --}}
                 <div x-show="eigen" x-cloak class="col-span-3 border border-gray-300 bg-white p-3">
                     <div class="text-sm font-bold">Eigen tijdvak</div>
                     <div class="mt-2 flex items-center gap-2 text-sm">
                         <label for="pickup_window_start" class="text-xs uppercase text-gray-500">van</label>
-                        <select id="pickup_window_start" name="pickup_window_start" class="border p-2" :disabled="!eigen">
-                            @foreach (range(6, 22) as $hr)
-                                <option value="{{ $hr }}" @selected($eigenStart === $hr)>{{ sprintf('%02d:00', $hr) }}</option>
-                            @endforeach
-                        </select>
+                        <input type="time" id="pickup_window_start" name="pickup_window_start" step="300"
+                               value="{{ $eigenStart }}" class="border p-2" :disabled="!eigen" :required="eigen">
                         <label for="pickup_window_end" class="text-xs uppercase text-gray-500">tot</label>
-                        <select id="pickup_window_end" name="pickup_window_end" class="border p-2" :disabled="!eigen">
-                            @foreach (range(7, 23) as $hr)
-                                <option value="{{ $hr }}" @selected($eigenEind === $hr)>{{ sprintf('%02d:00', $hr) }}</option>
-                            @endforeach
-                        </select>
+                        <input type="time" id="pickup_window_end" name="pickup_window_end" step="300"
+                               value="{{ $eigenEind }}" class="border p-2" :disabled="!eigen" :required="eigen">
                     </div>
                     <p class="mt-2 text-xs text-gray-600">
                         Het einde moet later liggen dan het begin. De klant ziet dit tijdvak terug in de bevestigingsmail.

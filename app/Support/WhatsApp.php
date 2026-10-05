@@ -231,14 +231,14 @@ class WhatsApp
     }
 
     /**
-     * Een tijdvak als 09:00-11:00 blijft staan zoals het is. Een dagdeel krijgt
+     * Een tijdvak als 09:30-11:00 blijft staan zoals het is. Een dagdeel krijgt
      * de vertaling erbij, want "ochtend" zegt een Franse klant niets.
      */
     private static function windowLabel(Order $order, string $locale): string
     {
         $window = $order->pickup_window ?: 'flexibel';
 
-        if (preg_match('/^\d{2}:00-\d{2}:00$/', $window)) {
+        if (preg_match('/^\d{2}:\d{2}-\d{2}:\d{2}$/', $window)) {
             return $window;
         }
 

@@ -146,7 +146,7 @@ class PlanningController extends Controller
             'kind'        => 'required|in:order,bon',
             'id'          => 'required|integer',
             'pickup_date' => 'required|date|after_or_equal:today',
-            'window'      => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):00-([01]\d|2[0-3]):00)$/'],
+            'window'      => ['required', 'regex:/^(flexibel|ochtend|middag|avond|([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d)$/'],
         ]);
 
         // Een abonnementsrit is een bon: verslepen werkt de bon bij, niet een

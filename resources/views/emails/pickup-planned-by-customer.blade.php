@@ -13,7 +13,7 @@ Het moment kwam uit onze eigen lijst met beschikbare momenten, dus er is ruimte 
         {{ $order->pickup_date?->locale('nl')->translatedFormat('l d F Y') ?? '—' }}
     </div>
     <div style="font-size:13px;margin-top:2px;">
-        @if (preg_match('/^\d{2}:00-\d{2}:00$/', (string) $order->pickup_window))
+        @if (preg_match('/^\d{2}:\d{2}-\d{2}:\d{2}$/', (string) $order->pickup_window))
             {{ str_replace('-', ' – ', $order->pickup_window) }}
         @else
             {{ ucfirst($order->pickup_window ?? 'flexibel') }}
