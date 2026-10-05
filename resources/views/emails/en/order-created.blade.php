@@ -16,9 +16,10 @@
 
 <p>Dear {{ explode(' ', $order->customer_name)[0] }},</p>
 
-<p>This is the confirmation of your order. Your order number is
-<strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;">{{ $order->order_number }}</strong>.
-We will contact you within one business day to confirm the pickup.</p>
+<p>This is the confirmation of your order. We will contact you within one business day to confirm the pickup.</p>
+
+<p>Your order number:<br>
+<strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;white-space:nowrap;display:inline-block;margin-top:4px;">{{ $order->order_number }}</strong></p>
 
 @php $ophaalAdres = $order->pickupLocation(); @endphp
 {{-- Twee adressen naast elkaar, elk met een eigen kop, zodat in een oogopslag
