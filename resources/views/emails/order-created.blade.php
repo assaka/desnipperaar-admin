@@ -3,10 +3,12 @@
 
 <p>Beste {{ explode(' ', $order->customer_name)[0] }},</p>
 
-<p>Hierbij de bevestiging van uw opdracht. We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
+<p>Hierbij de bevestiging van uw opdracht.</p>
 
 <p>Uw ordernummer:<br>
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;white-space:nowrap;display:inline-block;margin-top:4px;">{{ $order->order_number }}</strong></p>
+
+<p>We nemen binnen één werkdag contact met u op om de ophaling te bevestigen.</p>
 
 @php $ophaalAdres = $order->pickupLocation(); @endphp
 {{-- Twee adressen naast elkaar, elk met een eigen kop, zodat in een oogopslag

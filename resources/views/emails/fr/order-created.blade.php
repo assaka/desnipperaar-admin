@@ -16,10 +16,12 @@
 
 <p>Bonjour {{ explode(' ', $order->customer_name)[0] }},</p>
 
-<p>Ceci est la confirmation de votre commande. Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
+<p>Ceci est la confirmation de votre commande.</p>
 
 <p>Votre numéro de commande :<br>
 <strong style="font-family:'Courier New',monospace;background:#F5C518;padding:2px 6px;white-space:nowrap;display:inline-block;margin-top:4px;">{{ $order->order_number }}</strong></p>
+
+<p>Nous vous contacterons sous un jour ouvré pour confirmer l'enlèvement.</p>
 
 @php $ophaalAdres = $order->pickupLocation(); @endphp
 {{-- Twee adressen naast elkaar, elk met een eigen kop, zodat in een oogopslag
