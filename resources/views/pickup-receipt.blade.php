@@ -1,43 +1,44 @@
 @php
-    // Vier toestanden. 'confirm' vraagt eerst, want een mailscanner die de link
-    // volgt mag niets afvinken. Na een antwoord toont de pagina dat antwoord.
+    // Drie toestanden. 'confirm' vraagt eerst, want een mailscanner die de link
+    // volgt mag niets afvinken.
     $copy = [
         'nl' => [
-            'confirm'   => ['t' => 'Komt dit ophaalmoment u uit?', 'm' => 'Laat ons weten of dit moment u schikt.'],
-            'akkoord'   => ['t' => 'Bedankt', 'm' => 'Fijn, dan zien wij u op het afgesproken moment.'],
-            'past_niet' => ['t' => 'Bedankt voor het laten weten', 'm' => 'Wij nemen zo snel mogelijk contact met u op om een ander moment af te spreken. Liever direct bellen? 06-10229965.'],
-            'invalid'   => ['t' => 'DeSnipperaar', 'm' => 'Deze link is niet (meer) geldig. Vragen? Bel 06-10229965.'],
-            'moment' => 'Ophaalmoment', 'ja' => 'Ja, komt goed uit', 'nee_open' => 'Komt dit moment niet uit?',
-            'nee_label' => 'Welke dagen of tijden komen beter uit? (optioneel)', 'nee' => 'Verstuur', 'site' => 'Naar desnipperaar.nl',
+            'confirm' => ['t' => 'Ophaalmail ontvangen?', 'm' => 'Bevestig hieronder dat u onze e-mail met het ophaalmoment heeft ontvangen.'],
+            'done'    => ['t' => 'Bedankt', 'm' => 'Fijn, dan zien wij u op het afgesproken moment.'],
+            'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Deze link is niet (meer) geldig. Vragen? Stuur ons een WhatsApp of bel 06-10229965.'],
+            'moment' => 'Ophaalmoment', 'knop' => 'Ontvangen', 'site' => 'Naar desnipperaar.nl',
+            'gewijzigd' => 'Let op, uw ophaalmoment is intussen gewijzigd. Dit is het actuele moment.',
+            'nietUit' => 'Komt dit moment niet uit?', 'wa' => 'Stuur ons een WhatsApp', 'waTekst' => 'Ophaalmoment :nr komt niet uit. ',
         ],
         'en' => [
-            'confirm'   => ['t' => 'Does this pickup slot suit you?', 'm' => 'Let us know whether this slot works for you.'],
-            'akkoord'   => ['t' => 'Thank you', 'm' => 'Great, see you then.'],
-            'past_niet' => ['t' => 'Thanks for letting us know', 'm' => 'We will contact you as soon as possible to arrange another slot. Prefer to call? +31 6 10229965.'],
-            'invalid'   => ['t' => 'DeSnipperaar', 'm' => 'This link is not (or no longer) valid. Questions? Call +31 6 10229965.'],
-            'moment' => 'Pickup', 'ja' => 'Yes, this works', 'nee_open' => 'Doesn\'t this slot work?',
-            'nee_label' => 'Which days or times suit you better? (optional)', 'nee' => 'Send: doesn\'t work', 'site' => 'Go to desnipperaar.nl',
+            'confirm' => ['t' => 'Pickup e-mail received?', 'm' => 'Please confirm below that you received our e-mail with the pickup date.'],
+            'done'    => ['t' => 'Thank you', 'm' => 'Great, see you at the agreed time.'],
+            'invalid' => ['t' => 'DeSnipperaar', 'm' => 'This link is not (or no longer) valid. Questions? Send us a WhatsApp or call +31 6 10229965.'],
+            'moment' => 'Pickup', 'knop' => 'Received', 'site' => 'Go to desnipperaar.nl',
+            'gewijzigd' => 'Please note, your pickup has been rescheduled since. This is the current slot.',
+            'nietUit' => 'Doesn\'t this slot suit you?', 'wa' => 'Send us a WhatsApp', 'waTekst' => 'Pickup :nr does not suit me. ',
         ],
         'fr' => [
-            'confirm'   => ['t' => 'Ce créneau vous convient-il ?', 'm' => 'Dites-nous si ce créneau d\'enlèvement vous convient.'],
-            'akkoord'   => ['t' => 'Merci', 'm' => 'Parfait, à bientôt.'],
-            'past_niet' => ['t' => 'Merci de nous avoir prévenus', 'm' => 'Nous vous contacterons au plus vite pour convenir d\'un autre créneau. Vous préférez appeler ? +31 6 10229965.'],
-            'invalid'   => ['t' => 'DeSnipperaar', 'm' => 'Ce lien n\'est pas (ou plus) valide. Des questions ? Appelez le +31 6 10229965.'],
-            'moment' => 'Enlèvement', 'ja' => 'Oui, ça me convient', 'nee_open' => 'Ce créneau ne vous convient pas ?',
-            'nee_label' => 'Quels jours ou horaires vous conviennent mieux ? (facultatif)', 'nee' => 'Envoyer : ne convient pas', 'site' => 'Aller sur desnipperaar.nl',
+            'confirm' => ['t' => 'E-mail d\'enlèvement reçu ?', 'm' => 'Confirmez ci-dessous que vous avez bien reçu notre e-mail avec la date d\'enlèvement.'],
+            'done'    => ['t' => 'Merci', 'm' => 'Parfait, à bientôt au moment convenu.'],
+            'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Ce lien n\'est pas (ou plus) valide. Des questions ? Envoyez-nous un WhatsApp ou appelez le +31 6 10229965.'],
+            'moment' => 'Enlèvement', 'knop' => 'Bien reçu', 'site' => 'Aller sur desnipperaar.nl',
+            'gewijzigd' => 'Attention, votre enlèvement a été modifié entre-temps. Voici le créneau actuel.',
+            'nietUit' => 'Ce créneau ne vous convient pas ?', 'wa' => 'Envoyez-nous un WhatsApp', 'waTekst' => 'L\'enlèvement :nr ne me convient pas. ',
         ],
         'es' => [
-            'confirm'   => ['t' => '¿Le viene bien este momento?', 'm' => 'Indíquenos si este momento de recogida le conviene.'],
-            'akkoord'   => ['t' => 'Gracias', 'm' => 'Perfecto, hasta entonces.'],
-            'past_niet' => ['t' => 'Gracias por avisarnos', 'm' => 'Nos pondremos en contacto con usted lo antes posible para acordar otro momento. ¿Prefiere llamar? +31 6 10229965.'],
-            'invalid'   => ['t' => 'DeSnipperaar', 'm' => 'Este enlace no es (o ya no es) válido. ¿Preguntas? Llame al +31 6 10229965.'],
-            'moment' => 'Recogida', 'ja' => 'Sí, me viene bien', 'nee_open' => '¿No le viene bien?',
-            'nee_label' => '¿Qué días u horas le vienen mejor? (opcional)', 'nee' => 'Enviar: no me viene bien', 'site' => 'Ir a desnipperaar.nl',
+            'confirm' => ['t' => '¿Ha recibido el correo de recogida?', 'm' => 'Confirme abajo que ha recibido nuestro correo con la fecha de recogida.'],
+            'done'    => ['t' => 'Gracias', 'm' => 'Perfecto, hasta el momento acordado.'],
+            'invalid' => ['t' => 'DeSnipperaar', 'm' => 'Este enlace no es (o ya no es) válido. ¿Preguntas? Envíenos un WhatsApp o llame al +31 6 10229965.'],
+            'moment' => 'Recogida', 'knop' => 'Recibido', 'site' => 'Ir a desnipperaar.nl',
+            'gewijzigd' => 'Atención, su recogida ha cambiado mientras tanto. Este es el momento actual.',
+            'nietUit' => '¿No le viene bien este momento?', 'wa' => 'Envíenos un WhatsApp', 'waTekst' => 'La recogida :nr no me viene bien. ',
         ],
     ];
     $all = $copy[$lang] ?? $copy['nl'];
     $c = $all[$state];
     $toonMoment = $state !== 'invalid' && $order?->pickup_date;
+    $waUrl = $order ? 'https://wa.me/31610229965?text='.rawurlencode(str_replace(':nr', $order->order_number, $all['waTekst'])) : null;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $lang }}">
@@ -53,20 +54,19 @@
         p{font-size:15px;line-height:1.6;color:#333;margin:0 0 24px;}
         .moment{background:#F7F7F4;border-left:4px solid #F5C518;text-align:left;padding:12px 16px;margin:0 0 24px;font-size:15px;}
         .moment small{display:block;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:4px;}
+        .let-op{background:#FFF8E1;border-left:4px solid #E0A800;text-align:left;padding:10px 14px;margin:0 0 16px;font-size:14px;font-weight:700;}
         .btn{display:inline-block;background:#0A0A0A;color:#F5C518;font-weight:700;text-decoration:none;padding:13px 26px;border:0;font-size:15px;font-family:inherit;cursor:pointer;}
-        .btn-alt{background:#fff;color:#0A0A0A;border:2px solid #0A0A0A;padding:11px 24px;}
-        details{margin-top:24px;text-align:left;border-top:1px solid #E5E5E0;padding-top:18px;}
-        summary{cursor:pointer;font-weight:700;font-size:15px;text-align:center;}
-        label{display:block;font-size:14px;color:#333;margin:14px 0 6px;}
-        textarea{width:100%;box-sizing:border-box;min-height:90px;font:inherit;font-size:14px;padding:10px;border:1px solid #CCC;}
-        details form{text-align:center;}
-        details .btn{margin-top:12px;}
+        .wa{margin:22px 0 0;font-size:14px;color:#555;}
+        .wa a{color:#0A0A0A;font-weight:700;}
     </style>
 </head>
 <body>
     <div class="card">
         <h1>{{ $c['t'] }}</h1>
         <p>{{ $c['m'] }}</p>
+        @if ($gewijzigd)
+            <div class="let-op">{{ $all['gewijzigd'] }}</div>
+        @endif
         @if ($toonMoment)
             <div class="moment">
                 <small>{{ $all['moment'] }} · {{ $order->order_number }}</small>
@@ -78,21 +78,14 @@
             {{-- Host-relatief, want de pagina komt via desnipperaar.nl binnen. --}}
             <form method="post" action="/ontvangen/{{ rawurlencode($token) }}">
                 <input type="hidden" name="lang" value="{{ $lang }}">
-                <input type="hidden" name="antwoord" value="akkoord">
-                <button class="btn" type="submit">{{ $all['ja'] }}</button>
+                <input type="hidden" name="m" value="{{ $m }}">
+                <button class="btn" type="submit">{{ $all['knop'] }}</button>
             </form>
-            <details @if ($gekozen === 'past_niet') open @endif>
-                <summary>{{ $all['nee_open'] }}</summary>
-                <form method="post" action="/ontvangen/{{ rawurlencode($token) }}">
-                    <input type="hidden" name="lang" value="{{ $lang }}">
-                    <input type="hidden" name="antwoord" value="past_niet">
-                    <label for="note">{{ $all['nee_label'] }}</label>
-                    <textarea id="note" name="note" maxlength="2000"></textarea>
-                    <button class="btn btn-alt" type="submit">{{ $all['nee'] }}</button>
-                </form>
-            </details>
         @else
             <a class="btn" href="https://desnipperaar.nl">{{ $all['site'] }}</a>
+        @endif
+        @if ($toonMoment)
+            <p class="wa">{{ $all['nietUit'] }} <a href="{{ $waUrl }}">{{ $all['wa'] }}</a></p>
         @endif
     </div>
 </body>

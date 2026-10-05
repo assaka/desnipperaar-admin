@@ -372,12 +372,11 @@ class Order extends Model
     }
 
     public const RECEIPT_AKKOORD = 'akkoord';
-    public const RECEIPT_PAST_NIET = 'past_niet';
 
     /**
-     * Het antwoord van de klant op de knop in de ophaalmail ("past dit
-     * moment?"), 'akkoord' of 'past_niet'. Null als hij nog niet antwoordde, of
-     * als hij antwoordde op een moment dat inmiddels verzet is.
+     * Wat de klant met de knop "Ontvangen" in de ophaalmail liet weten, nu
+     * altijd 'akkoord'. Null als hij nog niet klikte, of als hij klikte voor een
+     * moment dat inmiddels verzet is.
      */
     public function pickupReceiptAnswer(): ?string
     {
