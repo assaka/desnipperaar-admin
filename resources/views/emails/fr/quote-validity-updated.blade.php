@@ -9,16 +9,16 @@
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     @if ($order->quoted_amount_excl_btw)
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Montant hors TVA</td>
-        <td style="padding:8px 0;text-align:right;font-weight:900;font-size:18px;font-family:monospace;">
+        <td style="padding:8px 0;text-align:right;font-weight:900;font-size:18px;font-family:monospace;white-space:nowrap;">
             € {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}
         </td></tr>
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Montant TVA 21% comprise</td>
-        <td style="padding:8px 0;text-align:right;font-family:monospace;border-top:1px solid #EEE;">
+        <td style="padding:8px 0;text-align:right;font-family:monospace;border-top:1px solid #EEE;white-space:nowrap;">
             € {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}
         </td></tr>
     @endif
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Nouvelle validité jusqu'au</td>
-        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">
+        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;white-space:nowrap;">
             {{ $order->quote_valid_until->format('d-m-Y') }}
         </td></tr>
 </table>

@@ -33,12 +33,12 @@ We will contact you within one business day to confirm the pickup.</p>
             @if ($order->customer?->company)<strong>{{ $order->customer->company }}</strong><br>@endif
             {{ $order->customer_name }}<br>
             @if ($order->customer_address){{ $order->customer_address }}<br>@endif
-            <span style="font-family:'Courier New',monospace;">{{ $order->customer_postcode }}</span> @if ($order->customer_city)&middot; {{ $order->customer_city }}@endif
+            {{ $order->customer_postcode }} @if ($order->customer_city)&middot; {{ $order->customer_city }}@endif
         </td>
         <td width="50%" valign="top" style="padding:0 0 0 12px;font-size:13px;line-height:1.6;">
             <div style="font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;margin:24px 0 10px;border-bottom:2px solid #0A0A0A;padding-bottom:6px;">Pickup address</div>
             @if ($ophaalAdres['address']){{ $ophaalAdres['address'] }}<br>@endif
-            <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span> @if ($ophaalAdres['city'])&middot; {{ $ophaalAdres['city'] }}@endif
+            {{ $ophaalAdres['postcode'] }} @if ($ophaalAdres['city'])&middot; {{ $ophaalAdres['city'] }}@endif
         </td>
     </tr>
 </table>
@@ -59,12 +59,15 @@ We will contact you within one business day to confirm the pickup.</p>
             </tr>
         @endif
         <tr>
-            <td style="padding:4px 0;color:#555;font-size:12px;">Postcode / city</td>
-            <td style="padding:4px 0;font-weight:700;font-size:13px;">
-            <span style="font-family:'Courier New',monospace;">{{ $ophaalAdres['postcode'] }}</span>
-            @if ($ophaalAdres['city']) &middot; {{ $ophaalAdres['city'] }} @endif
-            </td>
+            <td style="padding:4px 0;color:#555;font-size:12px;">Postcode</td>
+            <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $ophaalAdres['postcode'] }}</td>
         </tr>
+        @if ($ophaalAdres['city'])
+            <tr>
+                <td style="padding:4px 0;color:#555;font-size:12px;">City</td>
+                <td style="padding:4px 0;font-weight:700;font-size:13px;">{{ $ophaalAdres['city'] }}</td>
+            </tr>
+        @endif
     @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;font-weight:700;">Chosen service</td>
@@ -154,18 +157,18 @@ We will contact you within one business day to confirm the pickup.</p>
     @endphp
     <tr>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">{{ (($discountKennismaking + $discountPilot) > 0) ? 'Subtotal before discount' : 'Subtotal' }} (excl. VAT)</td>
-        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format(($subtotalRegular ?? $subtotal) - $discountStaffel, 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;white-space:nowrap;">€ {{ number_format(($subtotalRegular ?? $subtotal) - $discountStaffel, 2, ',', '.') }}</td>
     </tr>
     @if ($discountKennismaking > 0)
         <tr>
             <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Welcome offer discount</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;white-space:nowrap;">− € {{ number_format($discountKennismaking, 2, ',', '.') }}</td>
         </tr>
     @endif
     @if ($discountPilot > 0)
         <tr>
             <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Amsterdam pilot discount</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($discountPilot, 2, ',', '.') }}</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;white-space:nowrap;">− € {{ number_format($discountPilot, 2, ',', '.') }}</td>
         </tr>
     @endif
     @if (!empty($coupon))
@@ -176,16 +179,16 @@ We will contact you within one business day to confirm the pickup.</p>
                     ({{ \App\Support\Pricing::formatPercentage($coupon['pct']) }}% × € {{ number_format($coupon['base'], 2, ',', '.') }})
                 @endif
             </td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">− € {{ number_format($coupon['amount'], 2, ',', '.') }}</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;white-space:nowrap;">− € {{ number_format($coupon['amount'], 2, ',', '.') }}</td>
         </tr>
     @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">VAT 21%</td>
-        <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($vat, 2, ',', '.') }}</td>
+        <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;white-space:nowrap;">€ {{ number_format($vat, 2, ',', '.') }}</td>
     </tr>
     <tr>
         <td style="padding:10px 0 4px;font-weight:900;font-size:15px;border-top:2px solid #0A0A0A;" colspan="2">Total incl. VAT</td>
-        <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;">€ {{ number_format($total, 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">€ {{ number_format($total, 2, ',', '.') }}</td>
     </tr>
 </table>
 @if ($discountStaffel > 0)

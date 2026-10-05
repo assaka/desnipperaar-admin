@@ -51,21 +51,21 @@
 
     <tr>
         <td style="padding:10px 0 4px;color:#555;font-size:12px;" colspan="2">Subtotaal (excl. btw)</td>
-        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($snapshot['subtotal_regular'] ?? $snapshot['subtotal'], 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-family:'Courier New',monospace;text-align:right;font-size:13px;white-space:nowrap;">€ {{ number_format($snapshot['subtotal_regular'] ?? $snapshot['subtotal'], 2, ',', '.') }}</td>
     </tr>
     @if (!empty($snapshot['discount']) && $snapshot['discount'] > 0)
         <tr>
             <td style="padding:4px 0;color:#2E7D32;font-size:12px;" colspan="2">Waarvan korting</td>
-            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;">&minus; € {{ number_format($snapshot['discount'], 2, ',', '.') }}</td>
+            <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;color:#2E7D32;white-space:nowrap;">&minus; € {{ number_format($snapshot['discount'], 2, ',', '.') }}</td>
         </tr>
     @endif
     <tr>
         <td style="padding:4px 0;color:#555;font-size:12px;" colspan="2">BTW 21%</td>
-        <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;">€ {{ number_format($snapshot['vat'], 2, ',', '.') }}</td>
+        <td style="padding:4px 0;font-family:'Courier New',monospace;text-align:right;font-size:13px;white-space:nowrap;">€ {{ number_format($snapshot['vat'], 2, ',', '.') }}</td>
     </tr>
     <tr>
         <td style="padding:10px 0 4px;font-weight:900;font-size:15px;border-top:2px solid #0A0A0A;" colspan="2">Totaal incl. btw</td>
-        <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;">€ {{ number_format($snapshot['total'], 2, ',', '.') }}</td>
+        <td style="padding:10px 0 4px;font-weight:900;font-size:16px;border-top:2px solid #0A0A0A;text-align:right;font-family:'Courier New',monospace;white-space:nowrap;">€ {{ number_format($snapshot['total'], 2, ',', '.') }}</td>
     </tr>
 </table>
 

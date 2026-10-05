@@ -19,16 +19,16 @@
 @if ($order->quoted_amount_excl_btw)
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Bedrag excl. btw</td>
-        <td style="padding:8px 0;text-align:right;font-weight:900;font-size:18px;font-family:monospace;">
+        <td style="padding:8px 0;text-align:right;font-weight:900;font-size:18px;font-family:monospace;white-space:nowrap;">
             € {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}
         </td></tr>
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Bedrag incl. btw 21%</td>
-        <td style="padding:8px 0;text-align:right;font-family:monospace;border-top:1px solid #EEE;">
+        <td style="padding:8px 0;text-align:right;font-family:monospace;border-top:1px solid #EEE;white-space:nowrap;">
             € {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }}
         </td></tr>
     @if ($order->quote_valid_until)
         <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Geldig tot</td>
-            <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">
+            <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;white-space:nowrap;">
                 {{ $order->quote_valid_until->format('d-m-Y') }}
             </td></tr>
     @endif

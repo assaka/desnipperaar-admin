@@ -18,16 +18,16 @@
     @foreach ($deelnemers as $d)
         <tr>
             <td style="padding:6px 0;font-size:13px;border-bottom:1px dashed #DDD;">{{ $d['first_name'] }}</td>
-            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">{{ $d['box_count'] }}</td>
-            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">{{ $d['container_count'] }}</td>
-            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;">€ {{ number_format($d['subtotal'], 2, ',', '.') }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;white-space:nowrap;">{{ $d['box_count'] }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;white-space:nowrap;">{{ $d['container_count'] }}</td>
+            <td style="padding:6px 0;font-size:13px;text-align:right;font-family:'Courier New',monospace;border-bottom:1px dashed #DDD;white-space:nowrap;">€ {{ number_format($d['subtotal'], 2, ',', '.') }}</td>
         </tr>
     @endforeach
     <tr>
         <td style="padding:8px 0 4px;font-size:13px;font-weight:900;border-top:2px solid #0A0A0A;">Totaal · {{ $totals['count'] }} {{ $totals['count'] === 1 ? 'deelnemer' : 'deelnemers' }}</td>
-        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">{{ $totals['box_count'] }}</td>
-        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">{{ $totals['container_count'] }}</td>
-        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;">€ {{ number_format($totals['subtotal'], 2, ',', '.') }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;white-space:nowrap;">{{ $totals['box_count'] }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;white-space:nowrap;">{{ $totals['container_count'] }}</td>
+        <td style="padding:8px 0 4px;font-size:13px;font-weight:900;text-align:right;font-family:'Courier New',monospace;border-top:2px solid #0A0A0A;white-space:nowrap;">€ {{ number_format($totals['subtotal'], 2, ',', '.') }}</td>
     </tr>
 </table>
 @endif

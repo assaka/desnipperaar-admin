@@ -7,16 +7,16 @@
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Commande</td>
-        <td style="padding:8px 0;text-align:right;font-weight:700;font-family:monospace;">{{ $order->order_number }}</td></tr>
+        <td style="padding:8px 0;text-align:right;font-weight:700;font-family:monospace;white-space:nowrap;">{{ $order->order_number }}</td></tr>
     @if ($order->pickup_date)
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Créneau annulé</td>
-        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;">
+        <td style="padding:8px 0;text-align:right;font-weight:700;border-top:1px solid #EEE;white-space:nowrap;">
             {{ $order->pickup_date->format('d-m-Y') }}{{ $order->pickup_window ? ' ('.$order->pickup_window.')' : '' }}
         </td></tr>
     @endif
     @if ($reason)
     <tr><td style="padding:8px 0;color:#555;font-size:12px;border-top:1px solid #EEE;">Motif</td>
-        <td style="padding:8px 0;text-align:right;border-top:1px solid #EEE;">{{ $reason }}</td></tr>
+        <td style="padding:8px 0;text-align:right;border-top:1px solid #EEE;white-space:nowrap;">{{ $reason }}</td></tr>
     @endif
 </table>
 
