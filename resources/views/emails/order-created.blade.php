@@ -126,9 +126,9 @@
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
                 @switch($pickupChoice)
                     @case('spoed') Spoed ophalen @break
-                    @case('sooner') Eerder ophalen (binnen 2 weken) @break
+                    @case('sooner') Eerder ophalen (binnen {{ \App\Support\Pricing::freeWaitWeeks() }} weken) @break
                     @case('route') Gratis ophalen @break
-                    @default {{ $pickupInRegion ? 'Gratis ophalen (regio Amsterdam)' : 'Gratis ophalen (vanaf 2 weken)' }}
+                    @default {{ $pickupInRegion ? 'Gratis ophalen (regio Amsterdam)' : 'Gratis ophalen (vanaf '.\App\Support\Pricing::freeWaitWeeks().' weken)' }}
                 @endswitch
             </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>

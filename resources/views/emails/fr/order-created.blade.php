@@ -131,9 +131,9 @@
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
                 @switch($pickupChoice)
                     @case('spoed') Enlèvement urgent @break
-                    @case('sooner') Enlèvement anticipé (sous 2 semaines) @break
+                    @case('sooner') Enlèvement anticipé (sous {{ \App\Support\Pricing::freeWaitWeeks() }} semaines) @break
                     @case('route') Enlèvement gratuit @break
-                    @default {{ $pickupInRegion ? "Enlèvement gratuit (région d'Amsterdam)" : 'Enlèvement gratuit (à partir de 2 semaines)' }}
+                    @default {{ $pickupInRegion ? "Enlèvement gratuit (région d'Amsterdam)" : 'Enlèvement gratuit (à partir de '.\App\Support\Pricing::freeWaitWeeks().' semaines)' }}
                 @endswitch
             </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>

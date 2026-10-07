@@ -192,7 +192,7 @@ class SlotFinder
 
         // Weten wij de afstand niet, dan houden wij niemand tegen. Een wachttijd
         // opleggen omdat een geocodering mislukte zou een klant uit Amsterdam-Noord
-        // twee weken laten wachten op een rit die gratis is en meteen kan.
+        // weken laten wachten op een rit die gratis is en meteen kan.
         if ($depotKm === null) {
             return $earliest;
         }

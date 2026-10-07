@@ -115,7 +115,7 @@ class OrderCreated extends Mailable
                     ? ($this->order->pickup_choice ?: null)
                     : null,
                 // Binnen de gratis straal viel er niets te kiezen, dus daar
-                // noemen wij niet de wachttijd van twee weken die er niet geldt.
+                // noemen wij niet de wachttijd die er niet geldt.
                 //
                 // Dit leest de straal van vandaag en niet die van toen de order
                 // binnenkwam. Het bedrag staat vast op de order, dus dat schuift

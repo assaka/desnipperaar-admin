@@ -57,8 +57,8 @@ return [
         // dan hij krijgt.
         'rush_mode' => env('PICKUP_RUSH_MODE', 'off'),
 
-        // Ophaalkosten. Alleen "eerder dan 2 weken" kost iets; gratis vanaf 2
-        // weken is landelijk en blijft dat.
+        // Ophaalkosten. Alleen "eerder dan de wachttijd" kost iets; gratis
+        // na de wachttijd (planning.free_wait_days) is landelijk en blijft dat.
         //
         //   free_km           tot hier is de rit gratis, hoe snel de klant ook wil
         //   rate_per_km       daarboven per kilometer, enkele reis
@@ -200,13 +200,14 @@ return [
         'per_km' => (float) env('PLANNING_PER_KM', 0.65),
 
         // De wachttijd die hoort bij de gratis optie buiten regio Amsterdam.
-        // Op /order staat "gratis ophalen met minimaal 2 weken wachttijd", en
-        // dit is die twee weken. Het is geen willekeurige drempel: die tijd
+        // Op /order staat "gratis ophalen met minimaal 4 weken wachttijd", en
+        // dit is die termijn (sinds 2026-10-07 vier weken, was twee). De
+        // publieke site noemt hem als pickup.freeWaitWeeks in site-config.json. Het is geen willekeurige drempel: die tijd
         // hebben wij nodig om de rit te laten samenvallen met een andere rit in
         // de buurt. Wie eerder wil betaalt per kilometer, dat is de keuze
         // "sooner" op /order. Binnen de regio geldt de wachttijd niet, daar is
         // ophalen gratis zonder voorwaarde.
-        'free_wait_days' => (int) env('PLANNING_FREE_WAIT_DAYS', 14),
+        'free_wait_days' => (int) env('PLANNING_FREE_WAIT_DAYS', 28),
 
         // Het spoedvenster: een ophaling binnen zoveel dagen na vandaag geldt als
         // spoed. Hier staat geen bedrag meer bij. Wat spoed kost hoort thuis bij

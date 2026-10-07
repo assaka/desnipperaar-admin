@@ -7,7 +7,7 @@
     een rit in de buurt.
 
     Gratis heeft twee gezichten. In de regio Amsterdam viel er niets te kiezen en
-    geldt de wachttijd van twee weken niet, daarbuiten wel. Dat verschil staat in
+    geldt de wachttijd voor gratis ophalen niet, daarbuiten wel. Dat verschil staat in
     het bijschrift, want het bedrag is in beide gevallen nul.
 
     Alleen kleuren uit het standaardpalet van Tailwind 2, net als bij _status.
@@ -22,8 +22,8 @@
 
     [$keuzeLabel, $keuzeKleur, $keuzeBijschrift] = match ($order->pickup_choice) {
         'spoed'  => ['spoed',  'bg-red-700 text-white',    'binnen 2 werkdagen'],
-        'sooner' => ['eerder', 'bg-black text-yellow-400', 'binnen 2 weken'],
-        'free'   => ['gratis', 'bg-gray-300 text-black',   $keuzeInRegio ? 'binnen de straal' : 'vanaf 2 weken'],
+        'sooner' => ['eerder', 'bg-black text-yellow-400', 'binnen '.\App\Support\Pricing::freeWaitWeeks().' weken'],
+        'free'   => ['gratis', 'bg-gray-300 text-black',   $keuzeInRegio ? 'binnen de straal' : 'vanaf '.\App\Support\Pricing::freeWaitWeeks().' weken'],
         'route'  => ['meerit', 'bg-green-700 text-white',
             'op '.($order->routeRun?->label ?? 'open rit')
             .($order->routeRun?->run_date ? ' · '.$order->routeRun->run_date->format('d-m') : '')],

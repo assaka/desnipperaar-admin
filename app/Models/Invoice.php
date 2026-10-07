@@ -338,7 +338,7 @@ class Invoice extends Model
         $pickupCost = (float) ($order->pickup_cost ?? 0);
         if ($pickupCost > 0) {
             $lines[] = [
-                'label'    => 'Eerder ophalen (binnen 2 weken)',
+                'label'    => \App\Support\Pricing::soonerPickupLabel(),
                 'kind'     => 'pickup',
                 'qty'      => 1,
                 'unit'     => $pickupCost,

@@ -131,9 +131,9 @@
             <td style="padding:6px 0;color:#333;font-size:13px;border-bottom:1px dashed #DDD;">
                 @switch($pickupChoice)
                     @case('spoed') Rush pickup @break
-                    @case('sooner') Earlier pickup (within 2 weeks) @break
+                    @case('sooner') Earlier pickup (within {{ \App\Support\Pricing::freeWaitWeeks() }} weeks) @break
                     @case('route') Free pickup @break
-                    @default {{ $pickupInRegion ? 'Free pickup (Amsterdam region)' : 'Free pickup (from 2 weeks)' }}
+                    @default {{ $pickupInRegion ? 'Free pickup (Amsterdam region)' : 'Free pickup (from '.\App\Support\Pricing::freeWaitWeeks().' weeks)' }}
                 @endswitch
             </td>
             <td style="padding:6px 0;color:#666;font-size:12px;border-bottom:1px dashed #DDD;text-align:center;font-family:'Courier New',monospace;white-space:nowrap;"></td>

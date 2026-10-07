@@ -39,6 +39,24 @@ class Pricing
         return (float) config('desnipperaar.pickup.free_km', self::PICKUP_FREE_KM);
     }
 
+    /**
+     * De wachttijd voor gratis ophalen buiten de straal, in hele weken.
+     *
+     * Afgeleid van planning.free_wait_days, zodat de planning en elk label op
+     * bon, factuur en mail hetzelfde getal noemen. De publieke site noemt hem
+     * als {{pickup.freeWaitWeeks}} in site-config.json; zet ze samen om.
+     */
+    public static function freeWaitWeeks(): int
+    {
+        return max(1, intdiv((int) config('desnipperaar.planning.free_wait_days', 28), 7));
+    }
+
+    /** Het label van de betaalde ophaalregel, met de actuele wachttijd erin. */
+    public static function soonerPickupLabel(): string
+    {
+        return 'Eerder ophalen (binnen '.self::freeWaitWeeks().' weken)';
+    }
+
     /** Kilometerprijs boven die straal, euro per km enkele reis. */
     public static function ratePerKm(): float
     {
@@ -122,7 +140,7 @@ class Pricing
     /**
      * Authoritative pickup-cost calculation. The static site sends the km and the
      * chosen option, but the amount is always recomputed here so the client can
-     * never dictate the price. Free ("gratis vanaf 2 weken") is always 0; both
+     * never dictate the price. Free ("gratis na de wachttijd") is always 0; both
      * "sooner" and "spoed" cost the per-km rate beyond the free radius, one-way.
      *
      * Boven het drempelbedrag rijden wij dat eerdere ophalen zelf, tot de afstand
@@ -244,9 +262,14 @@ class Pricing
         return ($line['kind'] ?? null) === 'coupon';
     }
 
-    /** De regels waarmee de rit naar de klant wordt doorbelast. */
+    /**
+     * De regels waarmee de rit naar de klant wordt doorbelast. Oudere
+     * snapshots dragen nog het label van de termijn van toen, dus elk label
+     * dat ooit is uitgegeven blijft hier staan.
+     */
     public const PICKUP_LABELS = [
         'Eerder ophalen (binnen 2 weken)',
+        'Eerder ophalen (binnen 4 weken)',
         'Spoedtoeslag ophalen',
     ];
 

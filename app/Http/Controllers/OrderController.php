@@ -727,7 +727,7 @@ class OrderController extends Controller
             }
             $pickupCost = (float) ($order->pickup_cost ?? 0);
             if ($pickupCost > 0) {
-                $q['lines'][] = ['label' => 'Eerder ophalen (binnen 2 weken)', 'kind' => 'pickup', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
+                $q['lines'][] = ['label' => \App\Support\Pricing::soonerPickupLabel(), 'kind' => 'pickup', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
             }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
 

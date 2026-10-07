@@ -256,7 +256,7 @@ class OrderController extends Controller
         // passende rit vond; wij zoeken hem hier zelf opnieuw op het
         // ophaaladres, want de klant mag niet zelf een gratis rit claimen. Past
         // hij (niet meer), bijvoorbeeld omdat de rit intussen dicht is, dan valt
-        // hij terug op gratis vanaf 2 weken: dat is wat hij zonder de rit ook
+        // hij terug op gratis na de wachttijd: dat is wat hij zonder de rit ook
         // zonder kosten had gekregen.
         $routeRun = null;
         if ($choice === 'route') {
