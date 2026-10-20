@@ -67,8 +67,9 @@ return [
         // dan hij krijgt.
         'rush_mode' => env('PICKUP_RUSH_MODE', 'off'),
 
-        // Ophaalkosten. Alleen "eerder dan de wachttijd" kost iets; gratis
-        // na de wachttijd (planning.free_wait_days) is landelijk en blijft dat.
+        // Ophaalkosten. Alleen "eerder dan de wachttijd" kost iets; gratis na
+        // de wachttijd (planning.free_wait_days) geldt tot free_wait_max_km.
+        // Daarboven is er geen gratis wachtoptie en betaalt de klant per km.
         //
         //   free_km           tot hier is de rit gratis, hoe snel de klant ook wil
         //   rate_per_km       daarboven per kilometer, enkele reis
@@ -97,6 +98,13 @@ return [
         // los van het bestelbedrag. 0 zet deze regel uit. Zelfde waarde als
         // site-config.json -> pickup.freeFromBoxes op de publieke site.
         'free_from_boxes' => (int) env('PICKUP_FREE_FROM_BOXES', 10),
+
+        // Tot hier is ophalen na de wachttijd gratis. Verder weg rekenen wij de
+        // kilometerprijs, ook als de klant wil wachten: zo'n rit valt zelden
+        // samen met een andere. De vrijstellingen (free_from_boxes, free_above)
+        // gelden daar gewoon. Zelfde waarde als site-config.json ->
+        // pickup.freeWaitMaxKm op de publieke site.
+        'free_wait_max_km' => (float) env('PICKUP_FREE_WAIT_MAX_KM', 100),
 
         // In de omgeving als "bedrag:km:perKm:maxKm", want vier getallen passen
         // wel in een env-regel en een array niet. Onleesbaar of leeg? Dan blijft

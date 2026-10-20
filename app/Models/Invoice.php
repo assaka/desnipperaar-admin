@@ -356,7 +356,7 @@ class Invoice extends Model
         $pickupCost = (float) ($order->pickup_cost ?? 0);
         if ($pickupCost > 0) {
             $lines[] = [
-                'label'    => \App\Support\Pricing::soonerPickupLabel(),
+                'label'    => \App\Support\Pricing::soonerPickupLabel($order->pickup_km),
                 'kind'     => 'pickup',
                 'qty'      => 1,
                 'unit'     => $pickupCost,

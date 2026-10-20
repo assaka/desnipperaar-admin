@@ -140,6 +140,14 @@ class OrderController extends Controller
             $pickupChoice = 'sooner';
         }
 
+        // Voorbij free_wait_max_km levert wachten geen gratis rit op. Wat de
+        // pagina ook stuurt, 'free' wordt hier 'sooner', zodat de kilometerprijs
+        // geldt (tenzij een vrijstelling hem wegstreept) en de planning geen
+        // wachttijd oplegt die niets oplevert.
+        if ($pickupChoice === 'free' && \App\Support\Pricing::beyondFreeWait($pickupKm)) {
+            $pickupChoice = 'sooner';
+        }
+
         // De som zelf staat verderop, na de coupon: boven het drempelbedrag
         // vervalt de kilometerprijs, en dat drempelbedrag is het goederen-
         // subtotaal na korting. Hier is dat nog niet bekend.

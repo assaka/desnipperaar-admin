@@ -51,9 +51,27 @@ class Pricing
         return max(1, intdiv((int) config('desnipperaar.planning.free_wait_days', 28), 7));
     }
 
-    /** Het label van de betaalde ophaalregel, met de actuele wachttijd erin. */
-    public static function soonerPickupLabel(): string
+    /** Tot deze afstand is ophalen na de wachttijd gratis. */
+    public static function freeWaitMaxKm(): float
     {
+        return (float) config('desnipperaar.pickup.free_wait_max_km', 100);
+    }
+
+    /** Ligt dit adres voorbij de afstand waar wachten gratis ophalen oplevert? */
+    public static function beyondFreeWait(?int $km): bool
+    {
+        return $km !== null && $km > self::freeWaitMaxKm();
+    }
+
+    /**
+     * Het label van de betaalde ophaalregel. Binnen free_wait_max_km koos de
+     * klant voor eerder dan de wachttijd; daarbuiten is de rit altijd betaald.
+     */
+    public static function soonerPickupLabel(?int $km = null): string
+    {
+        if (self::beyondFreeWait($km)) {
+            return 'Ophaalkosten ('.$km.' km)';
+        }
         return 'Eerder ophalen (binnen '.self::freeWaitWeeks().' weken)';
     }
 
