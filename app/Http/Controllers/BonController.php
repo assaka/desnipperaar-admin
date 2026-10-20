@@ -59,6 +59,20 @@ class BonController extends Controller
             if ($rushFee > 0) {
                 $q['lines'][] = ['label' => 'Spoedtoeslag ophalen', 'kind' => 'pickup', 'qty' => 1, 'unit' => $rushFee, 'subtotal' => $rushFee];
             }
+            // Pricing::quote() kent alleen dozen en containers. De datadragers en
+            // ophaalregels staan wel in de tabel, dus ook in het subtotaal ervan.
+            // De staffel van datadragers telt niet als korting, net als in liveQuote.
+            $q['subtotal_regular'] = round(array_sum(array_map(
+                fn ($l) => \App\Support\Pricing::isMediaLine($l) ? $l['subtotal'] : ($l['was_subtotal'] ?? $l['subtotal']),
+                $q['lines']
+            )), 2);
+            // De kortingscode van de order, met dezelfde som als de factuur. Zonder
+            // deze regel stond hier de prijs zonder korting en weigerde de klant te
+            // tekenen voor een bedrag dat hij niet had besteld.
+            $q['coupon'] = Invoice::couponLineFor($q['lines'], $order);
+            if ($q['coupon'] !== null) {
+                $q['lines'][] = $q['coupon'];
+            }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
             $q['vat']      = round($q['subtotal'] * 0.21, 2);
             $q['total']    = round($q['subtotal'] + $q['vat'], 2);

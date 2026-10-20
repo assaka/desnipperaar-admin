@@ -57,7 +57,7 @@
             'corrected' => 'Gecorrigeerd', 'based_on_actual' => 'op basis van werkelijk opgehaald (dit wordt gefactureerd)',
             'subtotal' => 'Subtotaal', 'subtotal_excl' => 'Subtotaal excl. korting',
             'discount_intro' => 'Korting kennismaking', 'discount_pilot' => 'Korting Amsterdam-pilot',
-            'vat' => 'BTW 21%', 'total_incl' => 'Totaal incl. BTW', 'difference' => 'Verschil',
+            'coupon' => 'Kortingscode', 'vat' => 'BTW 21%', 'total_incl' => 'Totaal incl. BTW', 'difference' => 'Verschil',
             'seal_numbers' => 'Zegelnummers', 'seal_hint' => 'Eén per regel of gescheiden door komma\'s.',
             'notes' => 'Notities', 'signatures' => 'Handtekeningen', 'signed_check' => '✓ Getekend',
             'sign_again' => 'Opnieuw tekenen', 'clear' => 'Wissen', 'not_assigned' => 'nog niet toegewezen',
@@ -84,7 +84,7 @@
             'corrected' => 'Corrected', 'based_on_actual' => 'based on what was actually collected (this is invoiced)',
             'subtotal' => 'Subtotal', 'subtotal_excl' => 'Subtotal excl. discount',
             'discount_intro' => 'Introductory discount', 'discount_pilot' => 'Amsterdam pilot discount',
-            'vat' => 'VAT 21%', 'total_incl' => 'Total incl. VAT', 'difference' => 'Difference',
+            'coupon' => 'Discount code', 'vat' => 'VAT 21%', 'total_incl' => 'Total incl. VAT', 'difference' => 'Difference',
             'seal_numbers' => 'Seal numbers', 'seal_hint' => 'One per line or separated by commas.',
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signed',
             'sign_again' => 'Sign again', 'clear' => 'Clear', 'not_assigned' => 'not yet assigned',
@@ -111,7 +111,7 @@
             'corrected' => 'Corrigé', 'based_on_actual' => 'd\'après le réellement collecté (c\'est ce qui est facturé)',
             'subtotal' => 'Sous-total', 'subtotal_excl' => 'Sous-total hors remise',
             'discount_intro' => 'Remise découverte', 'discount_pilot' => 'Remise pilote Amsterdam',
-            'vat' => 'TVA 21%', 'total_incl' => 'Total TTC', 'difference' => 'Différence',
+            'coupon' => 'Code de réduction', 'vat' => 'TVA 21%', 'total_incl' => 'Total TTC', 'difference' => 'Différence',
             'seal_numbers' => 'Numéros de scellés', 'seal_hint' => 'Un par ligne ou séparés par des virgules.',
             'notes' => 'Notes', 'signatures' => 'Signatures', 'signed_check' => '✓ Signé',
             'sign_again' => 'Signer à nouveau', 'clear' => 'Effacer', 'not_assigned' => 'pas encore attribué',
@@ -138,7 +138,7 @@
             'corrected' => 'Corregido', 'based_on_actual' => 'según lo realmente recogido (esto se factura)',
             'subtotal' => 'Subtotal', 'subtotal_excl' => 'Subtotal sin descuento',
             'discount_intro' => 'Descuento de bienvenida', 'discount_pilot' => 'Descuento piloto Ámsterdam',
-            'vat' => 'IVA 21%', 'total_incl' => 'Total con IVA', 'difference' => 'Diferencia',
+            'coupon' => 'Código de descuento', 'vat' => 'IVA 21%', 'total_incl' => 'Total con IVA', 'difference' => 'Diferencia',
             'seal_numbers' => 'Números de precinto', 'seal_hint' => 'Uno por línea o separados por comas.',
             'notes' => 'Notas', 'signatures' => 'Firmas', 'signed_check' => '✓ Firmado',
             'sign_again' => 'Firmar de nuevo', 'clear' => 'Borrar', 'not_assigned' => 'aún sin asignar',
@@ -272,6 +272,11 @@
         pilot: {{ $bon->order->pilot ? 'true' : 'false' }},
         firstBoxFree: {{ $bon->order->first_box_free ? 'true' : 'false' }},
         orderedTotal: {{ $orderedQuote['total'] }},
+        // Ophaalregels en kortingscode staan los van de aantallen, dus die komen
+        // vast mee uit de controller. De som van de korting is die van
+        // Invoice::couponLineFor(), anders wijkt het gecorrigeerde totaal af van de factuur.
+        pickupLines: {{ \Illuminate\Support\Js::from(array_values(array_map(fn ($l) => ['label' => $ll($l['label'])] + $l, array_filter($orderedQuote['lines'], fn ($l) => \App\Support\Pricing::isPickupLine($l))))) }},
+        coupon: {{ \Illuminate\Support\Js::from($isSubVisit || ! $bon->order->coupon_code ? null : ['code' => strtoupper(trim($bon->order->coupon_code)), 'discount' => round((float) $bon->order->coupon_discount, 2), 'type' => $bon->order->coupon_type, 'value' => $bon->order->coupon_value !== null ? (float) $bon->order->coupon_value : null]) }},
         get diff() {
             if ((this.actBoxes|0) !== this.expBoxes) return true;
             if ((this.actCont|0)  !== this.expCont)  return true;
@@ -317,6 +322,7 @@
                 const q = this.actMedia[k]|0;
                 if (q > 0) lines.push({...mk(mLabels[k], q, mTiers[k][mTier(q)], mTiers[k][0]), media: true});
             }
+            for (const p of this.pickupLines) lines.push({...p});
             // De staffelprijs van datadragers staat als doorgestreepte prijs op de
             // regel zelf en telt niet mee als korting, net als in het overzicht op
             // basis van de bestelling (BonController::show).
@@ -325,9 +331,24 @@
             const discount             = Math.round((subtotalRegular - subtotal) * 100) / 100;
             const discountKennismaking = Math.round(lines.filter(l=>l.unit===0&&l.was_subtotal).reduce((s,l)=>s+l.was_subtotal,0) * 100) / 100;
             const discountPilot        = Math.round((discount - discountKennismaking) * 100) / 100;
-            const vat             = Math.round(subtotal * 0.21 * 100) / 100;
-            const total           = Math.round((subtotal + vat) * 100) / 100;
-            return {lines, subtotal, subtotalRegular, discount, discountKennismaking, discountPilot, vat, total};
+            const r2 = (n) => Math.round(n * 100) / 100;
+            let coupon = null;
+            if (this.coupon && this.coupon.discount > 0) {
+                const amount = r2(Math.min(this.coupon.discount, subtotal));
+                const base   = r2(lines.filter(l => l.kind !== 'pickup').reduce((s,l)=>s+l.subtotal,0));
+                if (amount > 0) {
+                    coupon = {code: this.coupon.code, amount};
+                    if (this.coupon.type === 'percentage' && this.coupon.value > 0 && base > 0
+                        && r2(base * this.coupon.value / 100) === amount) {
+                        coupon.pct  = this.coupon.value;
+                        coupon.base = base;
+                    }
+                }
+            }
+            const net             = r2(subtotal - (coupon ? coupon.amount : 0));
+            const vat             = r2(net * 0.21);
+            const total           = r2(net + vat);
+            return {lines, subtotal: net, subtotalRegular, discount, discountKennismaking, discountPilot, coupon, vat, total};
         },
         fmt(n) { return '€ ' + Number(n).toFixed(2).replace('.', ','); },
     }">
@@ -424,6 +445,7 @@
             </h3>
             <table class="w-full text-sm">
                 @foreach ($orderedQuote['lines'] as $line)
+                    @continue(\App\Support\Pricing::isCouponLine($line))
                     <tr class="border-b">
                         <td class="py-1">{{ $ll($line['label']) }}</td>
                         <td class="text-right font-mono">
@@ -437,7 +459,7 @@
                         </td>
                     </tr>
                 @endforeach
-                <tr><td class="pt-2 text-gray-600">{{ (!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0) ? $T['subtotal_excl'] : $T['subtotal'] }}</td><td></td>
+                <tr><td class="pt-2 text-gray-600">{{ ((!empty($orderedQuote['discount']) && $orderedQuote['discount'] > 0) || !empty($orderedQuote['coupon'])) ? $T['subtotal_excl'] : $T['subtotal'] }}</td><td></td>
                     <td class="text-right font-mono pt-2">€ {{ number_format($orderedQuote['subtotal_regular'] ?? $orderedQuote['subtotal'], 2, ',', '.') }}</td></tr>
                 @if (!empty($orderedQuote['discount_kennismaking']) && $orderedQuote['discount_kennismaking'] > 0)
                     <tr><td class="text-green-700">{{ $T['discount_intro'] }}</td><td></td>
@@ -446,6 +468,11 @@
                 @if (!empty($orderedQuote['discount_pilot']) && $orderedQuote['discount_pilot'] > 0)
                     <tr><td class="text-green-700">{{ $T['discount_pilot'] }}</td><td></td>
                         <td class="text-right font-mono text-green-700">− € {{ number_format($orderedQuote['discount_pilot'], 2, ',', '.') }}</td></tr>
+                @endif
+                @if (!empty($orderedQuote['coupon']))
+                    @php $c = $orderedQuote['coupon']; @endphp
+                    <tr><td class="text-green-700">{{ $T['coupon'] }} {{ $c['code'] }}@if (!empty($c['pct'])) <span class="text-xs text-gray-500 whitespace-nowrap">({{ \App\Support\Pricing::formatPercentage($c['pct']) }}% × € {{ number_format($c['base'], 2, ',', '.') }})</span>@endif</td><td></td>
+                        <td class="text-right font-mono text-green-700">− € {{ number_format(abs($c['subtotal']), 2, ',', '.') }}</td></tr>
                 @endif
                 <tr><td class="text-gray-600">{{ $T['vat'] }}</td><td></td>
                     <td class="text-right font-mono">€ {{ number_format($orderedQuote['vat'], 2, ',', '.') }}</td></tr>
@@ -474,7 +501,7 @@
                         </td>
                     </tr>
                 </template>
-                <tr><td class="pt-2 text-gray-600" x-text="liveQuote.discount > 0 ? L.subtotaalExcl : L.subtotaal"></td><td></td>
+                <tr><td class="pt-2 text-gray-600" x-text="(liveQuote.discount > 0 || liveQuote.coupon) ? L.subtotaalExcl : L.subtotaal"></td><td></td>
                     <td class="text-right font-mono pt-2" x-text="fmt(liveQuote.subtotalRegular)"></td></tr>
                 <tr x-show="liveQuote.discountKennismaking > 0">
                     <td class="text-green-700">{{ $T['discount_intro'] }}</td><td></td>
@@ -482,6 +509,11 @@
                 <tr x-show="liveQuote.discountPilot > 0">
                     <td class="text-green-700">{{ $T['discount_pilot'] }}</td><td></td>
                     <td class="text-right font-mono text-green-700" x-text="'− ' + fmt(liveQuote.discountPilot)"></td></tr>
+                <tr x-show="liveQuote.coupon">
+                    <td class="text-green-700">{{ $T['coupon'] }} <span x-text="liveQuote.coupon?.code"></span>
+                        <span x-show="liveQuote.coupon?.pct" class="text-xs text-gray-500 whitespace-nowrap"
+                              x-text="liveQuote.coupon?.pct ? '(' + String(liveQuote.coupon.pct).replace('.', ',') + '% × ' + fmt(liveQuote.coupon.base) + ')' : ''"></span></td><td></td>
+                    <td class="text-right font-mono text-green-700" x-text="liveQuote.coupon ? '− ' + fmt(liveQuote.coupon.amount) : ''"></td></tr>
                 <tr><td class="text-gray-600">{{ $T['vat'] }}</td><td></td>
                     <td class="text-right font-mono" x-text="fmt(liveQuote.vat)"></td></tr>
                 <tr class="border-t-2 border-black">

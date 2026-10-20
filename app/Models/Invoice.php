@@ -68,30 +68,9 @@ class Invoice extends Model
             fn ($l) => !\App\Support\Pricing::isCouponLine($l)
         ));
 
-        // Twee bedragen, en ze zijn niet hetzelfde. Het factuurbedrag is de
-        // bovengrens van wat een korting kan wegnemen, want meer terugbrengen dan
-        // er staat kan niet. De grondslag van het percentage is smaller en laat de
-        // ophaalregels erbuiten, zie grossExclBtw().
-        $factuurbedrag = round(array_sum(array_column($lines, 'subtotal')), 2);
-        $grondslag     = round(array_sum(array_map(
-            fn ($l) => \App\Support\Pricing::isPickupLine($l) ? 0 : $l['subtotal'],
-            $lines
-        )), 2);
-
-        $order    = $this->order;
-        $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $factuurbedrag);
-
-        if ($order && !empty($order->coupon_code) && $discount > 0) {
-            // De grondslag is het bedrag van deze factuur, niet wat er bij het
-            // toekennen op de order stond: de klant moet de som kunnen nalopen
-            // met de regels die hij voor zich heeft.
-            $lines[] = \App\Support\Pricing::couponLine(
-                $order->coupon_code,
-                $discount,
-                $order->coupon_type,
-                $order->coupon_value !== null ? (float) $order->coupon_value : null,
-                $grondslag,
-            );
+        $coupon = self::couponLineFor($lines, $this->order);
+        if ($coupon !== null) {
+            $lines[] = $coupon;
         }
 
         $subtotal = round(array_sum(array_column($lines, 'subtotal')), 2);
@@ -105,6 +84,45 @@ class Invoice extends Model
         ]);
 
         return $this;
+    }
+
+    /**
+     * De kortingsregel die de kortingscode van de order oplevert op deze regels,
+     * of null als er geen korting is.
+     *
+     * Eén plek voor de som, want de bon rekent hem ook uit. Toont de bon een
+     * ander bedrag dan straks op de factuur staat, dan tekent de klant niet.
+     */
+    public static function couponLineFor(array $lines, ?Order $order): ?array
+    {
+        $lines = array_filter($lines, fn ($l) => !\App\Support\Pricing::isCouponLine($l));
+
+        // Twee bedragen, en ze zijn niet hetzelfde. Het factuurbedrag is de
+        // bovengrens van wat een korting kan wegnemen, want meer terugbrengen dan
+        // er staat kan niet. De grondslag van het percentage is smaller en laat de
+        // ophaalregels erbuiten, zie grossExclBtw().
+        $factuurbedrag = round(array_sum(array_column($lines, 'subtotal')), 2);
+        $grondslag     = round(array_sum(array_map(
+            fn ($l) => \App\Support\Pricing::isPickupLine($l) ? 0 : $l['subtotal'],
+            $lines
+        )), 2);
+
+        $discount = min(round((float) ($order?->coupon_discount ?? 0), 2), $factuurbedrag);
+
+        if (! $order || empty($order->coupon_code) || $discount <= 0) {
+            return null;
+        }
+
+        // De grondslag is het bedrag van deze factuur, niet wat er bij het
+        // toekennen op de order stond: de klant moet de som kunnen nalopen
+        // met de regels die hij voor zich heeft.
+        return \App\Support\Pricing::couponLine(
+            $order->coupon_code,
+            $discount,
+            $order->coupon_type,
+            $order->coupon_value !== null ? (float) $order->coupon_value : null,
+            $grondslag,
+        );
     }
 
     /**
