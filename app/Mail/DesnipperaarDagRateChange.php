@@ -35,10 +35,10 @@ class DesnipperaarDagRateChange extends Mailable
         $salesEmail = config('desnipperaar.notifications.sales_email');
 
         $subject = match ($this->mailLocale) {
-            'en' => "Last chance for {$this->oldPct}% off on the DestructionDay",
-            'fr' => "Dernière chance pour {$this->oldPct}% au Jour de Destruction",
-            'es' => "Última oportunidad de {$this->oldPct}% en el Día de Destrucción",
-            default => "Nog één keer {$this->oldPct}% korting op de SnipperDag",
+            'en' => "Still {$this->oldPct}% off on the DestructionDay until 1 November",
+            'fr' => "Encore {$this->oldPct}% au Jour de Destruction jusqu'au 1er novembre",
+            'es' => "Todavía un {$this->oldPct}% en el Día de Destrucción hasta el 1 de noviembre",
+            default => "Profiteer nog van {$this->oldPct}% korting op de SnipperDag",
         };
 
         return new Envelope(
