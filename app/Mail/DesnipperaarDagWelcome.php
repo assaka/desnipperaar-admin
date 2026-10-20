@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Subscriber;
+use App\Support\DagDiscount;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -21,8 +22,11 @@ class DesnipperaarDagWelcome extends Mailable
 
     public string $mailLocale;
 
-    public function __construct(public Subscriber $subscriber, public int $pct = 35)
+    public int $pct;
+
+    public function __construct(public Subscriber $subscriber, ?int $pct = null)
     {
+        $this->pct = $pct ?? DagDiscount::pct();
         $this->mailLocale = in_array($subscriber->lang, ['nl', 'en', 'fr', 'es'], true)
             ? $subscriber->lang : 'nl';
     }

@@ -5,6 +5,16 @@ return [
     // Public customer-facing site. The pickup planning page lives there.
     'public_url' => env('PUBLIC_SITE_URL', 'https://desnipperaar.nl'),
 
+    // SnipperDag-korting. Een geplande wijziging staat onder next_pct met een
+    // ingangsdatum (Amsterdamse tijd), zodat de nieuwe korting op die dag vanzelf
+    // ingaat. De publieke site kent dezelfde datum in site-config.json discount;
+    // zet die mee om. Zie App\Support\DagDiscount.
+    'dag' => [
+        'pct'       => 35,
+        'next_pct'  => 25,
+        'next_from' => '2026-11-01',
+    ],
+
     'order' => [
         'prefix'        => env('DESNIPPERAAR_ORDER_PREFIX', 'B'),  // bestelling
         'quote_prefix'  => env('DESNIPPERAAR_QUOTE_PREFIX', 'O'),  // offerte

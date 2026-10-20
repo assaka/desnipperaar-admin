@@ -51,9 +51,9 @@ class CouponController extends Controller
      *
      * 10 en niet 25: iemand met een gevulde wagen voor zich heeft minder duwtje
      * nodig dan iemand die een blog las, en de aflopende klok doet hier het werk
-     * dat de hoogte van de korting anders zou moeten doen. Zo houdt WELKOM25 op
-     * de contentpagina's zijn plek en blijft de SnipperDag met 35 procent een
-     * echte reden om zich aan te melden.
+     * dat de hoogte van de korting anders zou moeten doen. Zo houdt de WELKOM-code
+     * op de contentpagina's zijn plek en blijft de SnipperDag een echte reden om
+     * zich aan te melden (percentages in DagDiscount en site-config.json).
      *
      * Codes die al zijn uitgegeven houden hun eigen percentage, want dat staat
      * per rij opgeslagen. Wat is toegezegd blijft staan.

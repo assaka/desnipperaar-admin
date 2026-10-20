@@ -6,6 +6,7 @@ use App\Mail\DesnipperaarDagAnnouncement;
 use App\Models\Coupon;
 use App\Models\DagAnnouncement;
 use App\Models\Subscriber;
+use App\Support\DagDiscount;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Mail;
  * The chosen day is derived deterministically from the ISO week so a daily cron
  * always agrees on "is today the day" without storing a schedule, yet the day
  * differs from week to week. On that day the command mints a fresh single-use-day
- * coupon (random code prefixed "SNIPPERDAG", 35%, expiring at midnight) and
+ * coupon (random code prefixed "SNIPPERDAG", DagDiscount::pct(), expiring at midnight) and
  * e-mails every active subscriber in their own language. A fresh code per event
  * means a leaked code can't be reused on another day. Idempotent: the unique
  * dag_announcements row (which also stores that day's code) stops a double send
@@ -31,13 +32,13 @@ class SendDagAnnouncement extends Command
     protected $description = 'Announce SnipperDag to subscribers when today is this week\'s random discount day.';
 
     private const PREFIX = 'SNIPPERDAG';
-    private const PCT    = 35;
 
     public function handle(): int
     {
         $today  = now('Europe/Amsterdam');
         $chosen = $this->chosenWeekday($today);
         $isDay  = $today->dayOfWeekIso === $chosen || $this->option('force');
+        $pctNow = DagDiscount::pct($today);
 
         $this->line("This week's SnipperDag falls on " . Carbon::now('Europe/Amsterdam')
             ->startOfWeek()->addDays($chosen - 1)->locale('nl')->translatedFormat('l') . '.');
@@ -55,7 +56,7 @@ class SendDagAnnouncement extends Command
         }
 
         $recipients = Subscriber::active()->whereNotNull('unsubscribe_token')->get();
-        $this->info("SnipperDag is today. {$recipients->count()} active subscriber(s), " . self::PCT . '%.');
+        $this->info("SnipperDag is today. {$recipients->count()} active subscriber(s), {$pctNow}%.");
 
         if ($this->option('dry-run')) {
             $this->warn('Dry run: no coupon minted, no mail sent.');
@@ -68,7 +69,7 @@ class SendDagAnnouncement extends Command
 
         if (! $coupon) {
             $record->code = $this->freshCode();
-            $coupon = new Coupon(['code' => $record->code, 'type' => 'percentage', 'value' => self::PCT]);
+            $coupon = new Coupon(['code' => $record->code, 'type' => 'percentage', 'value' => $pctNow]);
         }
         // Valid for this one day only (created today, expires tonight).
         $coupon->fill([
