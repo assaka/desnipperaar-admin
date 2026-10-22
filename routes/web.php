@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/mail', [\App\Http\Controllers\OrderController::class, 'mail'])->name('orders.mail');
     Route::post('/orders/{order}/whatsapp', [\App\Http\Controllers\OrderController::class, 'whatsapp'])->name('orders.whatsapp');
     Route::post('/orders/{order}/send-quote', [\App\Http\Controllers\OrderController::class, 'sendQuote'])->name('orders.send-quote');
+    Route::get('/orders/{order}/quote-pdf', [\App\Http\Controllers\OrderController::class, 'quotePdf'])->name('orders.quote-pdf');
     Route::post('/orders/{order}/quote-valid-until', [\App\Http\Controllers\OrderController::class, 'updateQuoteValidUntil'])->name('orders.quote-valid-until');
     Route::post('/orders/{order}/confirm-pickup', [\App\Http\Controllers\OrderController::class, 'confirmPickup'])->name('orders.confirm-pickup');
     Route::get('/orders/{order}/slots', [\App\Http\Controllers\OrderController::class, 'slots'])->name('orders.slots');

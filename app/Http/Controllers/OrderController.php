@@ -17,6 +17,7 @@ use App\Models\Driver;
 use App\Models\Order;
 use App\Models\OrderMessage;
 use App\Support\WhatsApp;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -1260,6 +1261,24 @@ class OrderController extends Controller
      * publieke offertepagina leest dezelfde datum, dus de wijziging werkt
      * meteen door. De klant wordt niet gemaild.
      */
+    /**
+     * De offerte als PDF op briefpapier. Inkoopafdelingen vragen daarom om een
+     * nieuwe leverancier als crediteur aan te maken, de publieke offertelink
+     * volstaat daar niet. De taal komt van de knop, zie offertes/pdf.
+     */
+    public function quotePdf(Request $request, Order $order)
+    {
+        abort_unless(
+            in_array($order->type, [Order::TYPE_QUOTE, Order::TYPE_ABONNEMENT], true)
+                && $order->quoted_amount_excl_btw !== null,
+            404
+        );
+        $lang = $request->query('lang') === 'en' ? 'en' : 'nl';
+
+        $pdf = Pdf::loadView('offertes.pdf', ['order' => $order, 'lang' => $lang])->setPaper('a4');
+        return $pdf->stream("desnipperaar-{$order->order_number}.pdf");
+    }
+
     public function updateQuoteValidUntil(Request $request, Order $order)
     {
         abort_unless(

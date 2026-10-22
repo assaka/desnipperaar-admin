@@ -365,6 +365,7 @@
                     Bedrag: <strong>€ {{ number_format($order->quoted_amount_excl_btw, 2, ',', '.') }}</strong> excl. btw
                     (€ {{ number_format($order->quoted_amount_excl_btw * 1.21, 2, ',', '.') }} incl.)
                 </div>
+                @include('orders._quote_pdf_links')
             @else
                 @if ($order->quote_sent_at)
                     <div class="text-sm mb-3">
@@ -380,6 +381,7 @@
                             @php $publicQuoteUrl = rtrim(config('desnipperaar.public_url'), '/').'/offerte/'.$order->quote_token; @endphp
                             <br>Publieke offertelink: <a href="{{ $publicQuoteUrl }}" target="_blank" class="underline font-mono text-xs">{{ $publicQuoteUrl }}</a>
                         </div>
+                        @include('orders._quote_pdf_links')
                         <form method="POST" action="{{ route('orders.quote-valid-until', $order) }}" class="flex flex-wrap items-end gap-2 mb-3">
                             @csrf
                             <label class="text-sm">
