@@ -32,7 +32,7 @@ class OrderController extends Controller
         // regel twee queries bij.
         $orders = Order::with(['customer', 'invoices', 'certificates'])
             ->where('type', Order::TYPE_DIRECT)
-            ->orderByDesc('id')
+            ->latestOrdered()
             ->paginate(25);
         return view('orders.index', compact('orders'));
     }
@@ -55,7 +55,7 @@ class OrderController extends Controller
     {
         $abonnementen = Order::with('customer')
             ->where('type', Order::TYPE_ABONNEMENT)
-            ->orderByDesc('id')
+            ->latestOrdered()
             ->paginate(25);
         return view('abonnementen.index', compact('abonnementen'));
     }

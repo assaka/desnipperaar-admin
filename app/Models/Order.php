@@ -392,6 +392,21 @@ class Order extends Model
         return $this->quote_valid_until && $this->quote_valid_until->isPast();
     }
 
+    /**
+     * Wanneer dit een order werd. Bij een geaccepteerde offerte is dat het
+     * moment van accepteren, niet created_at: die staat nog op de offertedatum.
+     */
+    public function orderedAt(): \Carbon\Carbon
+    {
+        return $this->quote_accepted_at ?? $this->created_at;
+    }
+
+    /** Sorteert op orderedAt(), nieuwste eerst. */
+    public function scopeLatestOrdered($query)
+    {
+        return $query->orderByRaw('COALESCE(quote_accepted_at, created_at) DESC')->orderByDesc('id');
+    }
+
     public static function generateOrderNumber(): string
     {
         return \App\Support\NumberSequence::next(config('desnipperaar.order.prefix'), (int) config('desnipperaar.order.start'));

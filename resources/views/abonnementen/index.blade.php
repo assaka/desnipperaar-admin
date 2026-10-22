@@ -62,7 +62,7 @@
                         {{ $abo->customer_name }}
                         @if ($abo->customer?->company) <span class="text-xs text-gray-500">— {{ $abo->customer->company }}</span>@endif
                     </td>
-                    <td class="text-sm">{{ $abo->created_at->format('Y-m-d H:i') }}</td>
+                    <td class="text-sm">{{ $abo->orderedAt()->format('Y-m-d H:i') }}</td>
                     <td>
                         <span class="inline-block px-2 py-1 text-xs font-bold uppercase {{ $statusClass }}">{{ $statusLabel }}</span>
                     </td>

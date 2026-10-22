@@ -74,7 +74,7 @@
                         @endif
                     </td>
                     <td>@include('orders._status')</td>
-                    <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                    <td>{{ $order->orderedAt()->format('Y-m-d H:i') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="9" class="py-6 text-center text-gray-500">Nog geen orders.</td></tr>
