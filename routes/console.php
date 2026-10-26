@@ -31,6 +31,14 @@ Schedule::command('subscriptions:invoice')
     ->timezone('Europe/Amsterdam')
     ->withoutOverlapping();
 
+// Dagelijks 03:15 Europe/Amsterdam: conceptfacturen voor de maandhuur van losse
+// rolcontainers die bij de klant blijven staan. Idempotent via dezelfde unique
+// index op (order_id, period_start).
+Schedule::command('containers:invoice-rent')
+    ->dailyAt('03:15')
+    ->timezone('Europe/Amsterdam')
+    ->withoutOverlapping();
+
 // Dagelijks 02:30 Europe/Amsterdam: rollend venster van 90 dagen aan ophalingen
 // voor lopende abonnementen, als losse orders met een datum zodat ze op het
 // planbord staan. Idempotent via de unique index op

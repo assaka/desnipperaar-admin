@@ -48,6 +48,17 @@ return [
         'prefix' => env('DESNIPPERAAR_CERT_PREFIX', 'C'),
     ],
 
+    // Losse rolcontainer die bij de klant blijft staan in plaats van in dezelfde
+    // rit mee terug te gaan. Een extra rit per order plus huur per container per
+    // maand, beide excl. btw en buiten de grondslag van een kortingscode. De
+    // eerste maand staat op de orderfactuur, de volgende maanden factureert
+    // containers:invoice-rent. Zelfde bedragen als order.html en
+    // partials/prijzen-tarieven*.html op de publieke site.
+    'container_keep' => [
+        'trip'       => (float) env('CONTAINER_KEEP_TRIP', 105),
+        'rent_month' => (float) env('CONTAINER_KEEP_RENT_MONTH', 9.50),
+    ],
+
     'pickup' => [
         // Spoed ophalen. Drie standen, want spoed geldt nu wel in regio Amsterdam
         // en nog niet daarbuiten:

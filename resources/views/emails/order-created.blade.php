@@ -193,6 +193,11 @@
     <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Staffelkorting toegepast en al in prijzen verwerkt.</p>
 @endif
 
+@if ($order->keepsContainer())
+@php $n = (int) $order->container_count; $rent = number_format(\App\Support\Pricing::keepRentMonth(), 2, ',', '.'); @endphp
+<p style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">U laat {{ $n }} rolcontainer{{ $n > 1 ? 's' : '' }} bij u staan. Deze bevestiging bevat de extra rit en de eerste maand huur. <strong>Voor elke volgende maand ontvangt u een aparte factuur</strong> van € {{ $rent }} per container, tot wij de container ophalen. Laat ons weten wanneer hij weg mag.</p>
+@endif
+
 @if ($order->quote_body)
 <div style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">{!! nl2br(e($order->quote_body)) !!}</div>
 @endif

@@ -97,6 +97,9 @@ class Order extends Model
         'delivery_mode',
         'box_count',
         'container_count',
+        'container_keep',
+        'container_keep_since',
+        'container_collected_on',
         'media_items',
         'notes',
         'state',
@@ -199,6 +202,9 @@ class Order extends Model
         'review_requested_at' => 'datetime',
         'box_count' => 'integer',
         'container_count' => 'integer',
+        'container_keep' => 'boolean',
+        'container_keep_since' => 'date',
+        'container_collected_on' => 'date',
         'duration_minutes' => 'integer',
         'is_organizer' => 'boolean',
         'quote_locked' => 'boolean',
@@ -605,6 +611,7 @@ class Order extends Model
                 (bool) $this->first_box_free,
                 (float) $this->pickup_cost,
                 (float) $this->pickup_rush_fee,
+                $this->keepsContainer(),
             );
     }
 
@@ -679,6 +686,29 @@ class Order extends Model
     public function canWithdrawCoupon(): bool
     {
         return $this->hasCoupon() && ! $this->isPickedUp();
+    }
+
+    /** Laat de klant zijn losse rolcontainer(s) langer staan, tegen huur? */
+    public function keepsContainer(): bool
+    {
+        return (bool) $this->container_keep && (int) $this->container_count > 0 && ! $this->isAbonnement();
+    }
+
+    /**
+     * Het aantal containers waarover huur loopt. Wat de chauffeur op de bon
+     * telde gaat voor wat er besteld is, net als bij de orderfactuur.
+     */
+    public function keptContainerCount(): int
+    {
+        $bon = $this->bons()->whereNotNull('picked_up_at')->orderBy('picked_up_at')->first();
+
+        return (int) ($bon?->actual_containers ?? $this->container_count);
+    }
+
+    /** Staat er nu een container van deze order bij de klant? */
+    public function hasContainerOnSite(): bool
+    {
+        return $this->keepsContainer() && $this->container_keep_since && ! $this->container_collected_on;
     }
 
     /** Alle ritten onder dit abonnement: bezorging, ophalingen en retour. */

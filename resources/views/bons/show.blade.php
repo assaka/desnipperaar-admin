@@ -32,6 +32,9 @@
         'Daarna eerste doos'         => ['nl' => 'Daarna eerste doos', 'en' => 'Then first box', 'fr' => 'Puis première boîte', 'es' => 'Luego primera caja'],
         'Eerste rolcontainer 240 L'  => ['nl' => 'Eerste rolcontainer 240 L', 'en' => 'First roll container 240 L', 'fr' => 'Premier conteneur roulant 240 L', 'es' => 'Primer contenedor con ruedas 240 L'],
         'Volgende rolcontainers'     => ['nl' => 'Volgende rolcontainers', 'en' => 'Additional roll containers', 'fr' => 'Conteneurs roulants suivants', 'es' => 'Contenedores con ruedas adicionales'],
+        'Extra rit, container blijft staan' => ['nl' => 'Extra rit, container blijft staan', 'en' => 'Extra trip, container stays', 'fr' => 'Trajet supplémentaire, le conteneur reste', 'es' => 'Viaje adicional, el contenedor se queda'],
+        'Huur rolcontainer 240 L, eerste maand' => ['nl' => 'Huur rolcontainer 240 L, eerste maand', 'en' => 'Roll container 240 L rental, first month', 'fr' => 'Location conteneur roulant 240 L, premier mois', 'es' => 'Alquiler contenedor con ruedas 240 L, primer mes'],
+        'Huur rolcontainer 240 L per maand' => ['nl' => 'Huur rolcontainer 240 L per maand', 'en' => 'Roll container 240 L rental per month', 'fr' => 'Location conteneur roulant 240 L par mois', 'es' => 'Alquiler contenedor con ruedas 240 L al mes'],
         'HDD'                        => ['nl' => 'HDD', 'en' => 'HDD', 'fr' => 'HDD', 'es' => 'HDD'],
         'SSD / NVMe'                 => ['nl' => 'SSD / NVMe', 'en' => 'SSD / NVMe', 'fr' => 'SSD / NVMe', 'es' => 'SSD / NVMe'],
         'USB / SD'                   => ['nl' => 'USB / SD', 'en' => 'USB / SD', 'fr' => 'USB / SD', 'es' => 'USB / SD'],
@@ -275,7 +278,7 @@
         // Ophaalregels en kortingscode staan los van de aantallen, dus die komen
         // vast mee uit de controller. De som van de korting is die van
         // Invoice::couponLineFor(), anders wijkt het gecorrigeerde totaal af van de factuur.
-        pickupLines: {{ \Illuminate\Support\Js::from(array_values(array_map(fn ($l) => ['label' => $ll($l['label'])] + $l, array_filter($orderedQuote['lines'], fn ($l) => \App\Support\Pricing::isPickupLine($l))))) }},
+        pickupLines: {{ \Illuminate\Support\Js::from(array_values(array_map(fn ($l) => ['label' => $ll($l['label'])] + $l, array_filter($orderedQuote['lines'], fn ($l) => \App\Support\Pricing::isPickupLine($l) || \App\Support\Pricing::isKeepLine($l))))) }},
         coupon: {{ \Illuminate\Support\Js::from($isSubVisit || ! $bon->order->coupon_code ? null : ['code' => strtoupper(trim($bon->order->coupon_code)), 'discount' => round((float) $bon->order->coupon_discount, 2), 'type' => $bon->order->coupon_type, 'value' => $bon->order->coupon_value !== null ? (float) $bon->order->coupon_value : null]) }},
         get diff() {
             if ((this.actBoxes|0) !== this.expBoxes) return true;
@@ -335,7 +338,7 @@
             let coupon = null;
             if (this.coupon && this.coupon.discount > 0) {
                 const amount = r2(Math.min(this.coupon.discount, subtotal));
-                const base   = r2(lines.filter(l => l.kind !== 'pickup').reduce((s,l)=>s+l.subtotal,0));
+                const base   = r2(lines.filter(l => l.kind !== 'pickup' && l.kind !== 'keep').reduce((s,l)=>s+l.subtotal,0));
                 if (amount > 0) {
                     coupon = {code: this.coupon.code, amount};
                     if (this.coupon.type === 'percentage' && this.coupon.value > 0 && base > 0

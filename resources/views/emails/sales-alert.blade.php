@@ -36,6 +36,9 @@
   @endif
   @if ($order->container_count)
     <tr><td style="color:#666;">Rolcontainers</td><td>{{ $order->container_count }}</td></tr>
+    @if ($order->keepsContainer())
+      <tr><td style="color:#666;">Blijft staan</td><td><strong>Ja</strong>, extra rit + huur per maand. Plan de ophaalrit later.</td></tr>
+    @endif
   @endif
   @if ($order->isAbonnement())
     <tr><td style="color:#666;">Frequentie</td><td>{{ $order->subFreqLabel() }}</td></tr>

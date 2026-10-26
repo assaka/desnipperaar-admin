@@ -309,6 +309,56 @@ class Pricing
         return in_array($line['label'] ?? '', self::PICKUP_LABELS, true);
     }
 
+    // Labels van de regels voor een container die blijft staan. Vast, zodat de
+    // anderstalige mails en facturen ze in hun labelMap kunnen vertalen.
+    public const KEEP_TRIP_LABEL  = 'Extra rit, container blijft staan';
+    public const KEEP_RENT_LABEL  = 'Huur rolcontainer 240 L, eerste maand';
+    public const KEEP_MONTH_LABEL = 'Huur rolcontainer 240 L per maand';
+
+    public static function keepTrip(): float
+    {
+        return (float) config('desnipperaar.container_keep.trip', 105);
+    }
+
+    public static function keepRentMonth(): float
+    {
+        return (float) config('desnipperaar.container_keep.rent_month', 9.50);
+    }
+
+    /**
+     * De twee regels voor een container die bij de klant blijft staan: één
+     * extra rit per order en de eerste maand huur per container. Leeg zonder
+     * containers. De volgende maanden staan op een eigen factuur, zie
+     * Invoice::fromContainerRent().
+     */
+    public static function keepLines(int $containers): array
+    {
+        if ($containers <= 0) {
+            return [];
+        }
+        $trip = self::keepTrip();
+        $rent = self::keepRentMonth();
+
+        return [
+            ['label' => self::KEEP_TRIP_LABEL, 'kind' => 'keep', 'qty' => 1, 'unit' => $trip, 'subtotal' => $trip],
+            ['label' => self::KEEP_RENT_LABEL, 'kind' => 'keep', 'qty' => $containers, 'unit' => $rent, 'subtotal' => round($rent * $containers, 2)],
+        ];
+    }
+
+    /**
+     * True voor een regel van een container die blijft staan. Die staat net als
+     * de ophaalregels buiten de grondslag van een kortingscode: een rit en huur,
+     * geen vernietiging.
+     */
+    public static function isKeepLine(array $line): bool
+    {
+        if (($line['kind'] ?? null) === 'keep') {
+            return true;
+        }
+
+        return in_array($line['label'] ?? '', [self::KEEP_TRIP_LABEL, self::KEEP_RENT_LABEL, self::KEEP_MONTH_LABEL], true);
+    }
+
     /**
      * De kortingscode als eigen regel met een negatief bedrag.
      *
@@ -516,7 +566,8 @@ class Pricing
         bool $pilot,
         bool $firstBoxFree,
         float $pickupCost = 0.0,
-        float $pickupRushFee = 0.0
+        float $pickupRushFee = 0.0,
+        bool $keepContainer = false
     ): array {
         if ($pilot) {
             // Pilot replaces all organizer perks per the pricing rule.
@@ -524,6 +575,17 @@ class Pricing
         }
 
         $quote = self::quote($boxes, $containers, $pilot, $firstBoxFree);
+
+        // Container die blijft staan: de regels gaan mee in 'lines', zodat elke
+        // template ze toont zonder eigen tak. Geen korting, dus subtotal en
+        // subtotal_regular groeien even hard.
+        if ($keepContainer) {
+            $keep = self::keepLines($containers);
+            $keepSum = array_sum(array_column($keep, 'subtotal'));
+            $quote['lines']            = array_merge($quote['lines'], $keep);
+            $quote['subtotal']         = round($quote['subtotal'] + $keepSum, 2);
+            $quote['subtotal_regular'] = round($quote['subtotal_regular'] + $keepSum, 2);
+        }
 
         $mediaLines = [];
         foreach (($mediaItems ?? []) as $key => $qty) {

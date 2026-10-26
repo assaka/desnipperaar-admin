@@ -426,6 +426,40 @@
         </div>
     @endif
 
+    {{-- Losse container die bij de klant blijft staan. De huur loopt per maand
+         vanaf de rit waarop hij bleef staan; containers:invoice-rent maakt elke
+         maand een conceptfactuur tot hier de ophaaldatum staat. --}}
+    @if ($order->keepsContainer())
+        @php $rentInvoices = $order->invoices->whereNotNull('period_start')->count(); @endphp
+        <section class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 text-sm">
+            <h2 class="font-black mb-2">Container blijft staan</h2>
+            <p>
+                {{ $order->container_count }} × rolcontainer 240 L ·
+                € {{ number_format(\App\Support\Pricing::keepTrip(), 2, ',', '.') }} extra rit +
+                € {{ number_format(\App\Support\Pricing::keepRentMonth(), 2, ',', '.') }} per container per maand.
+            </p>
+            @if (! $order->container_keep_since)
+                <p class="text-gray-600 mt-1">Staat nog niet bij de klant. De huur begint op de dag dat de bon wordt getekend.</p>
+            @else
+                <p class="mt-1">
+                    Bij de klant sinds <strong>{{ $order->container_keep_since->format('d-m-Y') }}</strong>.
+                    Eerste maand op de orderfactuur, {{ $rentInvoices }} huurfactuur{{ $rentInvoices === 1 ? '' : 'en' }} daarna.
+                </p>
+                @if ($order->container_collected_on)
+                    <p class="mt-1 text-green-700 font-bold">Opgehaald op {{ $order->container_collected_on->format('d-m-Y') }}. De huur is gestopt.</p>
+                @else
+                    <form method="POST" action="{{ route('orders.container-collected', $order) }}" class="mt-3 flex items-center gap-2">
+                        @csrf
+                        <label for="container_collected_on">Container opgehaald op</label>
+                        <input type="date" id="container_collected_on" name="container_collected_on" value="{{ now()->toDateString() }}" class="border px-2 py-1" required>
+                        <button type="submit" class="bg-black text-white px-3 py-1 font-bold">Huur stoppen</button>
+                    </form>
+                    <p class="text-xs text-gray-500 mt-1">Een maand die al begonnen is blijft gefactureerd.</p>
+                @endif
+            @endif
+        </section>
+    @endif
+
     @if (count($quote['lines']))
         <section class="mb-6 bg-gray-50 border-l-4 border-yellow-400 p-4">
             <h2 class="font-black mb-2">Prijsoverzicht

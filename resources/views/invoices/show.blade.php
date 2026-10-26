@@ -163,7 +163,7 @@
                 @endphp
                 @foreach ($regels as $line)
                     <tr class="border-b">
-                        <td class="py-2">{{ $line['label'] }}</td>
+                        <td class="py-2">{{ $line['label'] }}@if (!empty($line['period']))<br><span class="text-xs text-gray-500">{{ $line['period'] }}</span>@endif</td>
                         <td class="text-right font-mono">{{ $line['qty'] }}</td>
                         <td class="text-right font-mono">
                             {{ $money($line['unit']) }}

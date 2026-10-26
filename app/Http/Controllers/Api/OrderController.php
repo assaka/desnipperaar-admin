@@ -57,6 +57,9 @@ class OrderController extends Controller
             'akkoord'    => 'nullable',
             'boxes'          => 'nullable|integer|min:0|max:500',
             'containers'     => 'nullable|integer|min:0|max:50',
+            // Container langer laten staan: extra rit + huur per maand. Alleen
+            // geldig met minstens één container, zie hieronder.
+            'container_keep' => 'nullable|in:0,1,true,false',
             'media_json'     => 'nullable|string|max:2000',
             'first_box_free' => 'nullable|in:0,1,true,false',
             'coupon_code'    => 'nullable|string|max:50',
@@ -301,6 +304,8 @@ class OrderController extends Controller
             'delivery_mode'      => $mode,
             'box_count'          => (int) ($data['boxes']      ?? 0),
             'container_count'    => (int) ($data['containers'] ?? 0),
+            'container_keep'     => (int) ($data['containers'] ?? 0) > 0
+                && in_array($data['container_keep'] ?? null, ['1', 'true', 1, true], true),
             'media_items'        => $mediaItems ?: null,
             'notes'              => $notes ?: null,
             'state'              => Order::STATE_NIEUW,

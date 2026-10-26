@@ -59,6 +59,11 @@ class BonController extends Controller
             if ($rushFee > 0) {
                 $q['lines'][] = ['label' => 'Spoedtoeslag ophalen', 'kind' => 'pickup', 'qty' => 1, 'unit' => $rushFee, 'subtotal' => $rushFee];
             }
+            // Container die blijft staan, op het bestelde aantal: dezelfde regels
+            // als op de orderfactuur (Invoice::fromBon).
+            if ($order->keepsContainer()) {
+                $q['lines'] = array_merge($q['lines'], \App\Support\Pricing::keepLines((int) $order->container_count));
+            }
             // Pricing::quote() kent alleen dozen en containers. De datadragers en
             // ophaalregels staan wel in de tabel, dus ook in het subtotaal ervan.
             // De staffel van datadragers telt niet als korting, net als in liveQuote.
@@ -218,6 +223,13 @@ class BonController extends Controller
         if ($bon->picked_up_at && ! $bon->order->isAbonnement()
             && in_array($bon->order->state, [\App\Models\Order::STATE_NIEUW, \App\Models\Order::STATE_BEVESTIGD])) {
             $bon->order->update(['state' => \App\Models\Order::STATE_OPGEHAALD]);
+        }
+
+        // Container die blijft staan: de dag van deze rit is het anker van de
+        // huurmaanden. Eén keer zetten; een latere bon (de rit waarop hij wordt
+        // opgehaald) verschuift het begin niet.
+        if ($bon->picked_up_at && $bon->order->keepsContainer() && ! $bon->order->container_keep_since) {
+            $bon->order->update(['container_keep_since' => $bon->picked_up_at->toDateString()]);
         }
 
         // Mail signed bon to customer — only once, when signature + pickup are both present.

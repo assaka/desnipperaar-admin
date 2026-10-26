@@ -7,6 +7,9 @@
         'Eerste doos'                => 'Primera caja',
         'Eerste rolcontainer 240 L'  => 'Primer contenedor con ruedas 240 L',
         'Volgende rolcontainers'     => 'Contenedores con ruedas adicionales',
+        'Extra rit, container blijft staan' => 'Viaje adicional, el contenedor se queda',
+        'Huur rolcontainer 240 L, eerste maand' => 'Alquiler contenedor con ruedas 240 L, primer mes',
+        'Huur rolcontainer 240 L per maand' => 'Alquiler contenedor con ruedas 240 L al mes',
         'Telefoon / tablet'          => 'Teléfono / tableta',
     ];
     $tr = fn ($label) => $labelMap[$label] ?? $label;
@@ -196,6 +199,11 @@
 </table>
 @if ($discountStaffel > 0)
     <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Descuento por volumen aplicado y ya incluido en estos precios.</p>
+@endif
+
+@if ($order->keepsContainer())
+@php $n = (int) $order->container_count; $rent = number_format(\App\Support\Pricing::keepRentMonth(), 2, ',', '.'); @endphp
+<p style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">Se queda con {{ $n }} contenedor{{ $n > 1 ? 'es' : '' }} con ruedas en su local. Esta confirmación incluye el viaje adicional y el primer mes de alquiler. <strong>Por cada mes siguiente recibirá una factura aparte</strong> de € {{ $rent }} por contenedor, hasta que recojamos el contenedor. Avísenos cuando pueda llevárselo.</p>
 @endif
 
 @if ($order->quote_body)

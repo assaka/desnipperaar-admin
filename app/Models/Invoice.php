@@ -103,7 +103,7 @@ class Invoice extends Model
         // ophaalregels erbuiten, zie grossExclBtw().
         $factuurbedrag = round(array_sum(array_column($lines, 'subtotal')), 2);
         $grondslag     = round(array_sum(array_map(
-            fn ($l) => \App\Support\Pricing::isPickupLine($l) ? 0 : $l['subtotal'],
+            fn ($l) => (\App\Support\Pricing::isPickupLine($l) || \App\Support\Pricing::isKeepLine($l)) ? 0 : $l['subtotal'],
             $lines
         )), 2);
 
@@ -138,7 +138,7 @@ class Invoice extends Model
     public function grossExclBtw(): float
     {
         return round(array_sum(array_map(
-            fn ($l) => (\App\Support\Pricing::isCouponLine($l) || \App\Support\Pricing::isPickupLine($l))
+            fn ($l) => (\App\Support\Pricing::isCouponLine($l) || \App\Support\Pricing::isPickupLine($l) || \App\Support\Pricing::isKeepLine($l))
                 ? 0
                 : $l['subtotal'],
             $this->lines ?? []
@@ -311,6 +311,59 @@ class Invoice extends Model
         ]);
     }
 
+    /**
+     * De huurfactuur voor één maand van een container die bij de klant staat.
+     *
+     * De eerste maand staat op de orderfactuur (fromBon), dus dit pad begint bij
+     * maand twee. Geen herrekening uit de orderprijzen en geen kortingscode: het
+     * is een vast bedrag per container per maand. De unique index op
+     * (order_id, period_start) houdt een tweede factuur voor dezelfde maand tegen.
+     */
+    public static function fromContainerRent(Order $order, \Carbon\Carbon $periodStart, \Carbon\Carbon $periodEnd): self
+    {
+        $customer    = $order->customer;
+        $periodStart = $periodStart->copy()->startOfDay();
+        $periodEnd   = $periodEnd->copy()->startOfDay();
+        $count       = $order->keptContainerCount();
+        $rent        = \App\Support\Pricing::keepRentMonth();
+
+        $lines = [[
+            'label'    => \App\Support\Pricing::KEEP_MONTH_LABEL,
+            'kind'     => 'keep',
+            // Taalneutraal, zodat elke factuurtaal hem onder het label kan zetten.
+            'period'   => $periodStart->format('d-m-Y').' – '.$periodEnd->format('d-m-Y'),
+            'qty'      => $count,
+            'unit'     => $rent,
+            'subtotal' => round($rent * $count, 2),
+        ]];
+
+        $subtotal = round(array_sum(array_column($lines, 'subtotal')), 2);
+        $vat      = round($subtotal * 0.21, 2);
+        $total    = round($subtotal + $vat, 2);
+
+        return self::create([
+            'invoice_number'    => self::generateInvoiceNumber(),
+            'order_id'          => $order->id,
+            'bon_id'            => null,
+            'period_start'      => $periodStart->toDateString(),
+            'period_end'        => $periodEnd->toDateString(),
+            'customer_name'     => $order->customer_name,
+            'customer_company'  => $customer?->company,
+            'customer_email'    => $order->customer_email,
+            'customer_address'  => $order->customer_address,
+            'customer_postcode' => $order->customer_postcode,
+            'customer_city'     => $order->customer_city,
+            'lines'             => $lines,
+            'amount_excl_btw'   => $subtotal,
+            'vat_rate'          => 0.21,
+            'vat_amount'        => $vat,
+            'amount_incl_btw'   => $total,
+            'issued_at'         => now()->toDateString(),
+            'due_at'            => now()->addDays(config('desnipperaar.invoice.payment_terms_days'))->toDateString(),
+            'status'            => self::STATUS_DRAFT,
+        ]);
+    }
+
     /** Build an invoice from a signed bon — sole entry point. */
     public static function fromBon(Bon $bon): self
     {
@@ -375,6 +428,12 @@ class Invoice extends Model
                 'unit'     => $rushFee,
                 'subtotal' => $rushFee,
             ];
+        }
+
+        // Container die blijft staan: extra rit en de eerste maand huur. De
+        // volgende maanden komen via fromContainerRent().
+        if ($order->keepsContainer()) {
+            $lines = array_merge($lines, \App\Support\Pricing::keepLines((int) $containers));
         }
 
         $subtotal = array_sum(array_column($lines, 'subtotal'));

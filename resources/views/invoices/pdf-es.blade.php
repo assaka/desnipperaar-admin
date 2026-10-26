@@ -55,6 +55,9 @@
         'Eerste doos'                => 'Primera caja',
         'Eerste rolcontainer 240 L'  => 'Primer contenedor con ruedas 240 L',
         'Volgende rolcontainers'     => 'Contenedores con ruedas adicionales',
+        'Extra rit, container blijft staan' => 'Viaje adicional, el contenedor se queda',
+        'Huur rolcontainer 240 L, eerste maand' => 'Alquiler contenedor con ruedas 240 L, primer mes',
+        'Huur rolcontainer 240 L per maand' => 'Alquiler contenedor con ruedas 240 L al mes',
         'Telefoon / tablet'          => 'Teléfono / tableta',
     ];
     $tr = fn ($label) => $labelMap[$label] ?? $label;
@@ -139,7 +142,7 @@
         <tbody>
             @foreach ($regels as $line)
                 <tr>
-                    <td>{{ $tr($line['label']) }}@if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
+                    <td>{{ $tr($line['label']) }}@if (!empty($line['period']))<br><span style="color:#777;font-size:0.9em;">{{ $line['period'] }}</span>@endif@if ($isStaffel($line))<span style="color:#2E7D32;font-weight:700;">&nbsp;*</span>@endif</td>
                     <td class="r">{{ $line['qty'] }}</td>
                     <td class="r">
                         {{ $money($line['unit']) }}

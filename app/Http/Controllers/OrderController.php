@@ -730,6 +730,9 @@ class OrderController extends Controller
             if ($pickupCost > 0) {
                 $q['lines'][] = ['label' => \App\Support\Pricing::soonerPickupLabel($order->pickup_km), 'kind' => 'pickup', 'qty' => 1, 'unit' => $pickupCost, 'subtotal' => $pickupCost];
             }
+            if ($order->keepsContainer()) {
+                $q['lines'] = array_merge($q['lines'], \App\Support\Pricing::keepLines((int) $containers));
+            }
             $q['subtotal'] = round(array_sum(array_column($q['lines'], 'subtotal')), 2);
 
             // Pricing::quote() rekent subtotal_regular over dozen en containers; de
@@ -975,6 +978,26 @@ class OrderController extends Controller
      * De knop blijft daarna staan zodat je hem bewust nog eens kunt sturen, maar
      * de orderpagina zet erbij wanneer de vraag eruit ging en langs welk kanaal.
      */
+    /**
+     * Stop de huur van een container die bij de klant stond. Vanaf de maand die
+     * na deze datum begint maakt containers:invoice-rent geen factuur meer; een
+     * maand die al liep blijft gefactureerd.
+     */
+    public function containerCollected(Request $request, Order $order)
+    {
+        if (! $order->keepsContainer() || ! $order->container_keep_since) {
+            return back()->with('error', 'Bij deze order staat geen container bij de klant.');
+        }
+
+        $data = $request->validate([
+            'container_collected_on' => 'required|date|after_or_equal:'.$order->container_keep_since->toDateString(),
+        ]);
+
+        $order->update(['container_collected_on' => $data['container_collected_on']]);
+
+        return back()->with('success', 'Container opgehaald, de huur is gestopt.');
+    }
+
     public function askReview(Request $request, Order $order)
     {
         $channel = $request->input('channel') === 'whatsapp' ? 'whatsapp' : 'mail';

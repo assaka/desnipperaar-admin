@@ -7,6 +7,9 @@
         'Eerste doos'                => 'First box',
         'Eerste rolcontainer 240 L'  => 'First 240 L roll container',
         'Volgende rolcontainers'     => 'Additional roll containers',
+        'Extra rit, container blijft staan' => 'Extra trip, container stays',
+        'Huur rolcontainer 240 L, eerste maand' => 'Roll container 240 L rental, first month',
+        'Huur rolcontainer 240 L per maand' => 'Roll container 240 L rental per month',
         'Telefoon / tablet'          => 'Phone / tablet',
     ];
     $tr = fn ($label) => $labelMap[$label] ?? $label;
@@ -196,6 +199,11 @@
 </table>
 @if ($discountStaffel > 0)
     <p style="font-size:11px;color:#777;margin:-8px 0 16px;" class="staffel-note">* Volume discount applied and already included in these prices.</p>
+@endif
+
+@if ($order->keepsContainer())
+@php $n = (int) $order->container_count; $rent = number_format(\App\Support\Pricing::keepRentMonth(), 2, '.', ','); @endphp
+<p style="font-size:14px;line-height:1.6;background:#F7F7F4;padding:14px;border-left:3px solid #F5C518;margin:16px 0;">You are keeping {{ $n }} roll container{{ $n > 1 ? 's' : '' }} on site. This confirmation includes the extra trip and the first month of rent. <strong>You will receive a separate invoice for each following month</strong> of € {{ $rent }} per container, until we collect the container. Let us know when it can go.</p>
 @endif
 
 @if ($order->quote_body)
