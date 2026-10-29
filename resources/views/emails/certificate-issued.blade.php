@@ -8,7 +8,7 @@
 @if (! empty($corrected))
 <p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Gecorrigeerde versie.</strong>
 @if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
-Uw certificaat wordt automatisch aangemaakt. In uw offerte stond de optie mobiele vernietiging op locatie, waardoor de vorige versie een onjuiste locatie van vernietiging vermeldde. Uw materiaal is vernietigd in ons depot in Amsterdam-Noord. Die locatie staat nu op het certificaat. Dit exemplaar vervangt het certificaat dat u eerder ontving.
+In uw offerte stond de optie mobiele vernietiging op locatie, waardoor de vorige versie een onjuiste locatie van vernietiging vermeldde. Uw materiaal is vernietigd in ons depot in Amsterdam-Noord. Die locatie staat nu op het certificaat. Dit exemplaar vervangt het certificaat dat u eerder ontving.
 @else
 Dit certificaat vervangt het exemplaar dat u eerder van ons ontving. Gebruik voortaan deze versie.
 @endif

@@ -8,7 +8,7 @@
 @if (! empty($corrected))
 <p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Corrected version.</strong>
 @if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
-Your certificate is generated automatically. Your quote included the option of mobile destruction on site, so the previous version stated an incorrect location of destruction. Your material was destroyed at our depot in Amsterdam-Noord. That location is now on the certificate. This copy replaces the certificate you received earlier.
+Your quote included the option of mobile destruction on site, so the previous version stated an incorrect location of destruction. Your material was destroyed at our depot in Amsterdam-Noord. That location is now on the certificate. This copy replaces the certificate you received earlier.
 @else
 This certificate replaces the copy you received from us earlier. Please use this version from now on.
 @endif

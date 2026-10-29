@@ -8,7 +8,7 @@
 @if (! empty($corrected))
 <p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Versión corregida.</strong>
 @if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
-Su certificado se genera automáticamente. Su presupuesto incluía la opción de destrucción móvil in situ, por lo que la versión anterior indicaba un lugar de destrucción incorrecto. Su material se destruyó en nuestro depósito de Amsterdam-Noord. Ese lugar figura ahora en el certificado. Este ejemplar sustituye al certificado que recibió anteriormente.
+Su presupuesto incluía la opción de destrucción móvil in situ, por lo que la versión anterior indicaba un lugar de destrucción incorrecto. Su material se destruyó en nuestro depósito de Amsterdam-Noord. Ese lugar figura ahora en el certificado. Este ejemplar sustituye al certificado que recibió anteriormente.
 @else
 Este certificado sustituye al ejemplar que recibió anteriormente. Utilice a partir de ahora esta versión.
 @endif

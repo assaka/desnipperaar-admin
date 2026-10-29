@@ -8,7 +8,7 @@
 @if (! empty($corrected))
 <p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Version corrigée.</strong>
 @if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
-Votre certificat est généré automatiquement. Votre devis comprenait l'option de destruction mobile sur site, si bien que la version précédente indiquait un lieu de destruction erroné. Vos documents ont été détruits dans notre dépôt d'Amsterdam-Noord. C'est désormais ce lieu qui figure sur le certificat. Cet exemplaire remplace le certificat reçu précédemment.
+Votre devis comprenait l'option de destruction mobile sur site, si bien que la version précédente indiquait un lieu de destruction erroné. Vos documents ont été détruits dans notre dépôt d'Amsterdam-Noord. C'est désormais ce lieu qui figure sur le certificat. Cet exemplaire remplace le certificat reçu précédemment.
 @else
 Ce certificat remplace l'exemplaire que vous avez reçu précédemment. Veuillez désormais utiliser cette version.
 @endif
