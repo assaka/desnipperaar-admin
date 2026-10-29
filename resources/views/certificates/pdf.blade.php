@@ -320,7 +320,7 @@
 
     <footer class="pg">
         <div class="co">
-            {{ $co['name'] }} &middot; Mobiele documentvernietiging op locatie binnen 20 km van Amsterdam-Noord (1034DN)<br>
+            {{ $co['name'] }} &middot; Gecertificeerde documentvernietiging &middot; Amsterdam-Noord (1034DN)<br>
             {{ $co['email'] }} &middot; {{ $co['website'] }} &middot; KvK {{ $co['kvk'] ?: '[nummer]' }} &middot; BTW {{ $co['btw'] ?: '[nummer]' }}
         </div>
         <div class="badges">AVG-CONFORM &nbsp;·&nbsp; DIN 66399 &nbsp;·&nbsp; NEN-15713 &nbsp;·&nbsp; ISO 21964 &nbsp;·&nbsp; VERZEKERD &nbsp;·&nbsp; VOG</div>
@@ -362,7 +362,7 @@
 
     <footer class="pg">
         <div class="co">
-            {{ $co['name'] }} &middot; Mobiele documentvernietiging op locatie binnen 20 km van Amsterdam-Noord (1034DN)<br>
+            {{ $co['name'] }} &middot; Gecertificeerde documentvernietiging &middot; Amsterdam-Noord (1034DN)<br>
             {{ $co['email'] }} &middot; {{ $co['website'] }} &middot; KvK {{ $co['kvk'] ?: '[nummer]' }} &middot; BTW {{ $co['btw'] ?: '[nummer]' }}
         </div>
         <div class="badges">AVG-CONFORM &nbsp;·&nbsp; DIN 66399 &nbsp;·&nbsp; NEN-15713 &nbsp;·&nbsp; ISO 21964 &nbsp;·&nbsp; VERZEKERD &nbsp;·&nbsp; VOG</div>

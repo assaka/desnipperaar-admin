@@ -81,7 +81,7 @@
             'loc' => 'Locatie van vernietiging', 'onsite' => 'Mobiel op locatie opdrachtgever', 'depot' => 'Bij depot Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar bevestigt hierbij dat de bovenstaande materialen volledig en onomkeerbaar zijn vernietigd, conform AVG, DIN 66399, NEN-15713 en ISO 21964.',
             'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Opdrachtgever / getuige', 'name' => 'Naam', 'signature' => 'Handtekening', 'noSig' => 'De klant kon niet ondertekenen',
-            'tagline' => 'Mobiele documentvernietiging op locatie binnen 20 km van Amsterdam-Noord (1034DN)',
+            'tagline' => 'Gecertificeerde documentvernietiging · Amsterdam-Noord (1034DN)',
             'badges' => 'AVG-CONFORM · DIN 66399 · NEN-15713 · ISO 21964 · VERZEKERD · VOG',
         ],
         'en' => [
@@ -97,7 +97,7 @@
             'loc' => 'Location of destruction', 'onsite' => 'Mobile, at client location', 'depot' => 'At depot Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar hereby confirms that the materials listed above have been fully and irreversibly destroyed, in accordance with GDPR, DIN 66399, NEN-15713 and ISO 21964.',
             'operator' => 'Operator (DeSnipperaar)', 'witness' => 'Client / witness', 'name' => 'Name', 'signature' => 'Signature', 'noSig' => 'The customer was unable to sign',
-            'tagline' => 'Mobile document destruction on site within 20 km of Amsterdam-Noord (1034DN)',
+            'tagline' => 'Certified document destruction · Amsterdam-Noord (1034DN)',
             'badges' => 'GDPR · DIN 66399 · NEN-15713 · ISO 21964 · INSURED · VOG-SCREENED',
         ],
         'fr' => [
@@ -129,7 +129,7 @@
             'loc' => 'Lugar de destrucción', 'onsite' => 'Móvil en las instalaciones del cliente', 'depot' => 'En el depósito Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar confirma por la presente que los materiales indicados arriba han sido destruidos de forma completa e irreversible, conforme al RGPD, DIN 66399, NEN-15713 e ISO 21964.',
             'operator' => 'Operario (DeSnipperaar)', 'witness' => 'Cliente / testigo', 'name' => 'Nombre', 'signature' => 'Firma', 'noSig' => 'El cliente no estaba en condiciones de firmar',
-            'tagline' => 'Destrucción móvil de documentos in situ en un radio de 20 km de Amsterdam-Noord (1034DN)',
+            'tagline' => 'Destrucción certificada de documentos · Amsterdam-Noord (1034DN)',
             'badges' => 'CONFORME RGPD · DIN 66399 · NEN-15713 · ISO 21964 · ASEGURADO · PERSONAL CON VOG',
         ],
     ][$loc];
