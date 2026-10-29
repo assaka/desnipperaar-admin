@@ -19,7 +19,12 @@ class CertificateIssued extends Mailable
 
     public string $mailLocale;
 
-    public function __construct(public Certificate $certificate, public ?User $sender = null)
+    /**
+     * $corrected: het certificaat ging al eerder de deur uit en is daarna
+     * gecorrigeerd. De klant krijgt dan een mail die zegt dat deze versie de
+     * vorige vervangt, in plaats van dezelfde mail nog eens.
+     */
+    public function __construct(public Certificate $certificate, public ?User $sender = null, public bool $corrected = false)
     {
         $this->sender ??= $certificate->order?->senderUser();
         $orderLocale = $certificate->order?->locale;
@@ -35,6 +40,15 @@ class CertificateIssued extends Mailable
             default => "Certificaat van vernietiging {$this->certificate->certificate_number}",
         };
 
+        if ($this->corrected) {
+            $subject = match ($this->mailLocale) {
+                'en' => "Corrected certificate of destruction {$this->certificate->certificate_number}",
+                'fr' => "Certificat de destruction corrigé {$this->certificate->certificate_number}",
+                'es' => "Certificado de destrucción corregido {$this->certificate->certificate_number}",
+                default => "Gecorrigeerd certificaat van vernietiging {$this->certificate->certificate_number}",
+            };
+        }
+
         return new Envelope(
             subject: $subject,
             from: new Address(config('desnipperaar.notifications.sales_email'), 'DeSnipperaar'),
@@ -46,7 +60,7 @@ class CertificateIssued extends Mailable
     {
         return new Content(
             view: $this->mailLocale === 'nl' ? 'emails.certificate-issued' : 'emails.'.$this->mailLocale.'.certificate-issued',
-            with: ['certificate' => $this->certificate],
+            with: ['certificate' => $this->certificate, 'corrected' => $this->corrected],
         );
     }
 

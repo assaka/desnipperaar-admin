@@ -51,7 +51,10 @@
     $mi       = fn ($k) => (int) ($src[$k] ?? 0);
     $method   = $certificate->destruction_method ?: 'DIN 66399';
     $co       = config('desnipperaar.company');
-    $locOnsite = $bon && in_array($bon->mode, ['mobiel']);
+    $locOnsite  = $certificate->isOnsite();
+    $boxes      = $certificate->boxCount();
+    $cnts       = $certificate->containerCount();
+    $quoteLines = $certificate->quoteMaterialLines((array) $src);
     $weightSuffix = $certificate->weight_kg_final ? ' · ' . number_format($certificate->weight_kg_final, 1, ',', '.') . ' kg' : '';
 
     $toDataUri = function ($path) {
@@ -72,7 +75,7 @@
             'company' => 'Bedrijf / organisatie', 'address' => 'Adres', 'contact' => 'Contactpersoon',
             'emailphone' => 'E-mail / telefoon', 'coc' => 'Ophaal / chain of custody', 'seals' => 'Verzegelde container- / sealnummers',
             'materials' => 'Vernietigde materialen', 'colMat' => 'Materiaal', 'colQty' => 'Aantal / gewicht', 'colMethod' => 'Methode',
-            'paperBox' => 'Papier / dossiers (dozen)', 'paperCnt' => 'Papier / dossiers (rolcontainers 240 L)',
+            'paperKg' => 'Papier / dossiers (gewicht)', 'paperBox' => 'Papier / dossiers (dozen)', 'paperCnt' => 'Papier / dossiers (rolcontainers 240 L)',
             'hdd' => 'Harde schijven (HDD)', 'ssd' => 'SSDs', 'phone' => 'Mobiele telefoons', 'usb' => 'USB / geheugenkaarten', 'laptop' => 'Anders (laptop / overig)',
             'box' => 'doos', 'boxes' => 'dozen', 'cnt' => 'rolcontainer', 'cnts' => 'rolcontainers', 'items' => 'stuks',
             'loc' => 'Locatie van vernietiging', 'onsite' => 'Mobiel op locatie opdrachtgever', 'depot' => 'Bij depot Amsterdam-Noord (1034DN)',
@@ -88,7 +91,7 @@
             'company' => 'Company / organisation', 'address' => 'Address', 'contact' => 'Contact person',
             'emailphone' => 'Email / phone', 'coc' => 'Chain of custody', 'seals' => 'Sealed container / seal numbers',
             'materials' => 'Destroyed materials', 'colMat' => 'Material', 'colQty' => 'Quantity / weight', 'colMethod' => 'Method',
-            'paperBox' => 'Paper / files (boxes)', 'paperCnt' => 'Paper / files (240 L roll containers)',
+            'paperKg' => 'Paper / files (weight)', 'paperBox' => 'Paper / files (boxes)', 'paperCnt' => 'Paper / files (240 L roll containers)',
             'hdd' => 'Hard drives (HDD)', 'ssd' => 'SSDs', 'phone' => 'Mobile phones', 'usb' => 'USB / memory cards', 'laptop' => 'Other (laptop / misc.)',
             'box' => 'box', 'boxes' => 'boxes', 'cnt' => 'roll container', 'cnts' => 'roll containers', 'items' => 'items',
             'loc' => 'Location of destruction', 'onsite' => 'Mobile, at client location', 'depot' => 'At depot Amsterdam-Noord (1034DN)',
@@ -104,7 +107,7 @@
             'company' => 'Société / organisation', 'address' => 'Adresse', 'contact' => 'Personne de contact',
             'emailphone' => 'E-mail / téléphone', 'coc' => 'Enlèvement / chaîne de possession', 'seals' => 'Numéros de conteneur scellé / scellés',
             'materials' => 'Matériaux détruits', 'colMat' => 'Matériau', 'colQty' => 'Quantité / poids', 'colMethod' => 'Méthode',
-            'paperBox' => 'Papier / dossiers (cartons)', 'paperCnt' => 'Papier / dossiers (conteneurs roulants 240 L)',
+            'paperKg' => 'Papier / dossiers (poids)', 'paperBox' => 'Papier / dossiers (cartons)', 'paperCnt' => 'Papier / dossiers (conteneurs roulants 240 L)',
             'hdd' => 'Disques durs (HDD)', 'ssd' => 'SSD', 'phone' => 'Téléphones mobiles', 'usb' => 'USB / cartes mémoire', 'laptop' => 'Autres (ordinateur portable / divers)',
             'box' => 'carton', 'boxes' => 'cartons', 'cnt' => 'conteneur roulant', 'cnts' => 'conteneurs roulants', 'items' => 'unités',
             'loc' => 'Lieu de destruction', 'onsite' => 'Mobile sur le site du donneur d\'ordre', 'depot' => 'Au dépôt Amsterdam-Noord (1034DN)',
@@ -120,7 +123,7 @@
             'company' => 'Empresa / organización', 'address' => 'Dirección', 'contact' => 'Persona de contacto',
             'emailphone' => 'Correo / teléfono', 'coc' => 'Recogida / cadena de custodia', 'seals' => 'Números de contenedor sellado / precintos',
             'materials' => 'Materiales destruidos', 'colMat' => 'Material', 'colQty' => 'Cantidad / peso', 'colMethod' => 'Método',
-            'paperBox' => 'Papel / expedientes (cajas)', 'paperCnt' => 'Papel / expedientes (contenedores con ruedas 240 L)',
+            'paperKg' => 'Papel / expedientes (peso)', 'paperBox' => 'Papel / expedientes (cajas)', 'paperCnt' => 'Papel / expedientes (contenedores con ruedas 240 L)',
             'hdd' => 'Discos duros (HDD)', 'ssd' => 'SSD', 'phone' => 'Teléfonos móviles', 'usb' => 'USB / tarjetas de memoria', 'laptop' => 'Otros (portátil / varios)',
             'box' => 'caja', 'boxes' => 'cajas', 'cnt' => 'contenedor con ruedas', 'cnts' => 'contenedores con ruedas', 'items' => 'unidades',
             'loc' => 'Lugar de destrucción', 'onsite' => 'Móvil en las instalaciones del cliente', 'depot' => 'En el depósito Amsterdam-Noord (1034DN)',
@@ -163,12 +166,17 @@
     <table class="mat">
         <thead><tr><th>{{ $L['colMat'] }}</th><th>{{ $L['colQty'] }}</th><th>{{ $L['colMethod'] }}</th></tr></thead>
         <tbody>
-            @if ($order->box_count > 0)
-                <tr><td>{{ $L['paperBox'] }}</td><td>{{ $order->box_count }} {{ $order->box_count == 1 ? $L['box'] : $L['boxes'] }}</td><td class="method">{{ $method }}</td></tr>
+            @if ($boxes > 0)
+                <tr><td>{{ $L['paperBox'] }}</td><td>{{ $boxes }} {{ $boxes == 1 ? $L['box'] : $L['boxes'] }}</td><td class="method">{{ $method }}</td></tr>
             @endif
-            @if ($order->container_count > 0)
-                <tr><td>{{ $L['paperCnt'] }}</td><td>{{ $order->container_count }} {{ $order->container_count == 1 ? $L['cnt'] : $L['cnts'] }}{{ $weightSuffix }}</td><td class="method">{{ $method }}</td></tr>
+            @if ($cnts > 0)
+                <tr><td>{{ $L['paperCnt'] }}</td><td>{{ $cnts }} {{ $cnts == 1 ? $L['cnt'] : $L['cnts'] }}{{ $weightSuffix }}</td><td class="method">{{ $method }}</td></tr>
+            @elseif ($certificate->weight_kg_final)
+                <tr><td>{{ $L['paperKg'] }}</td><td>{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg</td><td class="method">{{ $method }}</td></tr>
             @endif
+            @foreach ($quoteLines as $ql)
+                <tr><td>{{ $ql['label'] }}</td><td>{{ $ql['qty'] }}</td><td class="method">{{ $method }}</td></tr>
+            @endforeach
             @if ($mi('hdd') > 0)
                 <tr><td>{{ $L['hdd'] }}</td><td>{{ $mi('hdd') }} {{ $L['items'] }}</td><td class="method">{{ $method }}</td></tr>
             @endif

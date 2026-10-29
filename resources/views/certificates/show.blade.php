@@ -14,6 +14,9 @@
         $mediaSource = !empty($bon?->actual_media) ? $bon->actual_media : ($order->media_items ?? []);
         $mediaInt    = fn($k) => (int) ($mediaSource[$k] ?? 0);
         $method      = strtoupper((string) $certificate->destruction_method);
+        $boxes       = $certificate->boxCount();
+        $cnts        = $certificate->containerCount();
+        $quoteLines  = $certificate->quoteMaterialLines((array) $mediaSource);
     @endphp
 
     <div class="flex justify-between items-baseline mb-4">
@@ -103,10 +106,10 @@
                 @php
                     $hasPaperMethod = str_contains($method, 'P-4') || str_contains($method, 'P-5') || str_contains($method, 'P-6');
                 @endphp
-                @if ($order->box_count > 0)
+                @if ($boxes > 0)
                     <tr class="border-b">
                         <td class="py-2 px-3">Papier / dossiers (dozen)</td>
-                        <td class="text-right py-2 px-3 font-mono">{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
+                        <td class="text-right py-2 px-3 font-mono">{{ $boxes }} {{ $boxes == 1 ? 'doos' : 'dozen' }}</td>
                         <td class="py-2 px-3 font-mono">
                             @foreach (['P-4', 'P-5', 'P-6'] as $m)
                                 @php $on = str_contains($method, $m) || ($m === 'P-5' && !$hasPaperMethod); @endphp
@@ -115,11 +118,11 @@
                         </td>
                     </tr>
                 @endif
-                @if ($order->container_count > 0)
+                @if ($cnts > 0)
                     <tr class="border-b">
                         <td class="py-2 px-3">Papier / dossiers (rolcontainers 240 L)</td>
                         <td class="text-right py-2 px-3 font-mono">
-                            {{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}
+                            {{ $cnts }} {{ $cnts == 1 ? 'rolcontainer' : 'rolcontainers' }}
                             @if ($certificate->weight_kg_final)<br>{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif
                         </td>
                         <td class="py-2 px-3 font-mono">
@@ -130,6 +133,20 @@
                         </td>
                     </tr>
                 @endif
+                @if ($cnts == 0 && $certificate->weight_kg_final)
+                    <tr class="border-b">
+                        <td class="py-2 px-3">Papier / dossiers (gewicht)</td>
+                        <td class="text-right py-2 px-3 font-mono">{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg</td>
+                        <td class="py-2 px-3 font-mono"><span class="bg-yellow-400 text-black font-bold px-1">P-5</span></td>
+                    </tr>
+                @endif
+                @foreach ($quoteLines as $ql)
+                    <tr class="border-b">
+                        <td class="py-2 px-3">{{ $ql['label'] }} <span class="text-xs text-gray-500">(offerteregel)</span></td>
+                        <td class="text-right py-2 px-3 font-mono">{{ $ql['qty'] }}</td>
+                        <td class="py-2 px-3 font-mono text-gray-400">—</td>
+                    </tr>
+                @endforeach
                 @php
                     $mediaRows = [
                         'hdd'    => ['Harde schijven (HDD)', ['H-3', 'H-4', 'H-5']],
@@ -160,7 +177,7 @@
 
     <section class="mb-6">
         <h2 class="font-black mb-2 text-lg">Locatie van vernietiging</h2>
-        @php $locOnsite = $bon && $bon->mode === 'mobiel'; @endphp
+        @php $locOnsite = $certificate->isOnsite(); @endphp
         <div class="text-sm">
             @if ($locOnsite)
                 <span class="bg-yellow-400 text-black px-2 py-0.5 font-bold">☑ Mobiel op locatie opdrachtgever</span>
@@ -168,6 +185,36 @@
                 <span class="bg-yellow-400 text-black px-2 py-0.5 font-bold">☑ Bij depot Amsterdam-Noord (1034DN)</span>
             @endif
         </div>
+    </section>
+
+    <section class="mb-6 border border-gray-300 p-4">
+        <h2 class="font-black mb-1 text-lg">Corrigeren</h2>
+        <p class="text-xs text-gray-500 mb-3">De getekende bon blijft ongewijzigd. Wat hier staat gaat voor op bon en order. Leeg = overnemen van bon/order. Na opslaan opnieuw mailen.</p>
+        <form method="POST" action="{{ route('certificates.correct', $certificate) }}" class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-sm">
+            @csrf
+            <label class="flex flex-col">Locatie
+                <select name="destruction_location" class="border px-2 py-1">
+                    <option value="depot" @selected(! $locOnsite)>Depot Amsterdam-Noord</option>
+                    <option value="onsite" @selected($locOnsite)>Mobiel op locatie</option>
+                </select>
+            </label>
+            <label class="flex flex-col">Dozen
+                <input type="number" min="0" name="boxes_final" value="{{ $certificate->boxes_final }}" placeholder="{{ $boxes }}" class="border px-2 py-1">
+            </label>
+            <label class="flex flex-col">Rolcontainers
+                <input type="number" min="0" name="containers_final" value="{{ $certificate->containers_final }}" placeholder="{{ $cnts }}" class="border px-2 py-1">
+            </label>
+            <label class="flex flex-col">Gewicht (kg)
+                <input type="number" min="0" step="0.1" name="weight_kg_final" value="{{ $certificate->weight_kg_final }}" class="border px-2 py-1">
+            </label>
+            <button class="bg-black text-yellow-400 px-3 py-1.5 text-xs uppercase font-bold">Opslaan</button>
+        </form>
+        @if ($certificate->emailed_at)
+            <form method="POST" action="{{ route('certificates.mail', $certificate) }}" class="mt-3">
+                @csrf
+                <button class="bg-yellow-400 text-black px-3 py-1.5 text-xs uppercase font-bold">Opnieuw mailen naar klant</button>
+            </form>
+        @endif
     </section>
 
     <section class="mb-6 bg-green-50 border-l-4 border-green-600 p-4">

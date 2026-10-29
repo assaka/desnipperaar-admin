@@ -97,7 +97,10 @@
     $tMethods2    = str_contains($method, 'T-2');
     $tMethods3    = str_contains($method, 'T-3');
 
-    $locOnsite  = $bon && in_array($bon->mode, ['mobiel']);
+    $locOnsite  = $certificate->isOnsite();
+    $boxes      = $certificate->boxCount();
+    $cnts       = $certificate->containerCount();
+    $quoteLines = $certificate->quoteMaterialLines((array) $mediaSource);
     $locDepot   = !$locOnsite;
 
     $custSigPath   = $bon?->customer_signature_path;
@@ -165,11 +168,11 @@
         <table class="mat">
             <thead><tr><th></th><th>Materiaal</th><th>Aantal / gewicht</th><th>Methode (DIN 66399 / ISO 21964)</th></tr></thead>
             <tbody>
-                @if ($order->box_count > 0)
+                @if ($boxes > 0)
                     <tr>
                         <td class="chk"><span class="cbox on"></span></td>
                         <td>Papier / dossiers (dozen)</td>
-                        <td class="val">{{ $order->box_count }} {{ $order->box_count == 1 ? 'doos' : 'dozen' }}</td>
+                        <td class="val">{{ $boxes }} {{ $boxes == 1 ? 'doos' : 'dozen' }}</td>
                         <td>
                             @foreach ($paperMethods as $m => $on)
                                 <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
@@ -177,11 +180,11 @@
                         </td>
                     </tr>
                 @endif
-                @if ($order->container_count > 0)
+                @if ($cnts > 0)
                     <tr>
                         <td class="chk"><span class="cbox on"></span></td>
                         <td>Papier / dossiers (rolcontainers 240 L)</td>
-                        <td class="val">{{ $order->container_count }} {{ $order->container_count == 1 ? 'rolcontainer' : 'rolcontainers' }}@if ($certificate->weight_kg_final) &middot; {{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif</td>
+                        <td class="val">{{ $cnts }} {{ $cnts == 1 ? 'rolcontainer' : 'rolcontainers' }}@if ($certificate->weight_kg_final) &middot; {{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg @endif</td>
                         <td>
                             @foreach ($paperMethods as $m => $on)
                                 <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
@@ -189,6 +192,30 @@
                         </td>
                     </tr>
                 @endif
+                @if ($cnts == 0 && $certificate->weight_kg_final)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>Papier / dossiers (gewicht)</td>
+                        <td class="val">{{ number_format($certificate->weight_kg_final, 1, ',', '.') }} kg</td>
+                        <td>
+                            @foreach ($paperMethods as $m => $on)
+                                <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endif
+                @foreach ($quoteLines as $ql)
+                    <tr>
+                        <td class="chk"><span class="cbox on"></span></td>
+                        <td>{{ $ql['label'] }}</td>
+                        <td class="val">{{ $ql['qty'] }}</td>
+                        <td>
+                            @foreach ($paperMethods as $m => $on)
+                                <span class="meth"><span class="cbox {{ $on ? 'on' : '' }}"></span>{{ $m }}</span>
+                            @endforeach
+                        </td>
+                    </tr>
+                @endforeach
                 @if ($mediaInt('hdd') > 0)
                     <tr>
                         <td class="chk"><span class="cbox on"></span></td>

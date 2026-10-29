@@ -72,12 +72,32 @@ class CertificateController extends Controller
         }
     }
 
+    /**
+     * Corrigeer wat het certificaat verklaart: locatie en hoeveelheden. De
+     * getekende bon blijft zoals hij is, het certificaat is de verklaring over
+     * de vernietiging zelf. Na een correctie moet het opnieuw naar de klant.
+     */
+    public function correct(Request $request, Certificate $certificate)
+    {
+        $data = $request->validate([
+            'destruction_location' => 'required|in:' . Certificate::LOC_DEPOT . ',' . Certificate::LOC_ONSITE,
+            'boxes_final'          => 'nullable|integer|min:0|max:5000',
+            'containers_final'     => 'nullable|integer|min:0|max:500',
+            'weight_kg_final'      => 'nullable|numeric|min:0|max:100000',
+        ]);
+
+        $certificate->update($data);
+
+        return back()->with('status', 'Certificaat gecorrigeerd. Mail het opnieuw naar de klant.');
+    }
+
     public function mail(Request $request, Certificate $certificate)
     {
         $certificate->load('order');
 
+        // Ging hij al eerder de deur uit, dan is dit een correctie.
         Mail::to($certificate->order->customer_email)
-            ->send(new CertificateIssued($certificate, $request->user()));
+            ->send(new CertificateIssued($certificate, $request->user(), corrected: (bool) $certificate->emailed_at));
 
         $certificate->update(['emailed_at' => now()]);
         $certificate->order->update(['state' => Order::STATE_AFGESLOTEN]);

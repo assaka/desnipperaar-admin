@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         ->where('role', 'customer|driver')->name('bons.signature');
 
     Route::post('/orders/{order}/certificate', [\App\Http\Controllers\CertificateController::class, 'generate'])->name('certificates.generate');
+    Route::post('/certificates/{certificate}/correct', [\App\Http\Controllers\CertificateController::class, 'correct'])->name('certificates.correct');
     Route::post('/certificates/{certificate}/mail', [\App\Http\Controllers\CertificateController::class, 'mail'])->name('certificates.mail');
     Route::get('/certificates/{certificate}', [\App\Http\Controllers\CertificateController::class, 'show'])->name('certificates.show');
     Route::get('/certificates/{certificate}/pdf', [\App\Http\Controllers\CertificateController::class, 'pdf'])->name('certificates.pdf');

@@ -5,6 +5,10 @@
 
 <p>Aquí tiene su certificado de destrucción para el pedido <strong style="font-family:monospace;">{{ $certificate->order->order_number }}</strong>.</p>
 
+@if (! empty($corrected))
+<p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Versión corregida.</strong> Este certificado sustituye al ejemplar que recibió anteriormente. Utilice a partir de ahora esta versión.</p>
+@endif
+
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">
     <tr><td style="padding:8px 0;color:#555;font-size:12px;">Número de certificado</td>
         <td style="padding:8px 0 8px 12px;text-align:right;white-space:nowrap;font-family:monospace;font-weight:700;">{{ $certificate->certificate_number }}</td></tr>
