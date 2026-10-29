@@ -6,7 +6,13 @@
 <p>Please find your certificate of destruction for order <strong style="font-family:monospace;">{{ $certificate->order->order_number }}</strong>.</p>
 
 @if (! empty($corrected))
-<p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Corrected version.</strong> This certificate replaces the copy you received from us earlier. Please use this version from now on.</p>
+<p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Corrected version.</strong>
+@if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
+Your certificate is generated automatically. Your quote included the option of mobile destruction on site, so the previous version stated an incorrect location of destruction. Your material was destroyed at our depot in Amsterdam-Noord. That location is now on the certificate. This copy replaces the certificate you received earlier.
+@else
+This certificate replaces the copy you received from us earlier. Please use this version from now on.
+@endif
+</p>
 @endif
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">

@@ -6,7 +6,13 @@
 <p>Vous trouverez votre certificat de destruction pour la commande <strong style="font-family:monospace;">{{ $certificate->order->order_number }}</strong>.</p>
 
 @if (! empty($corrected))
-<p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Version corrigée.</strong> Ce certificat remplace l'exemplaire que vous avez reçu précédemment. Veuillez désormais utiliser cette version.</p>
+<p style="background:#FFF4D6;border-left:3px solid #F5C518;padding:12px 14px;font-size:13px;"><strong>Version corrigée.</strong>
+@if ($certificate->isMobileQuote() && ! $certificate->isOnsite())
+Votre certificat est généré automatiquement. Votre devis comprenait l'option de destruction mobile sur site, si bien que la version précédente indiquait un lieu de destruction erroné. Vos documents ont été détruits dans notre dépôt d'Amsterdam-Noord. C'est désormais ce lieu qui figure sur le certificat. Cet exemplaire remplace le certificat reçu précédemment.
+@else
+Ce certificat remplace l'exemplaire que vous avez reçu précédemment. Veuillez désormais utiliser cette version.
+@endif
+</p>
 @endif
 
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0;border-top:1px solid #EEE;">

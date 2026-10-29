@@ -56,8 +56,9 @@ class Certificate extends Model
 
     /**
      * Vernietigd op locatie van de klant? Een correctie op het certificaat gaat
-     * voor. Anders volgt het de bon, wat bij een offerte de methode is die de
-     * klant in het formulier koos en dus niet altijd wat er gebeurde.
+     * voor. Een offerte met 'mobiel' telt als depot: dat is de methode die de
+     * klant in het formulier aanklikte, niet wat er gebeurde. Klopt mobiel daar
+     * toch, dan zet je het op het certificaat zelf. Verder volgt het de bon.
      */
     public function isOnsite(): bool
     {
@@ -65,7 +66,18 @@ class Certificate extends Model
             return $this->destruction_location === self::LOC_ONSITE;
         }
 
+        if ($this->isMobileQuote()) {
+            return false;
+        }
+
         return $this->bon?->mode === Bon::MODE_MOBIEL;
+    }
+
+    /** Order uit een offerte waarin de klant mobiele vernietiging aanvinkte. */
+    public function isMobileQuote(): bool
+    {
+        return $this->order?->quote_reference
+            && ($this->bon?->mode ?? $this->order->delivery_mode) === Bon::MODE_MOBIEL;
     }
 
     /** Dozen: correctie, dan de werkelijke telling op de bon, dan de order. */
