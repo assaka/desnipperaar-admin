@@ -113,7 +113,7 @@
             'loc' => 'Lieu de destruction', 'onsite' => 'Mobile sur le site du donneur d\'ordre', 'depot' => 'Au dépôt Amsterdam-Noord (1034DN)',
             'confirm' => 'DeSnipperaar confirme par la présente que les matériaux mentionnés ci-dessus ont été détruits de manière complète et irréversible, conformément au RGPD, à la norme DIN 66399, NEN-15713 et ISO 21964.',
             'operator' => 'Opérateur (DeSnipperaar)', 'witness' => 'Donneur d\'ordre / témoin', 'name' => 'Nom', 'signature' => 'Signature', 'noSig' => "Le client n'était pas en mesure de signer",
-            'tagline' => 'Destruction mobile de documents sur site dans un rayon de 20 km autour d\'Amsterdam-Noord (1034DN)',
+            'tagline' => 'Destruction certifiée de documents · Amsterdam-Noord (1034DN)',
             'badges' => 'CONFORME RGPD · DIN 66399 · NEN-15713 · ISO 21964 · ASSURÉ · PERSONNEL AVEC VOG',
         ],
         'es' => [
