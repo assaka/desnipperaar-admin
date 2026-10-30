@@ -394,6 +394,15 @@ class Invoice extends Model
 
         $lines = $quote['lines'];
 
+        // Een geaccepteerde offerte op maat heeft geen dozen of datadragers, alleen
+        // de afgesproken regels. Zonder deze tak kwam daar een lege factuur van
+        // nul euro uit. De offerte is de prijs, dus geen herberekening uit de bon.
+        $fromQuote = ! empty($order->quote_lines);
+        if ($fromQuote) {
+            $lines = $order->priceSnapshot()['lines'];
+            $media = [];
+        }
+
         // Add media lines.
         // Richer invoice labels; pricing + staffel come from the central Pricing class.
         $mediaLabels = \App\Support\Pricing::MEDIA_LABELS_INVOICE;
@@ -407,7 +416,7 @@ class Invoice extends Model
 
         // Pickup surcharge for the "sooner" option (0 for free pickup / regio Amsterdam).
         $pickupCost = (float) ($order->pickup_cost ?? 0);
-        if ($pickupCost > 0) {
+        if ($pickupCost > 0 && ! $fromQuote) {
             $lines[] = [
                 'label'    => \App\Support\Pricing::soonerPickupLabel($order->pickup_km),
                 'kind'     => 'pickup',
