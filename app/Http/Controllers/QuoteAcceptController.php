@@ -118,17 +118,27 @@ class QuoteAcceptController extends Controller
             $finalAmount = round(array_sum(array_column($finalLines, 'subtotal')), 2);
         }
 
+        // Staat er een apart ophaaladres op de offerte, dan bevestigt de klant
+        // hier dat adres en niet zijn eigen (factuur)adres. Dan gaat het
+        // ingevulde adres naar pickup_* en blijven klantadres en klantkaart
+        // zoals ze zijn. Anders is het ingevulde adres het klantadres.
+        $separatePickup = $order->hasSeparatePickupAddress();
+        $addressFields = $separatePickup
+            ? ['pickup_address' => $address, 'pickup_postcode' => $postcode, 'pickup_city' => $data['stad']]
+            : ['customer_address' => $address, 'customer_postcode' => $postcode, 'customer_city' => $data['stad']];
+
         // Keep the linked customer record in step with what the client just confirmed.
         if ($order->customer) {
-            $order->customer->fill([
+            $order->customer->fill(array_merge([
                 'name'     => $data['naam'],
                 'email'    => $data['email'],
                 'company'  => $data['bedrijf'] ?: $order->customer->company,
                 'phone'    => $data['telefoon'],
+            ], $separatePickup ? [] : [
                 'address'  => $address,
                 'postcode' => $postcode,
                 'city'     => $data['stad'],
-            ])->save();
+            ]))->save();
         }
 
         $isAbonnement = $order->isAbonnement();
@@ -140,14 +150,11 @@ class QuoteAcceptController extends Controller
         // het blijft type abonnement, houdt zijn A-nummer en gaat alleen lopen
         // (sub_active_from). De losse ophalingen daaronder worden later als
         // aparte orders aangemaakt, want één abonnement is niet één ophaling.
-        $order->update([
+        $order->update($addressFields + [
             'order_number'         => $isAbonnement ? $order->order_number : Order::generateOrderNumber(),
             'customer_name'        => $data['naam'],
             'customer_email'       => $data['email'],
             'customer_phone'       => $data['telefoon'],
-            'customer_address'     => $address,
-            'customer_postcode'    => $postcode,
-            'customer_city'        => $data['stad'],
             'quote_lines'          => $finalLines,
             'quoted_amount_excl_btw' => $finalAmount,
             'quote_accepted_at'    => now(),

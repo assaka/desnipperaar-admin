@@ -125,6 +125,18 @@
 
             <h2>{{ __('quote.details_h') }}</h2>
             <p class="small">{{ __('quote.details_help') }}</p>
+            @php
+                // Het adres waar wij de opdracht uitvoeren: het aparte ophaaladres
+                // als dat op de offerte staat, anders dat van de klant. Straat en
+                // huisnummer staan als een regel opgeslagen, dus hier gesplitst.
+                $loc = $order->pickupLocation();
+                $locStreet = (string) ($loc['address'] ?? '');
+                $locNumber = '';
+                if (preg_match('/^(.+?)\s+(\d.*)$/u', trim($locStreet), $m)) {
+                    $locStreet = $m[1];
+                    $locNumber = $m[2];
+                }
+            @endphp
 
             <div class="field">
                 <label for="naam">{{ __('quote.f_name') }}</label>
@@ -152,26 +164,26 @@
                 <div class="field" style="flex:3;">
                     <label for="straat">{{ __('quote.f_street') }}</label>
                     <input type="text" id="straat" name="straat" required
-                           value="{{ old('straat') }}" autocomplete="street-address">
+                           value="{{ old('straat', $locStreet) }}" autocomplete="street-address">
                 </div>
                 <div class="field" style="flex:1;">
                     <label for="huisnummer">{{ __('quote.f_number') }}</label>
                     <input type="text" id="huisnummer" name="huisnummer" required
-                           value="{{ old('huisnummer') }}" autocomplete="address-line2">
+                           value="{{ old('huisnummer', $locNumber) }}" autocomplete="address-line2">
                 </div>
             </div>
             <div class="field-row">
                 <div class="field" style="flex:1;">
                     <label for="postcode">{{ __('quote.f_postcode') }}</label>
                     <input type="text" id="postcode" name="postcode" required
-                           value="{{ old('postcode', $order->customer_postcode) }}"
+                           value="{{ old('postcode', $loc['postcode']) }}"
                            pattern="\d{4}\s?[A-Za-z]{2}"
                            style="font-family:monospace;text-transform:uppercase;" autocomplete="postal-code">
                 </div>
                 <div class="field" style="flex:1;">
                     <label for="stad">{{ __('quote.f_city') }}</label>
                     <input type="text" id="stad" name="stad" required
-                           value="{{ old('stad', $order->customer_city) }}" autocomplete="address-level2">
+                           value="{{ old('stad', $loc['city']) }}" autocomplete="address-level2">
                 </div>
             </div>
 
