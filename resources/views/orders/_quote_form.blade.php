@@ -5,6 +5,23 @@
       @submit="if (typeof typed !== 'undefined' && typed) { $event.preventDefault(); alert('Je hebt de gegevens bovenaan gewijzigd maar nog niet opgeslagen. Klik eerst op Opslaan, verstuur daarna de offerte.'); }">
     @csrf
 
+    {{-- Waar de opdracht wordt uitgevoerd, als dat niet het adres van de klant
+         is. Hier en niet alleen onder Edit, want dit is de knop waarmee je de
+         offerte bijwerkt. De publieke offertepagina vult hiermee het adres in;
+         leeg laten = het klantadres. --}}
+    <div>
+        <label class="block text-sm font-bold mb-1">Ophaaladres <span class="font-normal text-gray-500">(alleen als het afwijkt van {{ $order->customer_address }}, {{ $order->customer_postcode }} {{ $order->customer_city }})</span></label>
+        <div class="grid grid-cols-3 gap-2">
+            <input type="text" name="pickup_address" maxlength="200" placeholder="Straat + huisnummer"
+                   value="{{ old('pickup_address', $order->pickup_address) }}" class="border p-1 text-sm">
+            <input type="text" name="pickup_postcode" maxlength="12" placeholder="Postcode"
+                   value="{{ old('pickup_postcode', $order->pickup_postcode) }}" class="border p-1 text-sm font-mono">
+            <input type="text" name="pickup_city" maxlength="100" placeholder="Plaats"
+                   value="{{ old('pickup_city', $order->pickup_city) }}" class="border p-1 text-sm">
+        </div>
+        @error('pickup_postcode') <span class="text-red-700 text-xs">{{ $message }}</span> @enderror
+    </div>
+
     {{-- Itemised quote rows. When any row has a description, the total below is
          computed from the rows and the manual amount field is ignored. Rows marked
          "Optioneel" are add-ons the customer can tick on the public quote page; they

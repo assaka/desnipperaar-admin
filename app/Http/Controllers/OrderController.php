@@ -1221,9 +1221,28 @@ class OrderController extends Controller
             'lines.*.unit'           => 'nullable|numeric|min:0|max:999999.99',
             'lines.*.optional'       => 'nullable|boolean',
             'lines.*.editable'       => 'nullable|boolean',
+            'pickup_address'         => 'nullable|string|max:200',
+            'pickup_postcode'        => ['nullable', 'string', 'max:12', 'regex:/^\d{4}\s?[A-Za-z]{2}$/'],
+            'pickup_city'            => 'nullable|string|max:100',
+        ], [
+            'pickup_postcode.regex' => 'Postcode moet NL-formaat zijn (bv. 1034 AB).',
         ]);
 
         $isOffer = $data['intent'] === 'offer';
+
+        // Afwijkend ophaaladres, ingevuld in het offerteformulier. Leeg = het
+        // klantadres. Verhuist het punt waar de wagen heen rijdt, dan laat de
+        // planning het opnieuw opzoeken (zelfde regel als OrderEditController).
+        $pickup = [
+            'pickup_address'  => trim((string) ($data['pickup_address'] ?? '')) ?: null,
+            'pickup_postcode' => strtoupper(preg_replace('/\s+/', '', (string) ($data['pickup_postcode'] ?? ''))) ?: null,
+            'pickup_city'     => trim((string) ($data['pickup_city'] ?? '')) ?: null,
+        ];
+        $oldPc = preg_replace('/\s+/', '', (string) $order->pickupLocation()['postcode']);
+        $newPc = preg_replace('/\s+/', '', (string) (clone $order)->forceFill($pickup)->pickupLocation()['postcode']);
+        if (strcasecmp($oldPc, $newPc) !== 0) {
+            $pickup += ['lat' => null, 'lon' => null, 'geocoded_at' => null];
+        }
 
         // Build itemised rows: keep only rows that carry a label. subtotal = qty * unit.
         // Optional rows are add-ons the customer can tick on the quote page, so they
@@ -1255,7 +1274,7 @@ class OrderController extends Controller
             ]);
         }
 
-        $order->update([
+        $order->update($pickup + [
             'quoted_amount_excl_btw' => $isOffer ? $baseAmount : null,
             'quote_body'             => $data['quote_body'],
             'quote_lines'            => $isOffer && ! empty($lines) ? $lines : null,
