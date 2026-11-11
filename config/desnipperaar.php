@@ -15,6 +15,12 @@ return [
         'next_from' => '2026-11-01',
     ],
 
+    // TIJDELIJK: geen mail naar deze adressen tot de test bevestigd is.
+    // Zie App\Listeners\BlockRecipients. Weer leegmaken na bevestiging.
+    'mail_block' => [
+        'verheij@verheijadvocatuur.nl',
+    ],
+
     'order' => [
         'prefix'        => env('DESNIPPERAAR_ORDER_PREFIX', 'B'),  // bestelling
         'quote_prefix'  => env('DESNIPPERAAR_QUOTE_PREFIX', 'O'),  // offerte
