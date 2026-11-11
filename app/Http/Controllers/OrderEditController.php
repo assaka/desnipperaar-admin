@@ -76,7 +76,12 @@ class OrderEditController extends Controller
             }
         }
 
-        if ($data['box_count'] < 1 && $data['container_count'] < 1 && $media === []) {
+        // Een offerte op maat kan zijn inhoud alleen in de offerteregels hebben
+        // ("40 archiefdozen ... 300,-") met nul dozen in de tellers. Die mag
+        // gewoon bewerkt worden, anders is ook het adres niet aan te passen.
+        $heeftOfferteRegels = ! empty($order->quote_lines);
+
+        if (! $heeftOfferteRegels && $data['box_count'] < 1 && $data['container_count'] < 1 && $media === []) {
             return back()->withErrors([
                 'box_count' => 'Een order zonder dozen, containers en dragers heeft niets om op te halen.',
             ])->withInput();
@@ -165,7 +170,14 @@ class OrderEditController extends Controller
             $order->update(['confirmation_stale' => true]);
         }
 
-        if ($request->boolean('notify')) {
+        // Een offerte heeft geen orderbevestiging: OrderCreated zou de klant een
+        // bestelling melden die er nog niet is. De klant ziet het nieuwe adres
+        // via de offertelink, dus daar hoort de offerte opnieuw versturen bij.
+        if ($order->type === Order::TYPE_QUOTE) {
+            if ($changed) {
+                $notes[] = 'dit is een offerte, er is geen bevestiging gestuurd. De offertelink toont de nieuwe gegevens meteen, verstuur de offerte opnieuw als de klant het moet weten';
+            }
+        } elseif ($request->boolean('notify')) {
             if (! $changed && ! $wasStale) {
                 $notes[] = 'er was niets nieuws voor de klant, dus er is geen bevestiging gestuurd';
             } elseif ($this->sendConfirmation($order)) {
