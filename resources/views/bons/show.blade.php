@@ -552,7 +552,8 @@
 
         <section>
             <h2 class="font-black mb-3">{{ $T['signatures'] }}</h2>
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Alleen de klant tekent hier. De chauffeur-handtekening komt automatisch uit het chauffeur-profiel. --}}
+            <div>
                 <div x-data="{ waived: {{ old('signature_waived', $bon->handtekeningKwijtgescholden()) ? 'true' : 'false' }} }">
                     <label class="block text-sm font-bold mb-2">{{ $T['customer'] }} · {{ $bon->order->customer_name }}</label>
                     @if ($bon->customer_signature_path)
@@ -576,7 +577,7 @@
                     {{-- Tekenvlak en override sluiten elkaar uit, één van beide sluit de bon af. --}}
                     <div x-show="!waived" style="{{ $bon->handtekeningKwijtgescholden() ? 'display:none;' : '' }}">
                         <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
-                            <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;-ms-touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;width:100%;max-width:400px;"></canvas>
+                            <canvas id="sig-customer" class="border border-black bg-white" width="800" height="400" style="touch-action:none;-ms-touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;display:block;width:100%;height:clamp(240px, 45vh, 420px);"></canvas>
                             <div class="flex gap-2 mt-1">
                                 <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">{{ $T['clear'] }}</button>
                             </div>
@@ -599,23 +600,6 @@
                     </div>
                     @endif
                 </div>
-                <div>
-                    <label class="block text-sm font-bold mb-2">{{ $T['driver'] }} · {{ $bon->driver_name_snapshot ?? $T['not_assigned'] }}</label>
-                    @if ($bon->driver_signature_path)
-                        <div class="border border-green-600 bg-green-50 p-2 text-center">
-                            <img src="{{ route('bons.signature', ['bon' => $bon, 'role' => 'driver']) }}" alt="driver signature" style="max-height:120px;margin:0 auto;display:block;">
-                            <div class="text-xs text-green-800 mt-1 font-bold uppercase">{{ $T['signed_check'] }}</div>
-                        </div>
-                        <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-driv-wrap').style.display='block';this.style.display='none';">{{ $T['sign_again'] }}</button>
-                    @endif
-                    <div id="sig-driv-wrap" style="{{ $bon->driver_signature_path ? 'display:none;' : '' }}">
-                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="300" style="touch-action:none;-ms-touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;width:100%;max-width:400px;"></canvas>
-                        <div class="flex gap-2 mt-1">
-                            <button type="button" class="text-xs underline" onclick="sigDriver.clear()">{{ $T['clear'] }}</button>
-                        </div>
-                    </div>
-                    <input type="hidden" name="driver_signature" id="sig-driver-data">
-                </div>
             </div>
             <p class="text-xs text-gray-500 mt-2">{{ $T['sign_note'] }}</p>
         </section>
@@ -633,8 +617,7 @@
     <script>
     (function () {
         var cCanvas = document.getElementById('sig-customer');
-        var dCanvas = document.getElementById('sig-driver');
-        if (!cCanvas || !dCanvas) return;
+        if (!cCanvas) return;
 
         function fitCanvas(canvas) {
             var ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -648,15 +631,13 @@
             return true;
         }
         fitCanvas(cCanvas);
-        fitCanvas(dCanvas);
 
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
-        window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
         // Geen body-fixed truc meer: die liet de pagina en de adresbalk meeschuiven
         // met de vinger. touch-action:none op het canvas plus preventDefault op de
         // touch-events van het canvas zelf houdt de pagina stil tijdens het tekenen.
-        [cCanvas, dCanvas].forEach(function (c) {
+        [cCanvas].forEach(function (c) {
             ['touchstart', 'touchmove', 'touchend'].forEach(function (type) {
                 c.addEventListener(type, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
             });
@@ -677,8 +658,7 @@
         // Vangnet voor elk vlak dat bij het laden nog geen afmeting had, of het
         // nu door de override kwam of doordat de klant al had getekend.
         if (typeof ResizeObserver !== 'undefined') {
-            var pads = [[cCanvas, function () { return sigCustomer; }],
-                        [dCanvas, function () { return sigDriver; }]];
+            var pads = [[cCanvas, function () { return sigCustomer; }]];
             pads.forEach(function (pair) {
                 var canvas = pair[0];
                 if (canvas.width > 0) return;
@@ -695,7 +675,6 @@
         var form = cCanvas.closest('form');
         form.addEventListener('submit', function () {
             if (!sigCustomer.isEmpty()) document.getElementById('sig-customer-data').value = sigCustomer.toDataURL('image/png');
-            if (!sigDriver.isEmpty())   document.getElementById('sig-driver-data').value   = sigDriver.toDataURL('image/png');
         });
     })();
     </script>
