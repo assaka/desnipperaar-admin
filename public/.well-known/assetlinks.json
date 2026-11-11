@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "nl.desnipperaar.admin",
+    "sha256_cert_fingerprints": ["F2:85:8A:92:05:5D:CE:7D:54:02:8E:DC:DE:D3:AC:AD:C2:DC:22:F3:1A:0C:0B:B6:6F:E1:60:49:0D:D4:80:49"]
+  }
+}]

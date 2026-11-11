@@ -1,0 +1,47 @@
+plugins { id 'com.android.application' }
+
+def hostName = 'admin.desnipperaar.nl'
+def ksFile = rootProject.file('keystore.properties')
+def ks = new Properties()
+if (ksFile.exists()) ks.load(new FileInputStream(ksFile))
+
+android {
+    namespace 'nl.desnipperaar.admin'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'nl.desnipperaar.admin'
+        minSdk 21
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+        manifestPlaceholders = [
+            hostName: hostName,
+            defaultUrl: "https://${hostName}/",
+            launcherName: 'DeSnipperaar Admin'
+        ]
+    }
+    signingConfigs {
+        release {
+            if (ks['storeFile']) {
+                storeFile file(ks['storeFile'])
+                storePassword ks['storePassword']
+                keyAlias ks['keyAlias']
+                keyPassword ks['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
