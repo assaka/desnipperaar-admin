@@ -199,8 +199,8 @@
         <div class="bg-yellow-100 border border-yellow-400 text-yellow-800 px-3 py-2 mb-4 text-sm">{{ session('warning') }}</div>
     @endif
 
-    <section class="grid grid-cols-3 gap-6 mb-6">
-        <div>
+    <section class="flex gap-6 mb-6">
+        <div class="w-1/2 min-w-0">
             <h2 class="font-black mb-2">{{ $T['customer'] }}</h2>
             <div>{{ $bon->order->customer_name }}</div>
             {{-- Waar de wagen heen gaat. Staat er een apart ophaaladres op de
@@ -213,7 +213,7 @@
                 <div class="text-xs text-gray-500 mt-2">{{ $T['invoice_address'] }}: {{ $bon->order->customer_address }}, {{ $bon->order->customer_postcode }} {{ $bon->order->customer_city }}</div>
             @endif
         </div>
-        <div>
+        <div class="w-1/2 min-w-0">
             @php
                 // Bij een abonnementsrit staat de datum op de bon, niet op de
                 // order. En de kop hangt af van wat we komen doen.
@@ -229,10 +229,8 @@
             @else
                 <div class="text-sm text-gray-500">—</div>
             @endif
-        </div>
-        <div class="text-right">
-            <a href="{{ $publicPdfUrl }}" target="_blank" title="PDF">
-                <img src="{{ $qrDataUri }}" alt="QR — PDF" style="width:120px;height:120px;display:inline-block;">
+            <a href="{{ $publicPdfUrl }}" target="_blank" title="PDF" class="inline-block mt-3">
+                <img src="{{ $qrDataUri }}" alt="QR — PDF" style="width:120px;height:120px;display:block;">
             </a>
         </div>
     </section>
