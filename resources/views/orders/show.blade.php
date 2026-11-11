@@ -55,7 +55,7 @@
             <button type="button"
                     @click="const f = document.getElementById('order-edit-form'); if (f) { f.requestSubmit(); }"
                     class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold">
-                Opslaan en mailen
+                {{ $order->type === 'quote' ? 'Opslaan' : 'Opslaan en mailen' }}
             </button>
             {{-- Gooit weg wat je hebt getypt. Raakt de order niet aan: er is nog
                  niets bewaard. form.reset() stuurt geen input-events, dus de balk

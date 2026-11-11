@@ -1,4 +1,8 @@
-<form method="POST" action="{{ route('orders.send-quote', $order) }}" class="mt-3 space-y-3" id="quote-form">
+{{-- Versturen verlaat de pagina. Staat er nog een niet-opgeslagen wijziging in
+     het bewerkformulier (bv. een ander ophaaladres), dan is die anders weg en
+     gaat de offerte met het oude adres de deur uit. --}}
+<form method="POST" action="{{ route('orders.send-quote', $order) }}" class="mt-3 space-y-3" id="quote-form"
+      @submit="if (typeof typed !== 'undefined' && typed) { $event.preventDefault(); alert('Je hebt de gegevens bovenaan gewijzigd maar nog niet opgeslagen. Klik eerst op Opslaan, verstuur daarna de offerte.'); }">
     @csrf
 
     {{-- Itemised quote rows. When any row has a description, the total below is

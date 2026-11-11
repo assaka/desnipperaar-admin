@@ -137,8 +137,12 @@
              knop, en die heet Opslaan en mailen. --}}
         <input type="hidden" name="notify" value="1">
 
-        {{-- Opslaan en Undo staan in de balk bovenaan, die blijft staan als je
-             scrolt. Hier staan alleen de velden. --}}
+        {{-- De balk bovenaan blijft staan als je scrolt, maar verschijnt pas na
+             het typen en valt bij een offerte makkelijk weg naast "verstuur
+             offerte". Daarom ook hier een knop onder de velden. --}}
+        <button type="submit" class="bg-black text-yellow-400 px-4 py-1.5 text-xs uppercase font-bold mb-2">
+            {{ $order->type === 'quote' ? 'Opslaan' : 'Opslaan en mailen' }}
+        </button>
         <p class="text-xs text-gray-500">
             Een gewijzigde postcode zet de pilotkorting opnieuw en laat de planning het adres opnieuw opzoeken.
             Al afgesproken ophaalkosten blijven staan: die worden niet stil herrekend.
