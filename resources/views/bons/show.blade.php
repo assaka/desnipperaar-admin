@@ -576,7 +576,7 @@
                     {{-- Tekenvlak en override sluiten elkaar uit, één van beide sluit de bon af. --}}
                     <div x-show="!waived" style="{{ $bon->handtekeningKwijtgescholden() ? 'display:none;' : '' }}">
                         <div id="sig-cust-wrap" style="{{ $bon->customer_signature_path ? 'display:none;' : '' }}">
-                            <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                            <canvas id="sig-customer" class="border border-black bg-white" width="400" height="300" style="touch-action:none;-ms-touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;width:100%;max-width:400px;"></canvas>
                             <div class="flex gap-2 mt-1">
                                 <button type="button" class="text-xs underline" onclick="sigCustomer.clear()">{{ $T['clear'] }}</button>
                             </div>
@@ -609,7 +609,7 @@
                         <button type="button" class="text-xs underline mt-1" onclick="document.getElementById('sig-driv-wrap').style.display='block';this.style.display='none';">{{ $T['sign_again'] }}</button>
                     @endif
                     <div id="sig-driv-wrap" style="{{ $bon->driver_signature_path ? 'display:none;' : '' }}">
-                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="300" style="touch-action:none;width:100%;max-width:400px;"></canvas>
+                        <canvas id="sig-driver" class="border border-black bg-white" width="400" height="300" style="touch-action:none;-ms-touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;width:100%;max-width:400px;"></canvas>
                         <div class="flex gap-2 mt-1">
                             <button type="button" class="text-xs underline" onclick="sigDriver.clear()">{{ $T['clear'] }}</button>
                         </div>
@@ -653,36 +653,14 @@
         window.sigCustomer = new SignaturePad(cCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
         window.sigDriver   = new SignaturePad(dCanvas, { penColor: '#0A0A0A', backgroundColor: '#FFFFFF' });
 
-        var drawing = false, savedScrollY = 0;
-
-        function lockScroll() {
-            if (drawing) return;
-            drawing = true;
-            savedScrollY = window.scrollY || window.pageYOffset;
-            document.body.style.position = 'fixed';
-            document.body.style.top      = '-' + savedScrollY + 'px';
-            document.body.style.width    = '100%';
-        }
-        function unlockScroll() {
-            if (!drawing) return;
-            drawing = false;
-            document.body.style.position = '';
-            document.body.style.top      = '';
-            document.body.style.width    = '';
-            window.scrollTo(0, savedScrollY);
-        }
-
+        // Geen body-fixed truc meer: die liet de pagina en de adresbalk meeschuiven
+        // met de vinger. touch-action:none op het canvas plus preventDefault op de
+        // touch-events van het canvas zelf houdt de pagina stil tijdens het tekenen.
         [cCanvas, dCanvas].forEach(function (c) {
-            c.addEventListener('touchstart',    function (e) { e.preventDefault(); lockScroll(); }, { passive: false });
-            c.addEventListener('touchend',      unlockScroll, { passive: false });
-            c.addEventListener('touchcancel',   unlockScroll, { passive: false });
-            c.addEventListener('pointerdown',   lockScroll);
-            c.addEventListener('pointerup',     unlockScroll);
-            c.addEventListener('pointercancel', unlockScroll);
+            ['touchstart', 'touchmove', 'touchend'].forEach(function (type) {
+                c.addEventListener(type, function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
+            });
         });
-        document.addEventListener('touchmove', function (e) {
-            if (drawing) e.preventDefault();
-        }, { passive: false });
 
         // Het tekenvlak staat verborgen zolang de override aanstaat, dus het heeft
         // dan geen afmeting. Wordt het vinkje weer uitgezet, dan meten we opnieuw.
